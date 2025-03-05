@@ -127,7 +127,7 @@ function MatchDetails() {
           >
             <div className="w-screen h-screen flex flex-col bg-white overflow-hidden items-center">
               <div className="bg-white w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-                <div className="flex items-center justify-between px-4 py-3 bg-[#F5F7FA] h-32">
+                <div className="flex items-center justify-between px-4 py-3 bg-[#F5F7FA] h-32 shadow-lg">
                   <div className="flex items-center space-x-3">
                     <img
                       src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_stopwatch.svg"
