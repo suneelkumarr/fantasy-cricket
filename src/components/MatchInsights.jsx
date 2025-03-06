@@ -35,11 +35,6 @@ function MatchInsights() {
       return;
     }
 
-    console.log(
-      "Fetching data for season_game_uid:",
-      matchInSights.season_game_uid
-    );
-
     const fetchData = async () => {
       setLoading(true);
       try {
