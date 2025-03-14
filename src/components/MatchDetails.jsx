@@ -43,18 +43,25 @@ function MatchDetails() {
 
   const getCountdownTime = (scheduledDate) => {
     const now = new Date();
+  
+    // Convert scheduledDate from UTC to IST (UTC +5:30)
     const targetDate = new Date(scheduledDate);
+    targetDate.setHours(targetDate.getHours() + 5);
+    targetDate.setMinutes(targetDate.getMinutes() + 30);
+  
     const diff = targetDate - now;
-
+  
     if (diff <= 0) {
-      return "Event Started";
+      return 'Event Started';
     }
-
+  
+    // Calculate days, hours, minutes, and seconds
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
+  
+    // Return formatted countdown string
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   };
 
@@ -92,13 +99,22 @@ function MatchDetails() {
             <div className="text-red-500 font-bold text-lg sm:text-xl">
               {getCountdownTime(fixtureDetails.season_scheduled_date)}
             </div>
-            <div className="text-gray-600 text-sm sm:text-md mt-1">
-              {new Date(fixtureDetails.season_scheduled_date).toLocaleString()}
-            </div>
+            <div className="text-gray-600 text-sm mt-1">
+  {(() => {
+    const utcDate = new Date(fixtureDetails.season_scheduled_date); // Parse UTC date
+    const istDate = new Date(utcDate.getTime() + (5.5 * 60 * 60 * 1000)); // Add 5 hours 30 minutes
+    return istDate.toLocaleString("en-IN"); // Convert to readable IST format
+  })()}
+</div>
+
+
             <div className="text-gray-500 text-xs sm:text-sm">
-              {fixtureDetails.league_name} -{" "}
-              {fixtureDetails.format === "1" ? "ODI" : fixtureDetails.format}
-            </div>
+  {fixtureDetails.league_name} - 
+  {fixtureDetails.format === "1" ? "Test" : 
+   fixtureDetails.format === "2" ? "ODI" : 
+   fixtureDetails.format === "3" ? "T20" : 
+   fixtureDetails.format === "4" ? "T10" : fixtureDetails.format}
+</div>
           </div>
 
           <div className="flex items-center space-x-2">
