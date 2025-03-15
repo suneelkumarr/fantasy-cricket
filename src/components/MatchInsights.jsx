@@ -10,7 +10,6 @@ function MatchInsights() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const matchInSights = location.state?.matchInSights;
-  console.log(matchInSights);
 
   const getCountdownTime = (scheduledDate) => {
     const now = new Date();
@@ -142,6 +141,10 @@ function MatchInsights() {
   );
   const deathOverBowl = fixturePlayers.slice(0, 5);
 
+  const filteredTopFormPlayers = fixturePlayers.filter(
+    (player) => player.top_category === "top_form"
+  );
+  filteredTopFormPlayers.sort((a, b) => b.avg_fpts - a.avg_fpts).slice(0, 5);
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-start justify-start">
@@ -230,12 +233,12 @@ function MatchInsights() {
       <div
         className={`w-full flex justify-center -mt-4 px-3 py-1 text-sm rounded-md 
         ${
-          matchInSights.playing_announce === 0
+          Number(matchInSights.playing_announce) === 1
             ? "text-green-700 bg-green-100"
             : "text-gray-700 bg-gray-100"
         }`}
       >
-        {matchInSights.playing_announce === 0
+        {Number(matchInSights.playing_announce) === 1
           ? "Playing 11 is announced"
           : "Playing 11 is not announced"}
       </div>
@@ -575,6 +578,7 @@ function MatchInsights() {
                             state={{
                               playerInfo: item,
                               matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
                             }}
                             className="flex justify-between items-center p-3 rounded-lg shadow-md bg-white hover:bg-gray-100 w-full"
                           >
@@ -613,6 +617,7 @@ function MatchInsights() {
                             state={{
                               playerInfo: item,
                               matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
                             }}
                             className="flex justify-between items-center p-3 rounded-lg shadow-md bg-white hover:bg-gray-100 w-full"
                           >
@@ -629,6 +634,134 @@ function MatchInsights() {
                         ))}
                       </ul>
                     </div>
+                  </div>
+                </div>
+
+                {/* Players in Top Form */}
+
+                <div className="win-container flex flex-col items-center w-full max-w-screen-lg mx-auto p-4 -mt-2">
+                  {/* Header Section */}
+                  <div className="view-win-container w-full">
+                    <div className="flex items-center w-full">
+                      <span className="text-xl font-bold text-gray-800 uppercase tracking-wide mr-2 italic">
+                        Players in Top Form
+                      </span>
+
+                      <div class="relative inline-block group">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke-width="1.5"
+                          stroke="currentColor"
+                          class="w-6 h-6 text-gray-600 cursor-pointer"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
+                          />
+                        </svg>
+
+                        <div
+                          class="
+                      absolute
+                      hidden
+                      group-hover:block
+                      bottom-full
+                      left-1/2
+                      mb-2
+                      transform
+                      -translate-x-1/2
+                      px-3
+                      py-2
+                      bg-black
+                      text-white
+                      text-base
+                      rounded
+                      shadow-lg
+                      whitespace-nowrap
+                    "
+                        >
+                          Players who are in top form in the recent matches.
+                        </div>
+                      </div>
+
+                      <div className="border-t border-dotted border-gray-300 flex-1 h-px"></div>
+                    </div>
+                    <span className="text-l font-bold md:text-gray-500 italic">
+                      Last 5 ODI's
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-lg w-full space-y-4">
+                    <div className="flex justify-end text-gray-500 text-sm font-semibold">
+                      Avg. FPTS
+                    </div>
+
+                    {filteredTopFormPlayers.map((player) => (
+                      <Link
+                        key={player.player_uid}
+                        to={`/player/${
+                          player.player_uid
+                        }/${player.full_name.replace(/\s+/g, "_")}/${
+                          matchInSights.season_game_uid
+                        }/form`}
+                        state={{
+                          playerInfo: player,
+                          matchID: matchInSights.season_game_uid,
+                          matchInSights: matchInSights,
+                        }}
+                        className="block"
+                      >
+                        <div
+                          key={player.player_id}
+                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                        >
+                          {/* Left: Player Info */}
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Right: Points & Star */}
+                          <div className="flex items-center space-x-4">
+                            <span className="text-black font-semibold text-lg">
+                              {player.avg_fpts}
+                            </span>
+
+                            {/* Favorite Star Icon */}
+                            <div className="cursor-pointer">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
                   </div>
                 </div>
 
@@ -691,97 +824,108 @@ function MatchInsights() {
                   </div>
 
                   <div className="bg-white p-4 rounded-lg w-full space-y-4">
-                  {top5.map((player) => (
-                    <Link
-                      key={player.player_uid}
-                      to={`/player/${
-                        player.player_uid
-                      }/${player.full_name.replace(/\s+/g, "_")}/${
-                        matchInSights.season_game_uid
-                      }/form`}
-                      state={{
-                        playerInfo: player,
-                        matchID: matchInSights.season_game_uid,
-                      }}
-                      className="block"
-                    >
-                      <div className="flex items-center justify-between shadow-md border-b pb-3 last:border-b-0 mt-2 bg-white hover:bg-gray-100 p-3 rounded-md h-14">
-                        {/* Left: Player Info */}
-                        <div className="flex items-center gap-x-4 w-1/3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
-                            alt={player.full_name}
-                            className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-gray-200"
-                          />
-                          <div>
-                            <div className="text-black font-bold text-sm">{player.full_name}</div>
-                            <div className="text-gray-500 text-xs">
-                              {player.batting_style} | {player.bowling_style}
+                    {top5.map((player) => (
+                      <Link
+                        key={player.player_uid}
+                        to={`/player/${
+                          player.player_uid
+                        }/${player.full_name.replace(/\s+/g, "_")}/${
+                          matchInSights.season_game_uid
+                        }/form`}
+                        state={{
+                          playerInfo: player,
+                          matchID: matchInSights.season_game_uid,
+                          matchInSights: matchInSights,
+                        }}
+                        className="block"
+                      >
+                        <div className="flex items-center justify-between shadow-md border-b pb-3 last:border-b-0 mt-2 bg-white hover:bg-gray-100 p-3 rounded-md h-14">
+                          {/* Left: Player Info */}
+                          <div className="flex items-center gap-x-4 w-1/3">
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                
-                        {/* Middle: Batting First & Chasing Indicators */}
-                        <div className="flex items-center gap-x-3 w-1/3">
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
-                            <span className="text-gray-600 text-xs">Batting First</span>
+
+                          {/* Middle: Batting First & Chasing Indicators */}
+                          <div className="flex items-center gap-x-3 w-1/3">
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
+                              <span className="text-gray-600 text-xs">
+                                Batting First
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                              <span className="text-gray-600 text-xs">
+                                Chasing
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                            <span className="text-gray-600 text-xs">Chasing</span>
+
+                          {/* Right: Points & Progress Bar */}
+                          <div className="flex items-center gap-x-4 w-1/3">
+                            {/* Batting First Points */}
+                            <span className="text-black font-medium text-sm w-10 text-right">
+                              {player.avg_bat_first_fpts}
+                            </span>
+
+                            {/* Progress Bar Container */}
+                            <div className="relative w-full h-2 bg-gray-300 rounded-full">
+                              <div
+                                className="absolute left-0 h-2 bg-gray-800 rounded-full"
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    (player.avg_bat_first_fpts /
+                                      Math.max(
+                                        player.avg_bat_first_fpts +
+                                          player.avg_chase_fpts,
+                                        1
+                                      )) *
+                                      100
+                                  )}%`,
+                                }}
+                              ></div>
+                            </div>
+
+                            {/* Chasing Points */}
+                            <span className="text-gray-500 text-sm w-10 text-left">
+                              {player.avg_chase_fpts}
+                            </span>
+                          </div>
+
+                          {/* Favorite Star Icon */}
+                          <div className="cursor-pointer flex justify-end w-10">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                              />
+                            </svg>
                           </div>
                         </div>
-                
-                        {/* Right: Points & Progress Bar */}
-                        <div className="flex items-center gap-x-4 w-1/3">
-                        {/* Batting First Points */}
-                        <span className="text-black font-medium text-sm w-10 text-right">
-                          {player.avg_bat_first_fpts}
-                        </span>
-                      
-                        {/* Progress Bar Container */}
-                        <div className="relative w-full h-2 bg-gray-300 rounded-full">
-                          <div
-                            className="absolute left-0 h-2 bg-gray-800 rounded-full"
-                            style={{
-                              width: `${Math.min(100, (player.avg_bat_first_fpts / Math.max(
-    player.avg_bat_first_fpts + player.avg_chase_fpts,
-    1
-  )) * 100)}%`,
-                            }}
-                          ></div>
-                        </div>
-                      
-                        {/* Chasing Points */}
-                        <span className="text-gray-500 text-sm w-10 text-left">
-                          {player.avg_chase_fpts}
-                        </span>
-                      </div>
-                
-                        {/* Favorite Star Icon */}
-                        <div className="cursor-pointer flex justify-end w-10">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                            />
-                          </svg>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-                
-                
+                      </Link>
+                    ))}
+                  </div>
                 </div>
 
                 {/* TOP PLAYERS CHASING */}
@@ -845,99 +989,106 @@ function MatchInsights() {
                   <div className="bg-white p-4 rounded-lg w-full space-y-4">
                     {topChase.map((player) => (
                       <Link
-                      key={player.player_uid}
-                      to={`/player/${
-                        player.player_uid
-                      }/${player.full_name.replace(/\s+/g, "_")}/${
-                        matchInSights.season_game_uid
-                      }/form`}
-                      state={{
-                        playerInfo: player,
-                        matchID: matchInSights.season_game_uid,
-                      }}
-                      className="block"
-                    >
-                      <div
-                        key={player.player_id}
-                        className="flex items-center justify-between shadow-md border-b pb-3 last:border-b-0 mt-2 bg-white hover:bg-gray-100 p-3 rounded-md h-14"
+                        key={player.player_uid}
+                        to={`/player/${
+                          player.player_uid
+                        }/${player.full_name.replace(/\s+/g, "_")}/${
+                          matchInSights.season_game_uid
+                        }/form`}
+                        state={{
+                          playerInfo: player,
+                          matchID: matchInSights.season_game_uid,
+                          matchInSights: matchInSights,
+                        }}
+                        className="block"
                       >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center gap-x-4 w-1/3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
-                            alt={player.full_name}
-                            className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-gray-200"
-                          />
-                          <div>
-                            <div className="text-black font-bold text-sm">
-                              {player.full_name}
-                            </div>
-                            <div className="text-gray-500 text-xs">
-                              {player.batting_style} | {player.bowling_style}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Middle: Batting First & Chasing Indicators */}
-                        <div className="flex items-center gap-x-3 w-1/3">
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
-                            <span className="text-gray-600 text-xs">
-                              Batting First
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                            <span className="text-gray-500 text-xs">
-                              Chasing
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Right: Points & Progress Bar */}
-                        <div className="flex items-center gap-x-4 w-1/3">
-                        {/* Batting First Points */}
-                        <span className="text-black font-medium text-sm w-10 text-right">
-                          {player.avg_bat_first_fpts}
-                        </span>
-                      
-                        {/* Progress Bar Container */}
-                        <div className="relative w-full h-2 bg-gray-300 rounded-full">
-                          <div
-                            className="absolute left-0 h-2 bg-gray-800 rounded-full"
-                            style={{
-                              width: `${Math.min(100, (player.avg_bat_first_fpts / Math.max(
-    player.avg_bat_first_fpts + player.avg_chase_fpts,
-    1
-  )) * 100)}%`,
-                            }}
-                          ></div>
-                        </div>
-                      
-                        {/* Chasing Points */}
-                        <span className="text-gray-500 text-sm w-10 text-left">
-                          {player.avg_chase_fpts}
-                        </span>
-                      </div>
-
-                        {/* Favorite Star Icon */}
-                        <div className="cursor-pointer flex justify-end w-10">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                        <div
+                          key={player.player_id}
+                          className="flex items-center justify-between shadow-md border-b pb-3 last:border-b-0 mt-2 bg-white hover:bg-gray-100 p-3 rounded-md h-14"
+                        >
+                          {/* Left: Player Info */}
+                          <div className="flex items-center gap-x-4 w-1/3">
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-gray-200"
                             />
-                          </svg>
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Middle: Batting First & Chasing Indicators */}
+                          <div className="flex items-center gap-x-3 w-1/3">
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
+                              <span className="text-gray-600 text-xs">
+                                Batting First
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                              <span className="text-gray-500 text-xs">
+                                Chasing
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Right: Points & Progress Bar */}
+                          <div className="flex items-center gap-x-4 w-1/3">
+                            {/* Batting First Points */}
+                            <span className="text-black font-medium text-sm w-10 text-right">
+                              {player.avg_bat_first_fpts}
+                            </span>
+
+                            {/* Progress Bar Container */}
+                            <div className="relative w-full h-2 bg-gray-300 rounded-full">
+                              <div
+                                className="absolute left-0 h-2 bg-gray-800 rounded-full"
+                                style={{
+                                  width: `${Math.min(
+                                    100,
+                                    (player.avg_bat_first_fpts /
+                                      Math.max(
+                                        player.avg_bat_first_fpts +
+                                          player.avg_chase_fpts,
+                                        1
+                                      )) *
+                                      100
+                                  )}%`,
+                                }}
+                              ></div>
+                            </div>
+
+                            {/* Chasing Points */}
+                            <span className="text-gray-500 text-sm w-10 text-left">
+                              {player.avg_chase_fpts}
+                            </span>
+                          </div>
+
+                          {/* Favorite Star Icon */}
+                          <div className="cursor-pointer flex justify-end w-10">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="currentColor"
+                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                              />
+                            </svg>
+                          </div>
                         </div>
-                      </div>
                       </Link>
                     ))}
                   </div>
@@ -1001,58 +1152,73 @@ function MatchInsights() {
                     </span>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-md w-full space-y-4">
+                  <div className="bg-white p-4 rounded-lg w-full space-y-4">
                     <div className="flex justify-end text-gray-500 text-sm font-semibold">
                       Avg. FPTS
                     </div>
 
                     {topH2H.map((player) => (
-                      <div
-                        key={player.player_id}
-                        className="flex items-center justify-between border-b pb-3 last:border-b-0"
+                      <Link
+                        key={player.player_uid}
+                        to={`/player/${
+                          player.player_uid
+                        }/${player.full_name.replace(/\s+/g, "_")}/${
+                          matchInSights.season_game_uid
+                        }/form`}
+                        state={{
+                          playerInfo: player,
+                          matchID: matchInSights.season_game_uid,
+                          matchInSights: matchInSights,
+                        }}
+                        className="block"
                       >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
-                            alt={player.full_name}
-                            className="w-10 h-10 rounded-full bg-gray-200"
-                          />
-                          <div>
-                            <div className="text-black font-bold text-sm">
-                              {player.full_name}
+                        <div
+                          key={player.player_id}
+                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                        >
+                          {/* Left: Player Info */}
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
                             </div>
-                            <div className="text-gray-500 text-xs">
-                              {player.batting_style} | {player.bowling_style}
+                          </div>
+
+                          {/* Right: Points & Star */}
+                          <div className="flex items-center space-x-4">
+                            <span className="text-black font-semibold text-lg">
+                              {player.avg_fpts}
+                            </span>
+
+                            {/* Favorite Star Icon */}
+                            <div className="cursor-pointer">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                                />
+                              </svg>
                             </div>
                           </div>
                         </div>
-
-                        {/* Right: Points & Star */}
-                        <div className="flex items-center space-x-4">
-                          <span className="text-black font-semibold text-lg">
-                            {player.avg_fpts}
-                          </span>
-
-                          {/* Favorite Star Icon */}
-                          <div className="cursor-pointer">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -1115,58 +1281,73 @@ function MatchInsights() {
                     </span>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-md w-full space-y-4">
+                  <div className="bg-white p-4 rounded-lg w-full space-y-4">
                     <div className="flex justify-end text-gray-500 text-sm font-semibold">
                       Avg. FPTS
                     </div>
 
                     {topVenue.map((player) => (
-                      <div
-                        key={player.player_id}
-                        className="flex items-center justify-between border-b pb-3 last:border-b-0"
+                      <Link
+                        key={player.player_uid}
+                        to={`/player/${
+                          player.player_uid
+                        }/${player.full_name.replace(/\s+/g, "_")}/${
+                          matchInSights.season_game_uid
+                        }/form`}
+                        state={{
+                          playerInfo: player,
+                          matchID: matchInSights.season_game_uid,
+                          matchInSights: matchInSights,
+                        }}
+                        className="block"
                       >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
-                            alt={player.full_name}
-                            className="w-10 h-10 rounded-full bg-gray-200"
-                          />
-                          <div>
-                            <div className="text-black font-bold text-sm">
-                              {player.full_name}
+                        <div
+                          key={player.player_id}
+                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                        >
+                          {/* Left: Player Info */}
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
                             </div>
-                            <div className="text-gray-500 text-xs">
-                              {player.batting_style} | {player.bowling_style}
+                          </div>
+
+                          {/* Right: Points & Star */}
+                          <div className="flex items-center space-x-4">
+                            <span className="text-black font-semibold text-lg">
+                              {player.avg_venue_fpts}
+                            </span>
+
+                            {/* Favorite Star Icon */}
+                            <div className="cursor-pointer">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                                />
+                              </svg>
                             </div>
                           </div>
                         </div>
-
-                        {/* Right: Points & Star */}
-                        <div className="flex items-center space-x-4">
-                          <span className="text-black font-semibold text-lg">
-                            {player.avg_venue_fpts}
-                          </span>
-
-                          {/* Favorite Star Icon */}
-                          <div className="cursor-pointer">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -1229,58 +1410,73 @@ function MatchInsights() {
                     </span>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-md w-full space-y-4">
+                  <div className="bg-white p-4 rounded-lg w-full space-y-4">
                     <div className="flex justify-end text-gray-500 text-sm font-semibold">
                       Avg. FPTS
                     </div>
 
                     {filteredPlayers.map((player) => (
-                      <div
-                        key={player.player_id}
-                        className="flex items-center justify-between border-b pb-3 last:border-b-0"
+                      <Link
+                        key={player.player_uid}
+                        to={`/player/${
+                          player.player_uid
+                        }/${player.full_name.replace(/\s+/g, "_")}/${
+                          matchInSights.season_game_uid
+                        }/form`}
+                        state={{
+                          playerInfo: player,
+                          matchID: matchInSights.season_game_uid,
+                          matchInSights: matchInSights,
+                        }}
+                        className="block"
                       >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
-                            alt={player.full_name}
-                            className="w-10 h-10 rounded-full bg-gray-200"
-                          />
-                          <div>
-                            <div className="text-black font-bold text-sm">
-                              {player.full_name}
+                        <div
+                          key={player.player_id}
+                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                        >
+                          {/* Left: Player Info */}
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
                             </div>
-                            <div className="text-gray-500 text-xs">
-                              {player.batting_style} | {player.bowling_style}
+                          </div>
+
+                          {/* Right: Points & Star */}
+                          <div className="flex items-center space-x-4">
+                            <span className="text-black font-semibold text-lg">
+                              {player.avg_venue_fpts}
+                            </span>
+
+                            {/* Favorite Star Icon */}
+                            <div className="cursor-pointer">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                                />
+                              </svg>
                             </div>
                           </div>
                         </div>
-
-                        {/* Right: Points & Star */}
-                        <div className="flex items-center space-x-4">
-                          <span className="text-black font-semibold text-lg">
-                            {player.avg_venue_fpts}
-                          </span>
-
-                          {/* Favorite Star Icon */}
-                          <div className="cursor-pointer">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -1350,54 +1546,69 @@ function MatchInsights() {
                     </div>
 
                     {powerPlayBat.map((player) => (
-                      <div
-                        key={player.player_id}
-                        className="flex items-center justify-between border-b pb-3 last:border-b-0"
+                      <Link
+                        key={player.player_uid}
+                        to={`/player/${
+                          player.player_uid
+                        }/${player.full_name.replace(/\s+/g, "_")}/${
+                          matchInSights.season_game_uid
+                        }/form`}
+                        state={{
+                          playerInfo: player,
+                          matchID: matchInSights.season_game_uid,
+                          matchInSights: matchInSights,
+                        }}
+                        className="block"
                       >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
-                            alt={player.full_name}
-                            className="w-10 h-10 rounded-full bg-gray-200"
-                          />
-                          <div>
-                            <div className="text-black font-bold text-sm">
-                              {player.full_name}
+                        <div
+                          key={player.player_id}
+                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                        >
+                          {/* Left: Player Info */}
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
                             </div>
-                            <div className="text-gray-500 text-xs">
-                              {player.batting_style} | {player.bowling_style}
+                          </div>
+
+                          {/* Right: Points & Star */}
+                          <div className="flex items-center space-x-4">
+                            <span className="text-black font-semibold text-lg">
+                              {player.power_play_bat_fpts
+                                ? player.power_play_bat_fpts.toFixed(2)
+                                : "0.00"}
+                            </span>
+
+                            {/* Favorite Star Icon */}
+                            <div className="cursor-pointer">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                                />
+                              </svg>
                             </div>
                           </div>
                         </div>
-
-                        {/* Right: Points & Star */}
-                        <div className="flex items-center space-x-4">
-                          <span className="text-black font-semibold text-lg">
-                            {player.power_play_bat_fpts
-                              ? player.power_play_bat_fpts.toFixed(2)
-                              : "0.00"}
-                          </span>
-
-                          {/* Favorite Star Icon */}
-                          <div className="cursor-pointer">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -1460,60 +1671,75 @@ function MatchInsights() {
                     </span>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-md w-full space-y-4">
+                  <div className="bg-white p-4 rounded-lg w-full space-y-4">
                     <div className="flex justify-end text-gray-500 text-sm font-semibold">
                       Avg. FPTS
                     </div>
 
                     {powerPlayBowl.map((player) => (
-                      <div
-                        key={player.player_id}
-                        className="flex items-center justify-between border-b pb-3 last:border-b-0"
+                      <Link
+                        key={player.player_uid}
+                        to={`/player/${
+                          player.player_uid
+                        }/${player.full_name.replace(/\s+/g, "_")}/${
+                          matchInSights.season_game_uid
+                        }/form`}
+                        state={{
+                          playerInfo: player,
+                          matchID: matchInSights.season_game_uid,
+                          matchInSights: matchInSights,
+                        }}
+                        className="block"
                       >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
-                            alt={player.full_name}
-                            className="w-10 h-10 rounded-full bg-gray-200"
-                          />
-                          <div>
-                            <div className="text-black font-bold text-sm">
-                              {player.full_name}
+                        <div
+                          key={player.player_id}
+                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                        >
+                          {/* Left: Player Info */}
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
                             </div>
-                            <div className="text-gray-500 text-xs">
-                              {player.batting_style} | {player.bowling_style}
+                          </div>
+
+                          {/* Right: Points & Star */}
+                          <div className="flex items-center space-x-4">
+                            <span className="text-black font-semibold text-lg">
+                              {player.power_play_bowl_fpts
+                                ? player.power_play_bowl_fpts.toFixed(2)
+                                : "0.00"}
+                            </span>
+
+                            {/* Favorite Star Icon */}
+                            <div className="cursor-pointer">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                                />
+                              </svg>
                             </div>
                           </div>
                         </div>
-
-                        {/* Right: Points & Star */}
-                        <div className="flex items-center space-x-4">
-                          <span className="text-black font-semibold text-lg">
-                            {player.power_play_bowl_fpts
-                              ? player.power_play_bowl_fpts.toFixed(2)
-                              : "0.00"}
-                          </span>
-
-                          {/* Favorite Star Icon */}
-                          <div className="cursor-pointer">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -1575,60 +1801,75 @@ function MatchInsights() {
                     </span>
                   </div>
 
-                  <div className="bg-white p-4 rounded-lg shadow-md w-full space-y-4">
+                  <div className="bg-white p-4 rounded-lg w-full space-y-4">
                     <div className="flex justify-end text-gray-500 text-sm font-semibold">
                       Avg. FPTS
                     </div>
 
                     {deathOverBowl.map((player) => (
-                      <div
-                        key={player.player_id}
-                        className="flex items-center justify-between border-b pb-3 last:border-b-0"
+                      <Link
+                        key={player.player_uid}
+                        to={`/player/${
+                          player.player_uid
+                        }/${player.full_name.replace(/\s+/g, "_")}/${
+                          matchInSights.season_game_uid
+                        }/form`}
+                        state={{
+                          playerInfo: player,
+                          matchID: matchInSights.season_game_uid,
+                          matchInSights: matchInSights,
+                        }}
+                        className="block"
                       >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
-                            alt={player.full_name}
-                            className="w-10 h-10 rounded-full bg-gray-200"
-                          />
-                          <div>
-                            <div className="text-black font-bold text-sm">
-                              {player.full_name}
+                        <div
+                          key={player.player_id}
+                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                        >
+                          {/* Left: Player Info */}
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
                             </div>
-                            <div className="text-gray-500 text-xs">
-                              {player.batting_style} | {player.bowling_style}
+                          </div>
+
+                          {/* Right: Points & Star */}
+                          <div className="flex items-center space-x-4">
+                            <span className="text-black font-semibold text-lg">
+                              {player.power_play_bowl_fpts
+                                ? player.power_play_bowl_fpts.toFixed(2)
+                                : "0.00"}
+                            </span>
+
+                            {/* Favorite Star Icon */}
+                            <div className="cursor-pointer">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                                />
+                              </svg>
                             </div>
                           </div>
                         </div>
-
-                        {/* Right: Points & Star */}
-                        <div className="flex items-center space-x-4">
-                          <span className="text-black font-semibold text-lg">
-                            {player.power_play_bowl_fpts
-                              ? player.power_play_bowl_fpts.toFixed(2)
-                              : "0.00"}
-                          </span>
-
-                          {/* Favorite Star Icon */}
-                          <div className="cursor-pointer">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
