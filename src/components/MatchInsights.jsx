@@ -289,9 +289,12 @@ function MatchInsights() {
                         className="filled-view-progress h-12 rounded-l-full"
                         style={{
                           width: `${
-                            100 -
-                            item.data.fixture_info.win_probability
-                              .winning_percentage
+                            item?.data?.fixture_info?.win_probability
+                              ?.wining_percentage != null
+                              ? 100 -
+                                item.data.fixture_info.win_probability
+                                  .winning_percentage
+                              : 100 // Fallback value when the percentage is null or undefined
                           }%`,
                           backgroundColor: "rgb(111, 200, 248)",
                         }}
@@ -307,8 +310,8 @@ function MatchInsights() {
                         <div className="per-container flex items-baseline">
                           <span className="txt-percentage text-2xl font-bold text-gray-800">
                             {100 -
-                              item.data.fixture_info.win_probability
-                                .winning_percentage}
+                              (item?.data?.fixture_info?.win_probability
+                                ?.winning_percentage ?? 0)}
                           </span>
                           <span className="txt-percentage1 text-lg font-medium text-gray-800">
                             %
@@ -325,7 +328,10 @@ function MatchInsights() {
                       <div
                         className="filled-view-progress h-12 rounded-l-full"
                         style={{
-                          width: `${item.data.fixture_info.win_probability.winning_percentage}%`,
+                          width: `${
+                            item?.data?.fixture_info?.win_probability
+                              ?.winning_percentage ?? 0
+                          }%`,
                           backgroundColor: "rgb(250, 180, 165)",
                         }}
                       ></div>
@@ -339,10 +345,8 @@ function MatchInsights() {
                       <div className="perc-container ml-4 flex flex-col">
                         <div className="per-container flex items-baseline">
                           <span className="txt-percentage text-2xl font-bold text-gray-800">
-                            {
-                              item.data.fixture_info.win_probability
-                                .winning_percentage
-                            }
+                            {item?.data?.fixture_info?.win_probability
+                              ?.winning_percentage ?? "N/A"}
                           </span>
                           <span className="txt-percentage1 text-lg font-medium text-gray-800">
                             %
