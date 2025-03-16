@@ -64,7 +64,6 @@ function Byformat() {
       return <div>Loading...</div>;
     }
     
-    console.log(data);
 
     const { player_detail, stats_data } = data;
     const { format: formats } = stats_data;

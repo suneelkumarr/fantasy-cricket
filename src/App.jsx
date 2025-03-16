@@ -22,7 +22,7 @@ function App() {
         <Route path="/fixture-info/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<MatchDetails />} />
         <Route path="/insight-match/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<MatchInsights />} />
         <Route path="/player/:playerId/:fullName/:matchId/form" element={<PlayerDetails />} />
-        <Route path="/player/:playerId/:fullName/:matchId/competition" element={<ByCometition />} />
+        <Route path="/player/:playerId/:fullName/:matchId/competition" element={<PlayerDetails />} />
         <Route path="/player/:playerId/:fullName/:matchId/format" element={<PlayerDetails />} />
         <Route path="/player/:playerId/:fullName/:matchId/graph" element={<PlayerDetails />} /> 
         <Route path="/player/:playerId/:fullName/:matchId/news" element={<News />} />
