@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { TrendingUp, ArrowRight, Star } from "lucide-react";
 import FantasyBreakDown from "./FantasyBreakDown"; // Import your modal component
 import { Link } from "react-router-dom";
+import Getlocation from './Getlocation.jsx';
 
 function ThisVenue({ data, matchInSights, playerInfo }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  console.log(Getlocation())
   // Format label mapping
   const formatLabel = (format = "") => {
     const labels = { 1: "Test", 2: "ODI", 3: "T20", 4: "T10" };

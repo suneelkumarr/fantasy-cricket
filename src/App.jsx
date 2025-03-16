@@ -4,11 +4,7 @@ import Home from './components/Home.jsx'
 import MatchDetails from './components/MatchDetails.jsx'
 import MatchInsights from './components/MatchInsights.jsx'
 import PlayerDetails from './components/PlayerDetails.jsx'
-import ByCometition from './components/ByCometition.jsx'
-import Byformat from './components/Byformat.jsx'
-import Graph from './components/Graph.jsx'
-import News from './components/News.jsx'
-import PowerRanking from './components/PowerRanking.jsx'
+import Squad from './components/Squad.jsx'
 // import FantasyBreakDown from './components/FantasyBreakDown.jsx'
 // <Route path="/player/:playerId/:fullName/:matchId/form" element={<FantasyBreakDown />} />
 
@@ -25,8 +21,9 @@ function App() {
         <Route path="/player/:playerId/:fullName/:matchId/competition" element={<PlayerDetails />} />
         <Route path="/player/:playerId/:fullName/:matchId/format" element={<PlayerDetails />} />
         <Route path="/player/:playerId/:fullName/:matchId/graph" element={<PlayerDetails />} /> 
-        <Route path="/player/:playerId/:fullName/:matchId/news" element={<News />} />
+        <Route path="/player/:playerId/:fullName/:matchId/news" element={<PlayerDetails />} />
         <Route path="/player/:playerId/:fullName/:matchId/powerranking" element={<PlayerDetails />} />
+        <Route path="/squad/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<Squad />} />
       </Routes>
     </Router>
   )

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
+import Getlocation from './Getlocation.jsx';
 
 // Constants
 const FORMAT_LABELS = {
@@ -30,6 +31,7 @@ function FantasyBreakDown({ selectedPlayer }) {
   const playerInfo = location.state?.playerInfo;
   const statsPlayerId = selectedPlayer?.player_id;
   const statsSeasonId = selectedPlayer?.season_id;
+  console.log(Getlocation())
 
   // Memoized request body
   const requestBody = useMemo(

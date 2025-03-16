@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
+import Getlocation from './Getlocation.jsx';
 
 function MatchInsights() {
   const [data, setData] = useState(null);
@@ -10,6 +11,7 @@ function MatchInsights() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const matchInSights = location.state?.matchInSights;
+  console.log(Getlocation())
 
   const getCountdownTime = (scheduledDate) => {
     const now = new Date();

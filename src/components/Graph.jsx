@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import Getlocation from './Getlocation.jsx';
 
 // A small helper for date formatting – so it’s consistent throughout.
 function formatDate(dateObj) {
@@ -294,6 +295,8 @@ function Graph() {
       domain: ["dataMin - 1", "dataMax + 1"],
     },
   ];
+
+  console.log(Getlocation())
 
   return (
     <>

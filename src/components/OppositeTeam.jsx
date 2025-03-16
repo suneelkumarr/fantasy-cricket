@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { TrendingUp, ArrowRight, Star } from "lucide-react";
 import FantasyBreakDown from "./FantasyBreakDown"; // Import your modal component
 import { Link } from "react-router-dom";
+import Getlocation from './Getlocation.jsx';
 
 function OppositeTeam({ data, matchInSights, playerInfo }) {
   const [enabled, setEnabled] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
+  console.log(Getlocation())
 
   const toggleSwitch = () => {
     setEnabled(!enabled);

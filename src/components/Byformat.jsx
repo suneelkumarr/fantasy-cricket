@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
+import Getlocation from './Getlocation.jsx';
 
 function Byformat() {
     const location = useLocation();
@@ -13,6 +14,7 @@ function Byformat() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
     const [activeFormat, setActiveFormat] = useState(null);
+    console.log(Getlocation())
 
   // Helper function to toggle accordion
   const handleToggle = (formatId) => {

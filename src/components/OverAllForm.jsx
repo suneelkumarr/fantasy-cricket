@@ -2,10 +2,10 @@ import React, { useState } from "react";
 import { TrendingUp, ArrowRight, Star } from "lucide-react";
 import FantasyBreakDown from "./FantasyBreakDown"; // Import your modal component
 import { Link } from "react-router-dom";
-
+import Getlocation from './Getlocation.jsx';
 function OverAllForm({ data, matchInSights, playerInfo }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-
+  console.log(Getlocation())
   // Define the tab labels based on format
   const formatLabel = (format) => {
     switch (format) {

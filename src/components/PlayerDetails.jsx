@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef  } from "react";
 import { useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import { FaStar, FaLock, FaTimes } from "react-icons/fa";
@@ -12,6 +12,9 @@ import Graph from "./Graph";
 import Byformat from "./Byformat";
 import ByCometition from "./ByCometition";
 import News from "./News";
+import Getlocation from './Getlocation.jsx';
+
+
 
 function PlayerDetails() {
   const [data, setData] = useState(null);
@@ -123,6 +126,10 @@ function PlayerDetails() {
     BOW: "Bowler",
     AR: "All Rounder",
   };
+
+
+
+    console.log(Getlocation())
 
 
   // -------------------------------- Render UI --------------------------------

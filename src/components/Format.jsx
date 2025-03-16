@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { TrendingUp, ArrowRight, Star } from "lucide-react";
 import FantasyBreakDown from "./FantasyBreakDown"; // Import your modal component
 import { Link } from "react-router-dom";
+import Getlocation from './Getlocation.jsx';
 
 function Format({ data, matchInSights, playerInfo, formatState }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -51,6 +52,8 @@ function Format({ data, matchInSights, playerInfo, formatState }) {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
+
+  console.log(Getlocation())
 
   return (
     <div>

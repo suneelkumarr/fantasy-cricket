@@ -10,6 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import Getlocation from './Getlocation.jsx';
 
 // Reusable chart component:
 function MetricChart({
@@ -78,7 +79,7 @@ function MetricChart({
 
 function PowerRanking() {
   const location = useLocation();
-
+  console.log(Getlocation())
   // Store details in state to preserve them on reload
   const [playerDetails] = useState(location.state?.playerInfo || null);
   const [matchDetails] = useState(location.state?.matchID || null);
