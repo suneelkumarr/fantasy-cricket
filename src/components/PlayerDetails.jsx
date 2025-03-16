@@ -2,10 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import { FaStar, FaLock, FaTimes } from "react-icons/fa";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Format from "./Format";
 import OppositeTeam from "./OppositeTeam";
 import ThisVenue from "./ThisVenue";
 import OverAllForm from "./OverAllForm";
+import PowerRanking from "./PowerRanking";
+import Graph from "./Graph";
+import Byformat from "./Byformat";
+import ByCometition from "./ByCometition";
+import News from "./News";
 
 function PlayerDetails() {
   const [data, setData] = useState(null);
@@ -19,41 +25,48 @@ function PlayerDetails() {
   const matchID = location.state?.matchID;
   const matchInSights = location.state?.matchInSights;
 
-  // Define the tab labels based on format
-  const formatLabel = (format) => {
-    switch (format) {
-      case "1":
-        return "Test";
-      case "2":
-        return "ODI";
-      case "3":
-        return "T20";
-      case "4":
-        return "T10";
-      default:
-        return format || "N/A";
-    }
-  };
+    // Helper to label format
+    const formatLabels = {
+      "1": "Test",
+      "2": "ODI",
+      "3": "T20",
+      "4": "T10",
+    };
+    const formatLabel = (format) =>
+      formatLabels[format] || format || "N/A";
 
-  // Construct your top-level tabs
+    // Predefine the label for the second tab so it’s consistent
+  const vsAwayTeamLabel = `VS ${matchInSights?.away_abbr ?? "???"}`;
+
+  // Construct your top-level (sub) tabs for “FORM”
   const tabs = [
     formatLabel(matchInSights?.format),
-    `VS ${matchInSights?.away_abbr ?? "???"}`,
+    vsAwayTeamLabel,
     "THIS VENUE",
     "OVERALL FORM",
   ];
 
-  // Active sub-nav tab
-  const [activeTab, setActiveTab] = useState(tabs[0]); // default: first
+  // Main navigation data
+  const mainNavItems = [
+    { label: "FORM", path: "form" },
+    { label: "POWER RANKING", path: "powerranking" },
+    { label: "GRAPH", path: "graph" },
+    { label: "BY FORMAT", path: "format" },
+    { label: "BY COMPETITION", path: "competition" },
+    { label: "NEWS", path: "news" },
+  ];
 
-  // For highlighting top nav links
-  const pathname = location.pathname;
-  const isActive = (routePath) => pathname.includes(routePath);
+  const [activeNav, setActiveNav] = useState(mainNavItems[0].path);
+  const [activeTab, setActiveTab] = useState(tabs[0]); // default sub-tab
+
+
+
 
   // Fetch the data
   useEffect(() => {
-    if (!matchID) {
-      console.warn("season_game_uid (matchID) is undefined or null");
+    // We need matchID and player UID to fetch data
+    if (!matchID || !playerInfo?.player_uid) {
+      console.warn("Either matchID or player UID is missing");
       return;
     }
 
@@ -64,11 +77,11 @@ function PlayerDetails() {
           "https://plapi.perfectlineup.in/fantasy/stats/get_perfectlineup_playercard",
           {
             season_game_uid: matchID,
-            sports_id: null, // or 7 if you have it set
+            sports_id: null, // or 7 if you have it
             fav_detail: 1,
             player_uid: playerInfo?.player_uid,
             power_rank_detail: 1,
-            tab_info: "form",
+            tab_info: activeNav,
             website_id: 1,
             year: null,
           },
@@ -82,10 +95,7 @@ function PlayerDetails() {
         );
 
         console.log("API Response:", response.data);
-
-        // If the API structure is:
-        // { data: {...someObject} }
-        // then store it in state as an object:
+        // API structure: { data: { ... } }
         setData(response.data.data);
       } catch (err) {
         console.error("API Error:", err);
@@ -98,10 +108,24 @@ function PlayerDetails() {
     fetchData();
   }, [matchID, playerInfo?.player_uid]);
 
-  const formatState = data?.stats_data?.form?.format_stats;
+  // Easier destructuring from data
+  const {
+    player_detail = {},
+    player_power_rank = {},
+    stats_data = {},
+  } = data || {};
+  const { graph = {}, form = {} } = stats_data;
+  const { format_stats, opposition_stats, venue_stats, recent_stats } = graph;
+
+  // Mapping for positions
+  const positionMap = {
+    BAT: "Batsman",
+    BOW: "Bowler",
+    AR: "All Rounder",
+  };
+
 
   // -------------------------------- Render UI --------------------------------
-
   return (
     <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-center justify-start">
       {/* Navigation Bar */}
@@ -133,6 +157,7 @@ function PlayerDetails() {
         </h1>
       </div>
 
+      {/* Loading & Error States */}
       {loading && (
         <div className="text-center text-gray-600 my-4">Loading...</div>
       )}
@@ -140,52 +165,42 @@ function PlayerDetails() {
         <div className="text-red-500 text-center my-4">Error: {error}</div>
       )}
 
+      {/* Main content if we have data */}
       {data && (
-        // Main card wrapper
         <div className="w-full max-w-4xl mx-auto bg-gray-100 shadow-lg rounded-lg p-4 my-4">
           {/* Player Header */}
           <div className="flex justify-between items-start">
             {/* Player Details */}
             <div className="flex flex-col space-y-1">
               <h2 className="text-2xl font-bold text-gray-900 flex items-center">
-                {data?.player_detail?.full_name}{" "}
-                {/* example: rank lightning icon + rank number */}
+                {player_detail.full_name}
                 <span className="text-orange-500 ml-1">⚡</span>
-                <span className="ml-1">
-                  {data?.player_power_rank?.power_rank}
-                </span>
+                <span className="ml-1">{player_power_rank.power_rank}</span>
               </h2>
 
               <div className="flex items-center space-x-2 text-sm text-gray-600">
-                {/* Flag */}
-                {data?.player_detail?.flag && (
+                {player_detail.flag && (
                   <img
-                    src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${data.player_detail.flag}`}
+                    src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${player_detail.flag}`}
                     alt="Player's Flag"
                     className="w-5 h-5 rounded-full"
                   />
                 )}
-                <span>{data?.player_detail?.team_name}</span>
+                <span>{player_detail.team_name}</span>
                 <span>|</span>
                 <span>
-                  {data?.player_detail?.position === "BAT"
-                    ? "Batsman"
-                    : data?.player_detail?.position === "BOW"
-                    ? "Bowler"
-                    : data?.player_detail?.position === "AR"
-                    ? "All Rounder"
-                    : "Batsman"}
+                  {positionMap[player_detail.position] || "Batsman"}
                 </span>
                 <span>|</span>
                 <span>
-                  {data?.player_detail?.batting_style === "Right Hand Bat"
+                  {player_detail.batting_style === "Right Hand Bat"
                     ? "RH Bat"
-                    : data?.player_detail?.batting_style === "Left Hand Bat"
+                    : player_detail.batting_style === "Left Hand Bat"
                     ? "LH Bat"
-                    : "Right Hand Bat"}
+                    : "RH Bat"}
                 </span>
                 <span>|</span>
-                <span>{data?.player_detail?.bowling_style}</span>
+                <span>{player_detail.bowling_style}</span>
               </div>
 
               {/* Last Match Info */}
@@ -197,13 +212,13 @@ function PlayerDetails() {
                   <span className="bg-gray-200 px-3 py-1 rounded font-medium text-gray-900">
                     Batting order{" "}
                     <span className="font-bold">
-                      {data?.player_detail?.batting_order}
+                      {player_detail.batting_order}
                     </span>
                   </span>
                   <span className="bg-gray-200 px-3 py-1 rounded font-medium text-gray-900">
                     Bowling order{" "}
                     <span className="font-bold">
-                      {data?.player_detail?.bowling_order}
+                      {player_detail.bowling_order}
                     </span>
                   </span>
                 </div>
@@ -227,176 +242,115 @@ function PlayerDetails() {
             </div>
 
             {/* Player Image (jersey) */}
-            {data?.player_detail?.jersey && (
+            {player_detail.jersey && (
               <img
-                src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${data.player_detail.jersey}`}
+                src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player_detail.jersey}`}
                 alt="Player's Jersey"
                 className="w-20 h-20 object-cover"
               />
             )}
           </div>
 
-          {/* Main navigation (FORM / POWER RANKING / GRAPH / BY FORMAT / COMPETITION / NEWS) */}
+          {/* Main navigation */}
           <div className="mt-6 border-b">
             <nav className="flex space-x-6 text-gray-600">
-              <Link
-                to={`/player/${
-                  playerInfo?.player_uid
-                }/${playerInfo?.full_name?.replace(/\s+/g, "_")}/${
-                  matchInSights?.season_game_uid
-                }/form`}
-                state={{ playerInfo, matchID, matchInSights }}
-                className={`py-2 ${
-                  isActive("/form")
-                    ? "border-b-2 border-blue-500 text-gray-900 font-semibold"
-                    : "hover:text-gray-900"
-                }`}
-              >
-                FORM
-              </Link>
-
-              <Link
-                to={`/player/${
-                  playerInfo?.player_uid
-                }/${playerInfo?.full_name?.replace(/\s+/g, "_")}/${
-                  matchInSights?.season_game_uid
-                }/powerranking`}
-                state={{ playerInfo, matchID, matchInSights }}
-                className={`py-2 ${
-                  isActive("/powerranking")
-                    ? "border-b-2 border-blue-500 text-gray-900 font-semibold"
-                    : "hover:text-gray-900"
-                }`}
-              >
-                POWER RANKING
-              </Link>
-
-              <Link
-                to={`/player/${
-                  playerInfo?.player_uid
-                }/${playerInfo?.full_name?.replace(/\s+/g, "_")}/${
-                  matchInSights?.season_game_uid
-                }/graph`}
-                state={{ playerInfo, matchID, matchInSights }}
-                className={`py-2 ${
-                  isActive("/graph")
-                    ? "border-b-2 border-blue-500 text-gray-900 font-semibold"
-                    : "hover:text-gray-900"
-                }`}
-              >
-                GRAPH
-              </Link>
-
-              <Link
-                to={`/player/${
-                  playerInfo?.player_uid
-                }/${playerInfo?.full_name?.replace(/\s+/g, "_")}/${
-                  matchInSights?.season_game_uid
-                }/format`}
-                state={{ playerInfo, matchID, matchInSights }}
-                className={`py-2 ${
-                  isActive("/format")
-                    ? "border-b-2 border-blue-500 text-gray-900 font-semibold"
-                    : "hover:text-gray-900"
-                }`}
-              >
-                BY FORMAT
-              </Link>
-
-              <Link
-                to={`/player/${
-                  playerInfo?.player_uid
-                }/${playerInfo?.full_name?.replace(/\s+/g, "_")}/${
-                  matchInSights?.season_game_uid
-                }/competition`}
-                state={{ playerInfo, matchID, matchInSights }}
-                className={`py-2 ${
-                  isActive("/competition")
-                    ? "border-b-2 border-blue-500 text-gray-900 font-semibold"
-                    : "hover:text-gray-900"
-                }`}
-              >
-                BY COMPETITION
-              </Link>
-
-              <Link
-                to={`/player/${
-                  playerInfo?.player_uid
-                }/${playerInfo?.full_name?.replace(/\s+/g, "_")}/${
-                  matchInSights?.season_game_uid
-                }/news`}
-                state={{ playerInfo, matchID, matchInSights }}
-                className={`py-2 ${
-                  isActive("/news")
-                    ? "border-b-2 border-blue-500 text-gray-900 font-semibold"
-                    : "hover:text-gray-900"
-                }`}
-              >
-                NEWS
-              </Link>
-            </nav>
-          </div>
-
-          {/* Sub navigation (based on 'tabs' array) */}
-          <div className="mt-6 border-b">
-            <nav className="flex space-x-6 text-gray-600">
-              {tabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
+              {mainNavItems.map(({ label, path }) => (
+                <Link
+                  key={path}
+                  to={`/player/${
+                    playerInfo?.player_uid
+                  }/${playerInfo?.full_name?.replace(/\s+/g, "_")}/${
+                    matchInSights?.season_game_uid
+                  }/${path}`}
+                  state={{ playerInfo, matchID, matchInSights }}
+                  onClick={() => setActiveNav(path)}
                   className={`py-2 px-6 text-sm font-medium ${
-                    activeTab === tab
+                    activeNav === path
                       ? "border-b-2 border-blue-500 text-gray-900 font-semibold"
                       : "hover:text-gray-900"
                   }`}
                 >
-                  {tab}
-                </button>
+                  {label}
+                </Link>
               ))}
             </nav>
           </div>
 
-          {/* Dynamic Content Based on Active Tab */}
+          {/* Main Content based on activeNav */}
           <div className="p-4">
-            {/* EXAMPLE: If tab = T20 */}
-            {activeTab === tabs[0] && data?.stats_data?.graph?.format_stats && (
-              <Format
-                data={data}
-                matchInSights={matchInSights}
-                playerInfo={playerInfo}
-                formatState={formatState}
-              />
+            {activeNav === "form" && (
+              <>
+                {/* Sub navigation (FORM tabs) */}
+                <div className="mt-6 border-b justify-center">
+                  <nav className="flex space-x-6 text-gray-600">
+                    {tabs.map((tab) => (
+                      <button
+                        key={tab}
+                        onClick={() => setActiveTab(tab)}
+                        className={`py-2 px-6 text-sm font-medium ${
+                          activeTab === tab
+                            ? "border-b-2 border-blue-500 text-gray-900 font-semibold"
+                            : "hover:text-gray-900"
+                        }`}
+                      >
+                        {tab}
+                      </button>
+                    ))}
+                  </nav>
+                </div>
+
+                {/* Dynamic Content Based on Active Tab */}
+                <div className="p-4">
+                  {activeTab === tabs[0] && format_stats && (
+                    <Format
+                      data={data}
+                      matchInSights={matchInSights}
+                      playerInfo={playerInfo}
+                      formatState={form?.format_stats}
+                    />
+                  )}
+
+                  {activeTab === vsAwayTeamLabel && opposition_stats && (
+                    <OppositeTeam
+                      data={data}
+                      matchInSights={matchInSights}
+                      playerInfo={playerInfo}
+                      formatState={form?.format_stats}
+                    />
+                  )}
+
+                  {activeTab === "THIS VENUE" && venue_stats && (
+                    <ThisVenue
+                      data={data}
+                      matchInSights={matchInSights}
+                      playerInfo={playerInfo}
+                      formatState={form?.format_stats}
+                    />
+                  )}
+
+                  {activeTab === "OVERALL FORM" && recent_stats && (
+                    <OverAllForm
+                      data={data}
+                      matchInSights={matchInSights}
+                      playerInfo={playerInfo}
+                      formatState={form?.format_stats}
+                    />
+                  )}
+                </div>
+              </>
             )}
 
-            {activeTab === `VS ${matchInSights?.away_abbr}` &&
-              data?.stats_data?.graph?.opposition_stats && (
-                <OppositeTeam
-                  data={data}
-                  matchInSights={matchInSights}
-                  playerInfo={playerInfo}
-                  formatState={formatState}
-                />
-              )}
+            {activeNav === "powerranking" && (
+             <PowerRanking />
+            )}
 
-            {activeTab === "THIS VENUE" &&
-              data?.stats_data?.graph?.venue_stats && (
-                <ThisVenue
-                  data={data}
-                  matchInSights={matchInSights}
-                  playerInfo={playerInfo}
-                  formatState={formatState}
-                />
-              )}
+            {activeNav === "graph" && <Graph />}
 
-            {activeTab === "OVERALL FORM" &&
-              data?.stats_data?.graph?.recent_stats && (
-                <OverAllForm
-                  data={data}
-                  matchInSights={matchInSights}
-                  playerInfo={playerInfo}
-                  formatState={formatState}
-                />
-              )}
+            {activeNav === "format" && <Byformat />}
+
+            {activeNav === "competition" && <ByCometition />}
+
+            {activeNav === "news" && <News />}
           </div>
         </div>
       )}
