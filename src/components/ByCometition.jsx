@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-import Getlocation from './Getlocation.jsx';
 
 // Helper: format date as "Mar 7’" from "YYYY-MM-DD HH:mm:ss"
 function formatLeagueDate(dateString) {
@@ -116,7 +115,6 @@ export default function ByCompetition() {
   };
 
   const years = getYearOptions();
-  console.log(Getlocation())
 
   return (
     <div className="bg-gray-50 min-h-screen p-4">

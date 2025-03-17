@@ -5,6 +5,8 @@ import MatchDetails from './components/MatchDetails.jsx'
 import MatchInsights from './components/MatchInsights.jsx'
 import PlayerDetails from './components/PlayerDetails.jsx'
 import Squad from './components/Squad.jsx'
+import StatsPlayground from './components/StatsPlayground.jsx'
+import MatchReport from './components/MatchReport.jsx'
 // import FantasyBreakDown from './components/FantasyBreakDown.jsx'
 // <Route path="/player/:playerId/:fullName/:matchId/form" element={<FantasyBreakDown />} />
 
@@ -24,6 +26,8 @@ function App() {
         <Route path="/player/:playerId/:fullName/:matchId/news" element={<PlayerDetails />} />
         <Route path="/player/:playerId/:fullName/:matchId/powerranking" element={<PlayerDetails />} />
         <Route path="/squad/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<Squad />} />
+        <Route path="/stats-playground/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<StatsPlayground />} />
+        <Route path="/match-report/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<MatchReport />} />
       </Routes>
     </Router>
   )

@@ -305,11 +305,11 @@ function Format({ data, matchInSights, playerInfo, formatState }) {
                   {/* Versus Column */}
                   <td className="py-3 px-4">
                     <Link
-                      to={`/player/${
-                        playerInfo?.player_uid
-                      }/${playerInfo?.full_name.replace(/\s+/g, "_")}/${
-                        matchInSights?.season_game_uid
-                      }/form`}
+                    to={`/player/${
+                      playerInfo?.player_uid
+                    }/${(playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name).replace(/\s+/g, "_")}/${
+                      matchInSights?.season_game_uid
+                    }/form`}
                       state={{
                         stats_player_id: match.player_id,
                         stats_season_id: match.stats_season_id,

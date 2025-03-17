@@ -104,7 +104,6 @@ function Home() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [timerTrigger, setTimerTrigger] = useState(0); // State to trigger countdown updates
-  console.log(Getlocation())
 
 
   // Function to get the current timestamp in IST

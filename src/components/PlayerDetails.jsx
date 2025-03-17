@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef  } from "react";
+import React, { useState, useEffect  } from "react";
 import { useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import { FaStar, FaLock, FaTimes } from "react-icons/fa";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Format from "./Format";
 import OppositeTeam from "./OppositeTeam";
 import ThisVenue from "./ThisVenue";
@@ -39,7 +38,8 @@ function PlayerDetails() {
       formatLabels[format] || format || "N/A";
 
     // Predefine the label for the second tab so it’s consistent
-  const vsAwayTeamLabel = `VS ${matchInSights?.away_abbr ?? "???"}`;
+    const vsAwayTeamLabel = `VS ${matchInSights?.away_abbr || matchInSights?.away || "???"}`;
+
 
   // Construct your top-level (sub) tabs for “FORM”
   const tabs = [
@@ -266,7 +266,7 @@ function PlayerDetails() {
                   key={path}
                   to={`/player/${
                     playerInfo?.player_uid
-                  }/${playerInfo?.full_name?.replace(/\s+/g, "_")}/${
+                  }/${(playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name).replace(/\s+/g, "_")}/${
                     matchInSights?.season_game_uid
                   }/${path}`}
                   state={{ playerInfo, matchID, matchInSights }}

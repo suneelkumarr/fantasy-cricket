@@ -358,7 +358,7 @@ function OppositeTeam({ data, matchInSights, playerInfo }) {
                           <Link
                             to={`/player/${
                               playerInfo?.player_uid
-                            }/${playerInfo?.full_name.replace(/\s+/g, "_")}/${
+                            }/${(playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name).replace(/\s+/g, "_")}/${
                               matchInSights?.season_game_uid
                             }/form`}
                             state={{
@@ -707,7 +707,7 @@ function OppositeTeam({ data, matchInSights, playerInfo }) {
                           <Link
                             to={`/player/${
                               playerInfo?.player_uid
-                            }/${playerInfo?.full_name.replace(/\s+/g, "_")}/${
+                            }/${(playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name).replace(/\s+/g, "_")}/${
                               matchInSights?.season_game_uid
                             }/form`}
                             state={{

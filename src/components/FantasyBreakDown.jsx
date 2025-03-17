@@ -88,7 +88,7 @@ function FantasyBreakDown({ selectedPlayer }) {
       <div className="p-4">
         {/* Header */}
         <h1 className="text-3xl font-bold text-gray-800">
-          {playerInfo?.full_name || "Player Name"}
+          { playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name || "Player Name"}
         </h1>
 
         <p className="text-gray-600">

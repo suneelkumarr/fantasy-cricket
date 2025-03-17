@@ -14,9 +14,13 @@ function PlayersListing({ teamsData, fixture_info }) {
   const [battingFilter, setBattingFilter] = useState("All");
   const [bowlingFilter, setBowlingFilter] = useState("All");
 
+  const keys = Object.keys(teamsData);
+
   // Safely retrieve arrays for each team from the teamsData prop
-  const banPlayers = teamsData["BAN-L"] || [];
-  const gatPlayers = teamsData["GAT"] || [];
+  const banPlayers = teamsData[keys[0]] || [];
+  const gatPlayers = teamsData[keys[1]] || [];
+
+  console.log(teamsData)
 
   /**
    * Filter a given list of players based on the user's dropdown selections.
