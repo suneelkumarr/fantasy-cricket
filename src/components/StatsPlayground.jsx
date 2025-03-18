@@ -9,6 +9,7 @@ function StatsPlayground() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const matchInSights = location.state?.matchInSights;
+  console.log(matchInSights)
 
   useEffect(() => {
     if (!matchInSights?.season_game_uid) {

@@ -187,6 +187,8 @@ const FantasyFilters = ({ data, matchInSights }) => {
     }
   };
 
+  console.log("+++++++++++++++filteredPlayers", filteredPlayers)
+
   function formatDate(inputDate) {
     const date = new Date(inputDate);
 
@@ -347,7 +349,7 @@ const FantasyFilters = ({ data, matchInSights }) => {
                                     <Link
                                       key={idx}
                                       to={`/match-report/Cricket/${match.season_game_uid}/${match.home}_vs_${match.away}/${match.league_id}/scorecard`}
-                                      state={{ matchInSights: matchInSights }}
+                                      state={{ matchInSights: matchInSights, matchSessionIDs: match.season_game_uid, matchleageIDs: match.league_id }}
                                       className="block"
                                     >
 
@@ -357,7 +359,7 @@ const FantasyFilters = ({ data, matchInSights }) => {
                         >
                           {/* Match Details */}
                           <div className="flex items-center space-x-2">
-                            <span>VS {match.away}</span>
+                            <span>VS {match.home === player.team_abbr ? match.away : match.home}</span>
                             <span className="text-xs text-gray-500">
                               ({formatDate(match.season_scheduled_date)})
                             </span>

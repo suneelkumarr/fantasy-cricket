@@ -27,7 +27,7 @@ function App() {
         <Route path="/player/:playerId/:fullName/:matchId/powerranking" element={<PlayerDetails />} />
         <Route path="/squad/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<Squad />} />
         <Route path="/stats-playground/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<StatsPlayground />} />
-        <Route path="/match-report/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<MatchReport />} />
+        <Route path="/match-report/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId/scorecard" element={<MatchReport />} />
       </Routes>
     </Router>
   )
