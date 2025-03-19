@@ -1242,49 +1242,50 @@ function MatchReport() {
   const matchSessionIDs = location.state?.matchSessionIDs
   const matchleageIDs = location.state?.matchleageIDs
 
-  useEffect(() => {
-    // Make sure both values exist before calling the API
-    if (!matchInSights?.season_game_uid || !matchInSights?.league_id) {
-      console.warn(
-        "Either season_game_uid or league_id is undefined or null"
-      );
-      return;
-    }
+ useEffect(() => {
+  // Check if at least one of season_game_uid or es_season_game_uid exists, and league_id is required
+  const hasSeasonGameUid = matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
 
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.post(
-          "https://plapi.perfectlineup.in/fantasy/completed_match/get_fixture_scorecard",
-          {
-            season_game_uid: matchSessionIDs,
-            league_id: matchleageIDs,
-            sports_id: "7", // Assuming sports_id is always 7
+  if (!hasSeasonGameUid || !matchInSights?.league_id) {
+    console.warn(
+      "Neither season_game_uid nor es_season_game_uid is defined, or league_id is undefined or null"
+    );
+    return;
+  }
+
+  // Use the available season_game_uid (primary or fallback)
+  const gameUid = matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post(
+        "https://plapi.perfectlineup.in/fantasy/completed_match/get_fixture_scorecard",
+        {
+          season_game_uid: gameUid, // Use the resolved value
+          league_id: matchInSights?.league_id, // Required field
+          sports_id: "7",
+        },
+        {
+          headers: {
+            sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+            moduleaccess: "7",
+            "Content-Type": "application/json",
           },
-          {
-            headers: {
-              sessionkey: "3cd0fb996816c37121c765f292dd3f78",
-              moduleaccess: "7",
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        }
+      );
+      console.log("API Response:", response.data);
+      setData(response.data.data);
+    } catch (error) {
+      console.error("API Error:", error);
+      setError(error.message || "An error occurred while fetching data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        console.log("API Response:", response.data);
-        setData(response.data.data);
-      } catch (error) {
-        console.error("API Error:", error);
-        setError(
-          error.message || "An error occurred while fetching data."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-    // Include all hook dependencies
-  }, [matchInSights?.season_game_uid, matchInSights?.league_id]);
+  fetchData();
+}, [matchInSights?.season_game_uid, matchInSights?.es_season_game_uid, matchInSights?.league_id]);
 
   // Countdown function (if you need it)
   const getCountdownTime = (scheduledDate) => {
@@ -1323,8 +1324,6 @@ function MatchReport() {
     return null;
   }
 
-  console.log("++++++++++++++++++data", data);
-  console.log("++++++++++++++++++matchInSights", matchInSights);
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-start justify-start">
@@ -1332,8 +1331,8 @@ function MatchReport() {
       <div className="relative flex items-center p-4 border-b w-full max-w-screen-lg mx-auto mt-4">
       {/* Back Button, absolutely positioned on the left */}
       <Link
-        key={matchInSights.season_game_uid}
-        to={`/stats-playground/Cricket/${matchInSights.season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
+        key={matchInSights?.season_game_uid ? matchInSights?.season_game_uid : matchInSights?.es_season_game_uid}
+        to={`/stats-playground/Cricket/${matchInSights?.season_game_uid ? matchInSights?.season_game_uid : matchInSights?.es_season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
         state={{ matchInSights: matchInSights }}
         className="absolute left-4 flex items-center p-2 rounded-lg shadow-md bg-white hover:bg-gray-100"
       >

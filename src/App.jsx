@@ -7,6 +7,8 @@ import PlayerDetails from './components/PlayerDetails.jsx'
 import Squad from './components/Squad.jsx'
 import StatsPlayground from './components/StatsPlayground.jsx'
 import MatchReport from './components/MatchReport.jsx'
+import PlayerPerformance from './components/PlayerPerformance.jsx'
+import VenuePerformance from './components/VenuePerformance.jsx'
 // import FantasyBreakDown from './components/FantasyBreakDown.jsx'
 // <Route path="/player/:playerId/:fullName/:matchId/form" element={<FantasyBreakDown />} />
 
@@ -28,6 +30,8 @@ function App() {
         <Route path="/squad/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<Squad />} />
         <Route path="/stats-playground/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<StatsPlayground />} />
         <Route path="/match-report/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId/scorecard" element={<MatchReport />} />
+        <Route path="/players-performace/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<PlayerPerformance />} />
+        <Route path="/venue/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<VenuePerformance />} />
       </Routes>
     </Router>
   )

@@ -275,10 +275,10 @@ const FantasyFilters = ({ data, matchInSights }) => {
                     {/* Player Info */}
                     <Link
                       key={player.player_uid}
-                      to={`/player/${
-                        player.player_uid
-                      }/${player.display_name.replace(/\s+/g, "_")}/${
-                        data.match_details.season_game_uid
+                        to={`/player/${
+                        player?.player_uid || "unknown"
+                      }/${(player?.display_name ? player.display_name.replace(/\s+/g, "_") : player?.full_name?.replace(/\s+/g, "_") || "unknown")}/${
+                        data?.match_details?.season_game_uid || "unknown"
                       }/form`}
                       state={{
                         playerInfo: player,

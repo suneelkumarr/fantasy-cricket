@@ -12,7 +12,8 @@ function StatsPlayground() {
   console.log(matchInSights)
 
   useEffect(() => {
-    if (!matchInSights?.season_game_uid) {
+    const hasSeasonGameUid = matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
+    if (!hasSeasonGameUid) {
       console.warn("season_game_uid is undefined or null");
       return;
     }
@@ -23,7 +24,7 @@ function StatsPlayground() {
         const response = await axios.post(
           "https://plapi.perfectlineup.in/fantasy/stats/stats_playground_master_data",
           {
-            season_game_uid: matchInSights.season_game_uid,
+            season_game_uid: matchInSights?.season_game_uid ? matchInSights?.season_game_uid : matchInSights?.es_season_game_uid,
             league_id: matchInSights.league_id,
             sports_id: "7", // Assuming sports_id is always 7
           },
@@ -46,7 +47,7 @@ function StatsPlayground() {
     };
 
     fetchData();
-  }, [matchInSights?.season_game_uid]);
+  }, [matchInSights?.season_game_uid , matchInSights?.es_season_game_uid]);
 
   const getCountdownTime = (scheduledDate) => {
     const now = new Date();
@@ -76,12 +77,15 @@ function StatsPlayground() {
     return null;
   }
 
+  
+  console.log("++++++++++++++++++++++", data)
+
   return (
     <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-start justify-start">
       <div className="flex items-center p-4 border-b w-full max-w-screen-lg mx-auto justify-between sm:justify-center mt-4">
         <Link
-          key={matchInSights.season_game_uid}
-          to={`/fixture-info/Cricket/${matchInSights.season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
+          key={matchInSights?.season_game_uid ? matchInSights?.season_game_uid : matchInSights?.es_season_game_uid}
+          to={`/fixture-info/Cricket/${matchInSights?.season_game_uid ? matchInSights?.season_game_uid : matchInSights?.es_season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
           state={{ fixtureDetails: matchInSights }}
           className="p-2 rounded-lg shadow-md bg-white hover:bg-gray-100 flex items-center"
         >

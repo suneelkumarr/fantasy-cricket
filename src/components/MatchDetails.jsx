@@ -111,7 +111,7 @@ function MatchDetails() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const fixtureDetails = location.state?.fixtureDetails;
-  console.log(Getlocation())
+  console.log("+++++++++++++++++fixtureDetails", fixtureDetails)
 
   // Function to get the current timestamp in IST
   const getCurrentTimestampInIST = () => {
@@ -122,14 +122,15 @@ function MatchDetails() {
   };
 
   useEffect(() => {
-    if (!fixtureDetails?.season_game_uid) return;
+    const hasSeasonGameUid = fixtureDetails?.season_game_uid || fixtureDetails?.es_season_game_uid;
+    if (!hasSeasonGameUid) return;
 
     const fetchData = async () => {
       setLoading(true);
       try {
         const timestamp = getCurrentTimestampInIST();
         const response = await axios.get(
-          `https://plineup-prod.blr1.digitaloceanspaces.com/appstatic/plprod_match_7_${fixtureDetails.season_game_uid}.json?${timestamp}`
+          `https://plineup-prod.blr1.digitaloceanspaces.com/appstatic/plprod_match_7_${fixtureDetails?.season_game_uid ? fixtureDetails?.season_game_uid : fixtureDetails?.es_season_game_uid}.json?${timestamp}`
         );
 
         console.log("API response: ", response.data);
@@ -143,7 +144,7 @@ function MatchDetails() {
     };
 
     fetchData();
-  }, [fixtureDetails?.season_game_uid]);
+  }, [fixtureDetails?.season_game_uid, fixtureDetails?.es_season_game_uid]);
 
   // Single getCountdownTime definition used throughout
   const getCountdownTime = (scheduledDate) => {
@@ -195,14 +196,23 @@ function MatchDetails() {
     },
   ];
 
+
+  console.log("+++++++++++++++++data", data)
+  console.log("+++++++++++++++++fixtureDetails", fixtureDetails)
+
   return (
     <div className="min-h-screen w-full flex flex-col bg-white">
       {/* Navigation Bar & Fixture Header */}
-      <FixtureHeader
-        fixtureDetails={fixtureDetails}
-        getCountdownTime={getCountdownTime}
-        data={data[0]}
-      />
+
+      {
+        data && (
+          <FixtureHeader
+          fixtureDetails={fixtureDetails}
+          getCountdownTime={getCountdownTime}
+          data={data[0]}
+        />
+        )
+      }
 
       {/* KEY MATCH INSIGHTS */}
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
