@@ -105,12 +105,457 @@ function FixtureHeader({ fixtureDetails, getCountdownTime, data }) {
   );
 }
 
+
+// Helper hook to update number of slides based on window width
+// Mapping for position abbreviations to full position names
+const POSITION_MAP = {
+  WK: "Wicket Keeper",
+  BAT: "Batsman",
+  AR: "All Rounder",
+  BOW: "Bowler",
+};
+
+/** TeamCard: Renders a single team's data */
+/** Renders a single team's data */
+function TeamCard({ team, teamIndex, totalTeams, glHeadings }) {
+  // Remaining salary if total is 100
+  const remainingSalary = 100 - team.salary_costs;
+
+  // Group players by position
+  const groupedPlayers = {};
+  team.players.forEach((player) => {
+    if (!groupedPlayers[player.position]) {
+      groupedPlayers[player.position] = [];
+    }
+    groupedPlayers[player.position].push(player);
+  });
+
+  // Order in which we display positions
+  const orderedPositions = ["WK", "BAT", "AR", "BOW"];
+
+  return (
+    <div className="relative bg-white bg-opacity-90 shadow p-4 rounded w-full max-w-md mx-auto text-center">
+      <div className="mb-2">
+        <h2 className="text-lg font-bold">
+          TEAM {teamIndex + 1} ({glHeadings[team.algo_applied]})
+        </h2>
+      </div>
+      <div className="mb-4">
+        <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded inline-block">
+          ₹{remainingSalary} Remaining
+        </span>
+      </div>
+
+      {/* Grouped players */}
+      {orderedPositions.map((pos) => {
+        const players = groupedPlayers[pos] || [];
+        if (players.length === 0) return null;
+
+        return (
+          <div key={pos} className="mb-3">
+            <div className="font-medium text-sm mb-1">
+              {POSITION_MAP[pos] || pos}
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {players.map((player) => (
+                <div
+                  key={player.player_id}
+                  className="flex flex-col items-center text-xs"
+                >
+                  <div className="relative">
+                    <img
+                      className="w-10 h-10 object-cover rounded-full"
+                      src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
+                      alt={player.display_name}
+                    />
+                    {/* C/VC labels */}
+                    {player.C === 1 && (
+                      <span className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-1 rounded">
+                        C
+                      </span>
+                    )}
+                    {player.C === 2 && (
+                      <span className="absolute top-0 right-0 bg-green-500 text-white text-[10px] px-1 rounded">
+                        VC
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-center">{player.display_name}</div>
+                  <div className="text-gray-500">₹{player.salary}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="mt-4 flex justify-center gap-4">
+        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
+          Save to my team
+        </button>
+        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
+          EXPORT TO
+        </button>
+      </div>
+      
+      <div className="mt-4 text-xs text-gray-500">
+        {teamIndex + 1} / {totalTeams}
+      </div>
+    </div>
+  );
+}
+
+function TeamCardSL({ team, teamIndex, totalTeams}) {
+  // Remaining salary if total is 100
+  const remainingSalary = 100 - team.salary_costs;
+
+  // Group players by position
+  const groupedPlayers = {};
+  team.players.forEach((player) => {
+    if (!groupedPlayers[player.position]) {
+      groupedPlayers[player.position] = [];
+    }
+    groupedPlayers[player.position].push(player);
+  });
+
+  // Order in which we display positions
+  const orderedPositions = ["WK", "BAT", "AR", "BOW"];
+
+  return (
+    <div className="relative bg-white bg-opacity-90 shadow p-4 rounded w-full max-w-md mx-auto text-center">
+      <div className="mb-2">
+      </div>
+      <div className="mb-4">
+        <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded inline-block">
+          ₹{remainingSalary} Remaining
+        </span>
+      </div>
+
+      {/* Grouped players */}
+      {orderedPositions.map((pos) => {
+        const players = groupedPlayers[pos] || [];
+        if (players.length === 0) return null;
+
+        return (
+          <div key={pos} className="mb-3">
+            <div className="font-medium text-sm mb-1">
+              {POSITION_MAP[pos] || pos}
+            </div>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {players.map((player) => (
+                <div
+                  key={player.player_id}
+                  className="flex flex-col items-center text-xs"
+                >
+                  <div className="relative">
+                    <img
+                      className="w-10 h-10 object-cover rounded-full"
+                      src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
+                      alt={player.display_name}
+                    />
+                    {/* C/VC labels */}
+                    {player.C === 1 && (
+                      <span className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-1 rounded">
+                        C
+                      </span>
+                    )}
+                    {player.C === 2 && (
+                      <span className="absolute top-0 right-0 bg-green-500 text-white text-[10px] px-1 rounded">
+                        VC
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-center">{player.display_name}</div>
+                  <div className="text-gray-500">₹{player.salary}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      <div className="mt-4 flex justify-center gap-4">
+        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
+          Save to my team
+        </button>
+        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
+          EXPORT TO
+        </button>
+      </div>
+      
+      <div className="mt-4 text-xs text-gray-500">
+        {teamIndex + 1} / {totalTeams}
+      </div>
+    </div>
+  );
+}
+
+
+/** Displays exactly ONE team at a time, with left/right arrows */
+function Carousel({ teams, glHeadings }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const totalTeams = teams.length;
+
+  const nextSlide = () => {
+    if (currentIndex < totalTeams - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const prevSlide = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  if (!teams || teams.length === 0) {
+    return <div className="text-center text-gray-500">No teams available</div>;
+  }
+
+  return (
+    <div className="relative flex items-center justify-center w-full mt-6">
+      {/* Single TeamCard */}
+      <TeamCard
+        team={teams[currentIndex]}
+        teamIndex={currentIndex}
+        totalTeams={totalTeams}
+        glHeadings={glHeadings}
+      />
+
+      {/* Left arrow */}
+      <button
+        onClick={prevSlide}
+        disabled={currentIndex === 0}
+        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded disabled:opacity-50"
+        aria-label="previous"
+      >
+        &lt;
+      </button>
+
+      {/* Right arrow */}
+      <button
+        onClick={nextSlide}
+        disabled={currentIndex === totalTeams - 1}
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded disabled:opacity-50"
+        aria-label="next"
+      >
+        &gt;
+      </button>
+    </div>
+  );
+}
+
+
+function CarouselSL({ teams }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const totalTeams = teams.length;
+
+  const nextSlide = () => {
+    if (currentIndex < totalTeams - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const prevSlide = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  if (!teams || teams.length === 0) {
+    return <div className="text-center text-gray-500">No teams available</div>;
+  }
+
+  return (
+    <div className="relative flex items-center justify-center w-full mt-6">
+      {/* Single TeamCard */}
+      <TeamCardSL
+        team={teams[currentIndex]}
+        teamIndex={currentIndex}
+        totalTeams={totalTeams}
+      />
+
+      {/* Left arrow */}
+      <button
+        onClick={prevSlide}
+        disabled={currentIndex === 0}
+        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded disabled:opacity-50"
+        aria-label="previous"
+      >
+        &lt;
+      </button>
+
+      {/* Right arrow */}
+      <button
+        onClick={nextSlide}
+        disabled={currentIndex === totalTeams - 1}
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded disabled:opacity-50"
+        aria-label="next"
+      >
+        &gt;
+      </button>
+    </div>
+  );
+}
+
+
+
+function Glmatch({fixtureDetails}){
+
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!fixtureDetails?.season_game_uid) {
+      console.warn("season_game_uid is undefined or null");
+      return;
+    }
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.post(
+          "https://plapi.perfectlineup.in/fantasy/lobby/get_user_fixture_data",
+          {
+            season_game_uid: fixtureDetails.season_game_uid,
+            website_id: 1,
+            sports_id: "7", // Assuming sports_id is always 7
+            fixture_detail: "",
+          },
+          {
+            headers: {
+              sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+              moduleaccess: "7",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("API Response:", response.data.data);
+        setData(response.data.data);
+      } catch (error) {
+        console.error("API Error:", error);
+        setError(error.message || "An error occurred while fetching data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [fixtureDetails?.season_game_uid]);
+
+  // Handle Loading & Error States
+  if (loading) {
+    return <div className="text-center text-gray-600">Loading...</div>;
+  }
+  if (error) {
+    return <div className="text-red-500 text-center">Error: {error}</div>;
+  }
+  if (!data) {
+    return <div className="text-center text-gray-600">No data available.</div>;
+  }
+
+
+
+  return (
+    <>
+    
+    {data &&data.gl_count > 0 &&
+
+      (
+        <Carousel teams={data.gl_team} glHeadings={data.gl_headings} />
+      )
+    }
+    
+    </>
+
+
+  )
+}
+
+function SLmatch({fixtureDetails}){
+
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!fixtureDetails?.season_game_uid) {
+      console.warn("season_game_uid is undefined or null");
+      return;
+    }
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.post(
+          "https://plapi.perfectlineup.in/fantasy/lobby/get_sl_teams",
+          {
+            season_game_uid: fixtureDetails.season_game_uid,
+            no_of_teams: 2
+          },
+          {
+            headers: {
+              sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+              moduleaccess: "7",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        console.log("API Response:", response.data.data);
+        setData(response.data.data);
+      } catch (error) {
+        console.error("API Error:", error);
+        setError(error.message || "An error occurred while fetching data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [fixtureDetails?.season_game_uid]);
+
+  // Handle Loading & Error States
+  if (loading) {
+    return <div className="text-center text-gray-600">Loading...</div>;
+  }
+  if (error) {
+    return <div className="text-red-500 text-center">Error: {error}</div>;
+  }
+  if (!data) {
+    return <div className="text-center text-gray-600">No data available.</div>;
+  }
+
+
+
+  return (
+    <>
+    
+    {data &&
+
+      (
+        <CarouselSL teams={data.sl_teams}/>
+      )
+    }
+    
+    </>
+
+
+  )
+}
+
+
 function MatchDetails() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const fixtureDetails = location.state?.fixtureDetails;
+  const [selectedLeague, setSelectedLeague] = useState("GL");
+
+  const Leage= ["GL", "SL"]
 
   // Function to get the current timestamp in IST
   const getCurrentTimestampInIST = () => {
@@ -215,8 +660,7 @@ function MatchDetails() {
     },
   ];
 
-  console.log("+++++++++++++++++data", data);
-  console.log("+++++++++++++++++fixtureDetails", fixtureDetails);
+
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-white">
@@ -266,6 +710,64 @@ function MatchDetails() {
           </Link>
         ))}
       </div>
+      
+      
+      
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">
+          Lineup Generator
+        </h2>
+        <div className="mb-4">
+        <h3 className="text-2xl font-bold">Algorithm Suggested Teams</h3>
+        <p className="text-gray-600">
+          A selection of 11 teams, which have a good chance of winning according to our algorithm, are ready.
+        </p>
+      </div>
+
+       {/* League Tabs */}
+          <div className="player-specification-list w-full max-w-4xl mx-auto">
+            <div className="tab-container mb-4  mt-4">
+              {/* 
+      flex items-center => sets up a flex container
+      bg-gray-100 p-1 => a light gray background with padding
+      rounded-full => rounded "pill" shape
+    */}
+              <div className="flex items-center bg-gray-100 p-1 rounded-full">
+                {Leage.map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setSelectedLeague(tab)}
+                    className={`
+            flex-1                /* Each button fills an equal portion of the row */
+            text-center           /* Center text within each button */
+            px-4 py-2 text-sm font-medium focus:outline-none 
+            transition-colors duration-200
+            ${
+              selectedLeague === tab
+                ? "bg-white text-gray-900 shadow rounded-full" /* Active tab styling */
+                : "bg-transparent text-gray-500" /* Inactive tab styling */
+            }
+          `}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+
+        {selectedLeague  === "GL" && (
+          <Glmatch fixtureDetails={fixtureDetails}/>
+        )}
+
+        {selectedLeague  === "SL" && (
+          <SLmatch fixtureDetails={fixtureDetails}/>
+        )}
+
+        </div>
+
+
 
       {/* DATA AND ANALYTICS SECTION */}
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">

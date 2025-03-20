@@ -1114,6 +1114,7 @@ const Fantasy = ({ matchData }) => {
 const MatchCard = ({ matchData, stats_details }) => {
   // Safely parse score data (it’s stored as a JSON string in matchData.score_data)
   const scoreData = JSON.parse(matchData.score_data);
+  console.log(scoreData)
   const {
     away_overs,
     home_overs,
@@ -1258,7 +1259,7 @@ function MatchReport() {
         const response = await axios.post(
           "https://plapi.perfectlineup.in/fantasy/completed_match/get_fixture_scorecard",
           {
-            season_game_uid: gameUid, // Use the resolved value
+            season_game_uid: matchSessionIDs, // Use the resolved value
             league_id: matchInSights?.league_id, // Required field
             sports_id: "7",
           },
@@ -1321,6 +1322,16 @@ function MatchReport() {
   if (!matchInSights) {
     return null;
   }
+
+  if (!data) {
+    return <div className="text-center text-gray-600">No data available.</div>;
+  }
+
+  console.log("datamatchreport++++++++++++++++++++++++++++++++++++",data)
+  console.log("datamatchreport++++++++++++++++++++++++++++++++++++",matchInSights)
+  console.log("datamatchreport++++++++++++++++++++++++++++++++++++",matchSessionIDs)
+  console.log("datamatchreport++++++++++++++++++++++++++++++++++++",matchleageIDs)
+
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-start justify-start">

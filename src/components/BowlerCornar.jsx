@@ -115,10 +115,10 @@ function FixtureHeader({ fixtureDetails, getCountdownTime, data }) {
       <div className="flex justify-center mt-2">
         <div
           className="
-              bg-white border border-gray-300 text-gray-600 px-3 py-1
-              rounded shadow text-sm text-center
-              transition-all duration-1000 ease-in-out
-            "
+                bg-white border border-gray-300 text-gray-600 px-3 py-1
+                rounded shadow text-sm text-center
+                transition-all duration-1000 ease-in-out
+              "
         >
           {bubbleText}
         </div>
@@ -127,7 +127,6 @@ function FixtureHeader({ fixtureDetails, getCountdownTime, data }) {
   );
 }
 
-// Helper function to render stat cells with matches
 // Helper to display value + matches in two lines
 const renderTwoLineCell = (value, matches) => {
   return (
@@ -142,18 +141,7 @@ const renderTwoLineCell = (value, matches) => {
   );
 };
 
-// Helper to display "graph" cells (value + total_matches)
-const renderGraphCell = (graphData) => {
-  if (
-    graphData?.value !== undefined &&
-    graphData?.total_matches !== undefined
-  ) {
-    return renderTwoLineCell(graphData.value, graphData.total_matches);
-  }
-  return renderTwoLineCell("-", null);
-};
-
-// Helper to display "stats" cells (value + matches)
+// Helper to display "stats" cells (value + matches) in two lines
 const renderStatsCell = (value, matches) => {
   if (value !== undefined && matches !== undefined) {
     return renderTwoLineCell(value, matches);
@@ -161,35 +149,67 @@ const renderStatsCell = (value, matches) => {
   return renderTwoLineCell("-", null);
 };
 
-const DynamicTable = ({ sampleData, matchInSights }) => {
-  // Global filter: "Overall" shows all, "PAK" for Team 1 and "NZ" for Team 2.
-  const [filter, setFilter] = useState("Overall");
+const AdvancedDynamicTable = ({ sampleData, matchInSights }) => {
+  // 1) Team filter
+  const [teamFilter, setTeamFilter] = useState("Overall");
+  // 2) Bowling style filter
+  const [bowlingFilter, setBowlingFilter] = useState("All");
+  // 3) Position filter
+  const [positionFilter, setPositionFilter] = useState("All");
 
   // Sorting state: key is the property to sort by, direction is "asc" or "desc"
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
-  // Filter data by team_abbr
+  // Filtering logic
   const filteredData = useMemo(() => {
-    return sampleData.filter((item) => {
-      if (filter === "Overall") return true;
-      return item.team_abbr === filter;
+    return sampleData.filter((player) => {
+      // Team filter
+      let passTeam = true;
+      if (teamFilter !== "Overall") {
+        passTeam = player.team_abbr === teamFilter;
+      }
+      // Bowling style filter
+      let passBowling = true;
+      if (bowlingFilter !== "All") {
+        passBowling = player.bowling_style === bowlingFilter;
+      }
+      // Position filter
+      let passPosition = true;
+      if (positionFilter !== "All") {
+        passPosition = player.position === positionFilter;
+      }
+      return passTeam && passBowling && passPosition;
     });
-  }, [filter, sampleData]);
+  }, [sampleData, teamFilter, bowlingFilter, positionFilter]);
 
   // Sorting logic
   const sortedData = useMemo(() => {
     const sortableData = [...filteredData];
     if (sortConfig.key) {
       sortableData.sort((a, b) => {
-        let aValue, bValue;
+        let aValue = 0;
+        let bValue = 0;
+
         switch (sortConfig.key) {
           case "playerName":
             aValue = a.full_name.toLowerCase();
             bValue = b.full_name.toLowerCase();
             break;
+          case "bowlingStyle":
+            aValue = a.bowling_style || "";
+            bValue = b.bowling_style || "";
+            break;
           case "averageFpts":
             aValue = parseFloat(a.stats?.avg_fantasy_points) || 0;
             bValue = parseFloat(b.stats?.avg_fantasy_points) || 0;
+            break;
+          case "averageBow1Fpts":
+            aValue = parseFloat(a.stats?.avg_bow1_fpts) || 0;
+            bValue = parseFloat(b.stats?.avg_bow1_fpts) || 0;
+            break;
+          case "averageBow2Fpts":
+            aValue = parseFloat(a.stats?.avg_bow2_fpts) || 0;
+            bValue = parseFloat(b.stats?.avg_bow2_fpts) || 0;
             break;
           case "fptsOpposition":
             aValue = parseFloat(a.stats?.avg_opp_fpts) || 0;
@@ -199,41 +219,49 @@ const DynamicTable = ({ sampleData, matchInSights }) => {
             aValue = parseFloat(a.stats?.avg_venue_fpts) || 0;
             bValue = parseFloat(b.stats?.avg_venue_fpts) || 0;
             break;
-          case "batFirstFpts":
-            aValue = parseFloat(a.graph?.bat_first_fpts?.value) || 0;
-            bValue = parseFloat(b.graph?.bat_first_fpts?.value) || 0;
+          case "wickets":
+            aValue = parseFloat(a.stats?.wickets) || 0;
+            bValue = parseFloat(b.stats?.wickets) || 0;
             break;
-          case "fptsInChase":
-            aValue = parseFloat(a.graph?.bowl_first_fpts?.value) || 0;
-            bValue = parseFloat(b.graph?.bowl_first_fpts?.value) || 0;
+          case "pWickets":
+            aValue = parseFloat(a.stats?.p_wickets) || 0;
+            bValue = parseFloat(b.stats?.p_wickets) || 0;
             break;
-          case "inDreamTeam":
-            aValue = parseFloat(a.graph?.dream_team?.value) || 0;
-            bValue = parseFloat(b.graph?.dream_team?.value) || 0;
+          case "dWickets":
+            aValue = parseFloat(a.stats?.d_wickets) || 0;
+            bValue = parseFloat(b.stats?.d_wickets) || 0;
             break;
-          case "bottom20":
-            aValue = parseFloat(a.graph?.underperformed?.value) || 0;
-            bValue = parseFloat(b.graph?.underperformed?.value) || 0;
+          case "overs":
+            aValue = parseFloat(a.stats?.overs) || 0;
+            bValue = parseFloat(b.stats?.overs) || 0;
             break;
-          case "avgPositionRank":
-            aValue = parseFloat(a.graph?.avg_position_rank?.value) || 0;
-            bValue = parseFloat(b.graph?.avg_position_rank?.value) || 0;
+          case "pOvers":
+            aValue = parseFloat(a.stats?.p_overs) || 0;
+            bValue = parseFloat(b.stats?.p_overs) || 0;
             break;
-          case "avgTeamRank":
-            aValue = parseFloat(a.graph?.avg_team_rank?.value) || 0;
-            bValue = parseFloat(b.graph?.avg_team_rank?.value) || 0;
+          case "dOvers":
+            aValue = parseFloat(a.stats?.d_overs) || 0;
+            bValue = parseFloat(b.stats?.d_overs) || 0;
             break;
           default:
             aValue = 0;
             bValue = 0;
         }
-        if (aValue < bValue) {
-          return sortConfig.direction === "asc" ? -1 : 1;
+
+        // Compare as either string or number
+        if (typeof aValue === "string" && typeof bValue === "string") {
+          return sortConfig.direction === "asc"
+            ? aValue.localeCompare(bValue)
+            : bValue.localeCompare(aValue);
+        } else {
+          if (aValue < bValue) {
+            return sortConfig.direction === "asc" ? -1 : 1;
+          }
+          if (aValue > bValue) {
+            return sortConfig.direction === "asc" ? 1 : -1;
+          }
+          return 0;
         }
-        if (aValue > bValue) {
-          return sortConfig.direction === "asc" ? 1 : -1;
-        }
-        return 0;
       });
     }
     return sortableData;
@@ -258,21 +286,57 @@ const DynamicTable = ({ sampleData, matchInSights }) => {
 
   return (
     <div className="p-4">
-      {/* Global Filter */}
-      <div className="mb-4 flex items-center">
-        <label className="mr-2 font-semibold">Filter:</label>
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border rounded p-1"
-        >
-          <option value="Overall">Overall</option>
-          <option value={matchInSights.home}>{matchInSights.home}</option>
-          <option value={matchInSights.away}>{matchInSights.away}</option>
-        </select>
+      {/* FILTERS */}
+      <div className="mb-4 flex flex-wrap items-center space-x-4">
+        {/* Team Filter */}
+        <div>
+          <label className="mr-2 font-semibold">Team:</label>
+          <select
+            value={teamFilter}
+            onChange={(e) => setTeamFilter(e.target.value)}
+            className="border rounded p-1"
+          >
+            <option value="Overall">Overall</option>
+            <option value={matchInSights.home}>{matchInSights.home}</option>
+            <option value={matchInSights.away}>{matchInSights.away}</option>
+          </select>
+        </div>
+
+        {/* Bowling Style Filter */}
+        <div>
+          <label className="mr-2 font-semibold">Bowling Style:</label>
+          <select
+            value={bowlingFilter}
+            onChange={(e) => setBowlingFilter(e.target.value)}
+            className="border rounded p-1"
+          >
+            <option value="All">All</option>
+            <option value="Right Arm Leg Spin">Right Arm Leg Spin</option>
+            <option value="Right Arm Medium">Right Arm Medium</option>
+            <option value="Left Arm Fast">Left Arm Fast</option>
+            <option value="Right Arm Fast">Right Arm Fast</option>
+            <option value="Right Arm Off Spin">Right Arm Off Spin</option>
+            <option value="Left Arm Orthodox">Left Arm Orthodox</option>
+          </select>
+        </div>
+
+        {/* Position Filter */}
+        <div>
+          <label className="mr-2 font-semibold">Position:</label>
+          <select
+            value={positionFilter}
+            onChange={(e) => setPositionFilter(e.target.value)}
+            className="border rounded p-1"
+          >
+            <option value="All">All</option>
+            <option value="AR">AR</option>
+            <option value="BOW">BOW</option>
+            <option value="BAT">BAT</option>
+          </select>
+        </div>
       </div>
 
-      {/* Table Container */}
+      {/* TABLE */}
       <div className="overflow-x-auto">
         <table className="w-full table-auto text-sm">
           <thead>
@@ -284,10 +348,28 @@ const DynamicTable = ({ sampleData, matchInSights }) => {
                 Player Name {sortArrow("playerName")}
               </th>
               <th
+                onClick={() => requestSort("bowlingStyle")}
+                className="px-3 py-2 text-center cursor-pointer font-semibold"
+              >
+                Bowling Style {sortArrow("bowlingStyle")}
+              </th>
+              <th
                 onClick={() => requestSort("averageFpts")}
                 className="px-3 py-2 text-center cursor-pointer font-semibold"
               >
                 Average Fpts {sortArrow("averageFpts")}
+              </th>
+              <th
+                onClick={() => requestSort("averageBow1Fpts")}
+                className="px-3 py-2 text-center cursor-pointer font-semibold"
+              >
+                Average Fpts Bowling 1st {sortArrow("averageBow1Fpts")}
+              </th>
+              <th
+                onClick={() => requestSort("averageBow2Fpts")}
+                className="px-3 py-2 text-center cursor-pointer font-semibold"
+              >
+                Average Fpts Bowling 2nd {sortArrow("averageBow2Fpts")}
               </th>
               <th
                 onClick={() => requestSort("fptsOpposition")}
@@ -302,40 +384,40 @@ const DynamicTable = ({ sampleData, matchInSights }) => {
                 Average Fpts at Venue {sortArrow("fptsVenue")}
               </th>
               <th
-                onClick={() => requestSort("batFirstFpts")}
+                onClick={() => requestSort("wickets")}
                 className="px-3 py-2 text-center cursor-pointer font-semibold"
               >
-                Avg. Fpts Bat First {sortArrow("batFirstFpts")}
+                Wickets Taken {sortArrow("wickets")}
               </th>
               <th
-                onClick={() => requestSort("fptsInChase")}
+                onClick={() => requestSort("pWickets")}
                 className="px-3 py-2 text-center cursor-pointer font-semibold"
               >
-                Avg. Fpts in Chase {sortArrow("fptsInChase")}
+                Powerplay Wickets Taken {sortArrow("pWickets")}
               </th>
               <th
-                onClick={() => requestSort("inDreamTeam")}
+                onClick={() => requestSort("dWickets")}
                 className="px-3 py-2 text-center cursor-pointer font-semibold"
               >
-                In Dream Team {sortArrow("inDreamTeam")}
+                Death Overs Wickets Taken {sortArrow("dWickets")}
               </th>
               <th
-                onClick={() => requestSort("bottom20")}
+                onClick={() => requestSort("overs")}
                 className="px-3 py-2 text-center cursor-pointer font-semibold"
               >
-                Bottom 20% {sortArrow("bottom20")}
+                Overs Bowled {sortArrow("overs")}
               </th>
               <th
-                onClick={() => requestSort("avgPositionRank")}
+                onClick={() => requestSort("pOvers")}
                 className="px-3 py-2 text-center cursor-pointer font-semibold"
               >
-                Avg. Position Rank {sortArrow("avgPositionRank")}
+                Powerplay Overs Bowled {sortArrow("pOvers")}
               </th>
               <th
-                onClick={() => requestSort("avgTeamRank")}
+                onClick={() => requestSort("dOvers")}
                 className="px-3 py-2 text-center cursor-pointer font-semibold"
               >
-                Avg. Team Rank {sortArrow("avgTeamRank")}
+                Death Overs Bowled {sortArrow("dOvers")}
               </th>
             </tr>
           </thead>
@@ -343,21 +425,24 @@ const DynamicTable = ({ sampleData, matchInSights }) => {
           <tbody className="divide-y divide-gray-100">
             {sortedData.map((player) => (
               <tr key={player.player_id} className="hover:bg-gray-50">
-                {/* Player Name & Info */}
+                {/* 1) Player Name */}
                 <td className="px-3 py-2 text-center">
                   <div className="flex flex-col items-center">
                     <div className="text-sm font-semibold text-gray-900">
                       {player.full_name}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {player.position} . {player.team_abbr}{" "}
-                      {/* If you have style/bowling info: e.g. "Left Arm Orthodox" */}
-                      {player.bowling_style ? ` . ${player.bowling_style}` : ""}
+                      {player.position} . {player.team_abbr}
                     </div>
                   </div>
                 </td>
 
-                {/* Average Fpts */}
+                {/* 2) Bowling Style */}
+                <td className="px-3 py-2 text-center">
+                  {player.bowling_style || "-"}
+                </td>
+
+                {/* 3) Average Fpts */}
                 <td className="px-3 py-2 text-center">
                   {renderStatsCell(
                     player.stats?.avg_fantasy_points,
@@ -365,7 +450,23 @@ const DynamicTable = ({ sampleData, matchInSights }) => {
                   )}
                 </td>
 
-                {/* Average Fpts vs Opposition */}
+                {/* 4) Average Fpts Bowling 1st */}
+                <td className="px-3 py-2 text-center">
+                  {renderStatsCell(
+                    player.stats?.avg_bow1_fpts,
+                    player.stats?.bow1_tm
+                  )}
+                </td>
+
+                {/* 5) Average Fpts Bowling 2nd */}
+                <td className="px-3 py-2 text-center">
+                  {renderStatsCell(
+                    player.stats?.avg_bow2_fpts,
+                    player.stats?.bow2_tm
+                  )}
+                </td>
+
+                {/* 6) Average Fpts vs Opposition */}
                 <td className="px-3 py-2 text-center">
                   {renderStatsCell(
                     player.stats?.avg_opp_fpts,
@@ -373,7 +474,7 @@ const DynamicTable = ({ sampleData, matchInSights }) => {
                   )}
                 </td>
 
-                {/* Average Fpts at Venue */}
+                {/* 7) Average Fpts at Venue */}
                 <td className="px-3 py-2 text-center">
                   {renderStatsCell(
                     player.stats?.avg_venue_fpts,
@@ -381,34 +482,34 @@ const DynamicTable = ({ sampleData, matchInSights }) => {
                   )}
                 </td>
 
-                {/* Avg. Fpts Bat First */}
+                {/* 8) Wickets Taken */}
                 <td className="px-3 py-2 text-center">
-                  {renderGraphCell(player.graph?.bat_first_fpts)}
+                  {player.stats?.wickets ?? "-"}
                 </td>
 
-                {/* Avg. Fpts in Chase */}
+                {/* 9) Powerplay Wickets Taken */}
                 <td className="px-3 py-2 text-center">
-                  {renderGraphCell(player.graph?.bowl_first_fpts)}
+                  {player.stats?.p_wickets ?? "-"}
                 </td>
 
-                {/* In Dream Team */}
+                {/* 10) Death Overs Wickets Taken */}
                 <td className="px-3 py-2 text-center">
-                  {renderGraphCell(player.graph?.dream_team)}
+                  {player.stats?.d_wickets ?? "-"}
                 </td>
 
-                {/* Bottom 20% */}
+                {/* 11) Overs Bowled */}
                 <td className="px-3 py-2 text-center">
-                  {renderGraphCell(player.graph?.underperformed)}
+                  {player.stats?.overs ?? "-"}
                 </td>
 
-                {/* Avg. Position Rank */}
+                {/* 12) Powerplay Overs Bowled */}
                 <td className="px-3 py-2 text-center">
-                  {renderGraphCell(player.graph?.avg_position_rank)}
+                  {player.stats?.p_overs ?? "-"}
                 </td>
 
-                {/* Avg. Team Rank */}
+                {/* 13) Death Overs Bowled */}
                 <td className="px-3 py-2 text-center">
-                  {renderGraphCell(player.graph?.avg_team_rank)}
+                  {player.stats?.d_overs ?? "-"}
                 </td>
               </tr>
             ))}
@@ -419,7 +520,7 @@ const DynamicTable = ({ sampleData, matchInSights }) => {
   );
 };
 
-function PlayerPerformancelist() {
+function BowlerCornar() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -459,7 +560,7 @@ function PlayerPerformancelist() {
         }
 
         const response = await axios.post(
-          "https://plapi.perfectlineup.in/fantasy/stats/player_performance_list",
+          "https://plapi.perfectlineup.in/fantasy/stats/player_bowling_corner",
           payload,
           {
             headers: {
@@ -494,7 +595,6 @@ function PlayerPerformancelist() {
     return <div className="text-center text-gray-600">No data available.</div>;
   }
 
-  // Render the UI
   return (
     <>
       {data && (
@@ -512,26 +612,26 @@ function PlayerPerformancelist() {
           <div className="player-specification-list w-full max-w-4xl mx-auto">
             <div className="tab-container mb-4  mt-4">
               {/* 
-      flex items-center => sets up a flex container
-      bg-gray-100 p-1 => a light gray background with padding
-      rounded-full => rounded "pill" shape
-    */}
+    flex items-center => sets up a flex container
+    bg-gray-100 p-1 => a light gray background with padding
+    rounded-full => rounded "pill" shape
+  */}
               <div className="flex items-center bg-gray-100 p-1 rounded-full">
                 {tabs.map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
                     className={`
-            flex-1                /* Each button fills an equal portion of the row */
-            text-center           /* Center text within each button */
-            px-4 py-2 text-sm font-medium focus:outline-none 
-            transition-colors duration-200
-            ${
-              activeTab === tab
-                ? "bg-white text-gray-900 shadow rounded-full" /* Active tab styling */
-                : "bg-transparent text-gray-500" /* Inactive tab styling */
-            }
-          `}
+          flex-1                /* Each button fills an equal portion of the row */
+          text-center           /* Center text within each button */
+          px-4 py-2 text-sm font-medium focus:outline-none 
+          transition-colors duration-200
+          ${
+            activeTab === tab
+              ? "bg-white text-gray-900 shadow rounded-full" /* Active tab styling */
+              : "bg-transparent text-gray-500" /* Inactive tab styling */
+          }
+        `}
                   >
                     {tab}
                   </button>
@@ -541,21 +641,21 @@ function PlayerPerformancelist() {
           </div>
 
           {activeTab === `LAST MATCH` && data && (
-            <DynamicTable
+            <AdvancedDynamicTable
               sampleData={data.player_list}
               matchInSights={matchInSights}
             />
           )}
 
           {activeTab === `Last 10 MATCH` && data && (
-            <DynamicTable
+            <AdvancedDynamicTable
               sampleData={data.player_list}
               matchInSights={matchInSights}
             />
           )}
 
           {activeTab === `THIS SERIES` && data && (
-            <DynamicTable
+            <AdvancedDynamicTable
               sampleData={data.player_list}
               matchInSights={matchInSights}
             />
@@ -566,4 +666,4 @@ function PlayerPerformancelist() {
   );
 }
 
-export default PlayerPerformancelist;
+export default BowlerCornar;
