@@ -607,7 +607,26 @@ const AwayTeam = ({matchInSights}) => {
   
   return (
 
-    <h1>AwayTeam</h1>
+     <>
+{data && (
+  <div className="w-full flex max-w-4xl mx-auto mt-4">
+  <div className="flex flex-col items-center w-full">
+    {/* winning trend */}
+    <VenueTossTrends data ={data.win_stats} />
+
+    {/* pei chart */}
+    <DreamTeamChart data ={data.position_wise_fpts} matchInSights={matchInSights} total_matches ={data.total_matches}/>
+
+    <Playerinformations players ={data.player_list} matchInSights = {matchInSights}/>
+
+     <MatchDetails matchData ={data.matches_on_venue} />
+  </div>
+
+</div>
+)}
+
+</>
+
 
 )}
 
