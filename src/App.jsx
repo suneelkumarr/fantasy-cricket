@@ -12,6 +12,7 @@ import VenuePerformance from './components/VenuePerformance.jsx'
 import BattingOrder from './components/BattingOrder.jsx'
 import CheatSheet from './components/CheatSheet.jsx'
 import TeamH2H from './components/TeamH2H.jsx'
+import PlayerPerformancelist from './components/PlayerPerformancelist.jsx'
 // import FantasyBreakDown from './components/FantasyBreakDown.jsx'
 // <Route path="/player/:playerId/:fullName/:matchId/form" element={<FantasyBreakDown />} />
 
@@ -38,6 +39,7 @@ function App() {
         <Route path="/batting-order/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<BattingOrder />} />
         <Route path="/players-analyzer/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<CheatSheet />} />
         <Route path="/team-h2h/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<TeamH2H />} />
+        <Route path="/player-pick/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<PlayerPerformancelist />} />
       </Routes>
     </Router>
   )
