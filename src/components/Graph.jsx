@@ -11,7 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import Getlocation from './Getlocation.jsx';
+import Getlocation from "./Getlocation.jsx";
 
 // A small helper for date formatting – so it’s consistent throughout.
 function formatDate(dateObj) {
@@ -33,7 +33,6 @@ function ChartSection({
   color = "#1f3b64",
   tooltipFormatter,
 }) {
-
   const [showMatchList, setShowMatchList] = useState(false);
   const toggleMatchList = () => {
     setShowMatchList((prev) => !prev);
@@ -117,7 +116,7 @@ function ChartSection({
           )}
         </button>
       </div>
-      
+
       {showMatchList && data.length > 0 && (
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
@@ -153,7 +152,6 @@ function ChartSection({
     </div>
   );
 }
-
 
 function Graph() {
   const location = useLocation();
@@ -235,7 +233,8 @@ function Graph() {
           value: Number(item.value),
           fantasy_points: Number(item.fantasy_points),
         };
-      }).sort((a, b) => b.dateObj - a.dateObj);
+      })
+      .sort((a, b) => b.dateObj - a.dateObj);
   };
 
   const matchData = formatData(MatchStats);
@@ -296,7 +295,7 @@ function Graph() {
     },
   ];
 
-  console.log(Getlocation())
+  console.log(Getlocation());
 
   return (
     <>
@@ -314,21 +313,24 @@ function Graph() {
         </h2>
       </div>
       <div className="max-w-4xl mx-auto p-4 bg-white rounded-lg mb-10">
-      {/* Render each chart section dynamically */}
-      {chartSections.map(({ title, subTitle, dataKey, yLabel, domain }, idx) => (
-        <div key={idx} className="shadow-md mb-16"> {/* Add margin bottom for spacing */}
-          <ChartSection
-            title={title}
-            subTitle={subTitle}
-            data={matchData}
-            dataKey={dataKey}
-            yLabel={yLabel}
-            domain={domain}
-          />
-        </div>
-      ))}
-    </div>
-    
+        {/* Render each chart section dynamically */}
+        {chartSections.map(
+          ({ title, subTitle, dataKey, yLabel, domain }, idx) => (
+            <div key={idx} className="shadow-md mb-16">
+              {" "}
+              {/* Add margin bottom for spacing */}
+              <ChartSection
+                title={title}
+                subTitle={subTitle}
+                data={matchData}
+                dataKey={dataKey}
+                yLabel={yLabel}
+                domain={domain}
+              />
+            </div>
+          )
+        )}
+      </div>
     </>
   );
 }

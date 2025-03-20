@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { TrendingUp, ArrowRight, Star } from "lucide-react";
 import FantasyBreakDown from "./FantasyBreakDown"; // Import your modal component
 import { Link } from "react-router-dom";
-import Getlocation from './Getlocation.jsx';
+import Getlocation from "./Getlocation.jsx";
 
 function Format({ data, matchInSights, playerInfo, formatState }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -53,7 +53,7 @@ function Format({ data, matchInSights, playerInfo, formatState }) {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  console.log(Getlocation())
+  console.log(Getlocation());
 
   return (
     <div>
@@ -305,11 +305,14 @@ function Format({ data, matchInSights, playerInfo, formatState }) {
                   {/* Versus Column */}
                   <td className="py-3 px-4">
                     <Link
-                    to={`/player/${
-                      playerInfo?.player_uid
-                    }/${(playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name).replace(/\s+/g, "_")}/${
-                      matchInSights?.season_game_uid
-                    }/form`}
+                      to={`/player/${
+                        playerInfo?.player_uid
+                      }/${(playerInfo?.full_name
+                        ? playerInfo.full_name
+                        : playerInfo.display_name
+                      ).replace(/\s+/g, "_")}/${
+                        matchInSights?.season_game_uid
+                      }/form`}
                       state={{
                         stats_player_id: match.player_id,
                         stats_season_id: match.stats_season_id,

@@ -29,7 +29,6 @@ const formatMap = {
 };
 
 function PopupContainer({ playerData, onClick }) {
-  console.log(playerData);
   const { item, player } = playerData;
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -660,8 +659,9 @@ function PowerPlayBow({ playersData, matchInSights }) {
                       {player.nick_name}
                     </div>
                     {player.bowling_style && (
-                            <div className="position-style text-xs text-gray-500">
-                        {player.bowling_style} | {player.bowling_type ? player.bowling_type : ''}
+                      <div className="position-style text-xs text-gray-500">
+                        {player.bowling_style} |{" "}
+                        {player.bowling_type ? player.bowling_type : ""}
                       </div>
                     )}
                   </div>
@@ -771,7 +771,6 @@ function PowerPlayBow({ playersData, matchInSights }) {
   );
 }
 
-
 function DeathOverBow({ playersData, matchInSights }) {
   // We have three tabs: Overall, home, away
   const [activeTab, setActiveTab] = useState("Overall");
@@ -791,24 +790,24 @@ function DeathOverBow({ playersData, matchInSights }) {
 
   // Decide which players to show based on the active tab
   let finalPlayers = [];
-if (activeTab === "Overall") {
-  // Overall: sort descending by avg_fantasy_points and take top 5
-  finalPlayers = [...playersData]
-    .sort((a, b) => b.avg_fantasy_points - a.avg_fantasy_points)
-    .slice(0, 5);
-} else if (activeTab === matchInSights.home) {
-  // Home team: filter, sort by avg_fantasy_points, and take top 5
-  finalPlayers = playersData
-    .filter((p) => p.team_uid === matchInSights.home_uid)
-    .sort((a, b) => b.avg_fantasy_points - a.avg_fantasy_points)
-   .slice(0, 5);
-} else if (activeTab === matchInSights.away) {
-  // Away team: filter, sort by avg_fantasy_points, and take top 5
-  finalPlayers = playersData
-    .filter((p) => p.team_uid === matchInSights.away_uid)
-    .sort((a, b) => b.avg_fantasy_points - a.avg_fantasy_points)
-    .slice(0, 5);
-}
+  if (activeTab === "Overall") {
+    // Overall: sort descending by avg_fantasy_points and take top 5
+    finalPlayers = [...playersData]
+      .sort((a, b) => b.avg_fantasy_points - a.avg_fantasy_points)
+      .slice(0, 5);
+  } else if (activeTab === matchInSights.home) {
+    // Home team: filter, sort by avg_fantasy_points, and take top 5
+    finalPlayers = playersData
+      .filter((p) => p.team_uid === matchInSights.home_uid)
+      .sort((a, b) => b.avg_fantasy_points - a.avg_fantasy_points)
+      .slice(0, 5);
+  } else if (activeTab === matchInSights.away) {
+    // Away team: filter, sort by avg_fantasy_points, and take top 5
+    finalPlayers = playersData
+      .filter((p) => p.team_uid === matchInSights.away_uid)
+      .sort((a, b) => b.avg_fantasy_points - a.avg_fantasy_points)
+      .slice(0, 5);
+  }
 
   return (
     <div className="player-specification-list w-full max-w-3xl mx-auto">
@@ -875,7 +874,8 @@ if (activeTab === "Overall") {
                     </div>
                     {player.bowling_style && (
                       <div className="position-style text-xs text-gray-500">
-                        {player.bowling_style} | {player.bowling_type ? player.bowling_type : ''}
+                        {player.bowling_style} |{" "}
+                        {player.bowling_type ? player.bowling_type : ""}
                       </div>
                     )}
                   </div>
@@ -984,7 +984,6 @@ if (activeTab === "Overall") {
     </div>
   );
 }
-
 
 function PlayersTable({ allPlayers, matchInSights }) {
   const TEAMS = [
@@ -1537,8 +1536,7 @@ function BattingOrder() {
             />
           </div>
 
-
-                    <div className="flex flex-col items-center w-full max-w-screen-lg mx-auto p-4 -mt-2">
+          <div className="flex flex-col items-center w-full max-w-screen-lg mx-auto p-4 -mt-2">
             {/* Header Section */}
             <div className="view-win-container w-full">
               <div className="flex items-center w-full">
@@ -1595,7 +1593,6 @@ function BattingOrder() {
               matchInSights={matchInSights}
             />
           </div>
-
         </div>
       )}
     </>

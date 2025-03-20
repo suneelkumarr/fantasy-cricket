@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-import Getlocation from './Getlocation.jsx';
+import Getlocation from "./Getlocation.jsx";
 
 // Helper to format "YYYY-MM-DD HH:mm:ss" -> "July 20, 2022", etc.
 function formatDate(dateTimeString) {
@@ -31,7 +31,15 @@ function NoNewsIllustration() {
       <circle cx="150" cy="150" r="150" fill="#f5f5f5" />
       <g>
         <circle cx="150" cy="100" r="30" fill="#d9d9d9" />
-        <rect x="120" y="140" width="60" height="80" rx="8" fill="#fff" stroke="#ccc" />
+        <rect
+          x="120"
+          y="140"
+          width="60"
+          height="80"
+          rx="8"
+          fill="#fff"
+          stroke="#ccc"
+        />
         <rect x="125" y="145" width="50" height="20" rx="4" fill="#f5f5f5" />
         <path
           d="M140 175 a10 10 0 0 1 20 0"
@@ -55,7 +63,7 @@ function NoNewsIllustration() {
 
 function News() {
   const location = useLocation();
-  console.log(Getlocation())
+  console.log(Getlocation());
 
   // Store details in state to preserve them on reload
   const [playerDetails] = useState(location.state?.playerInfo || null);
@@ -108,8 +116,12 @@ function News() {
 
   return (
     <>
-      {loading && <div className="text-center text-gray-600 my-4">Loading...</div>}
-      {error && <div className="text-red-500 text-center my-4">Error: {error}</div>}
+      {loading && (
+        <div className="text-center text-gray-600 my-4">Loading...</div>
+      )}
+      {error && (
+        <div className="text-red-500 text-center my-4">Error: {error}</div>
+      )}
 
       <div className="max-w-3xl mx-auto p-4">
         {stats_news.length > 0 ? (
@@ -129,12 +141,16 @@ function News() {
               </div>
 
               {/* Notes */}
-              {item.notes && <p className="text-sm text-gray-700 mb-3">{item.notes}</p>}
+              {item.notes && (
+                <p className="text-sm text-gray-700 mb-3">{item.notes}</p>
+              )}
 
               {/* Analysis */}
               {item.analysis && (
                 <div>
-                  <p className="text-sm font-bold text-gray-600 mb-1">Analysis</p>
+                  <p className="text-sm font-bold text-gray-600 mb-1">
+                    Analysis
+                  </p>
                   <p className="text-sm text-gray-700">{item.analysis}</p>
                 </div>
               )}

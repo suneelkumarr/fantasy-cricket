@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import Getlocation from './Getlocation.jsx';
-
-
+import Getlocation from "./Getlocation.jsx";
 
 function FixtureItem({ item, getCountdownTime }) {
   // This state determines which text to show
@@ -25,7 +23,7 @@ function FixtureItem({ item, getCountdownTime }) {
   // Convert UTC date to IST date
   const utcDate = new Date(item.season_scheduled_date);
   const istDate = new Date(utcDate.getTime() + 5.5 * 60 * 60 * 1000);
-  
+
   // Decide what to show in the center text
   let centerText;
   if (item.playing_announce === "1") {
@@ -72,7 +70,7 @@ function FixtureItem({ item, getCountdownTime }) {
           {istDate.toLocaleString("en-IN")}
         </div>
         <div className="text-gray-500 text-xs">
-          {item.league_name} - 
+          {item.league_name} -
           {item.format === "1"
             ? "Test"
             : item.format === "2"
@@ -98,13 +96,11 @@ function FixtureItem({ item, getCountdownTime }) {
   );
 }
 
-
 function Home() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [timerTrigger, setTimerTrigger] = useState(0); // State to trigger countdown updates
-
 
   // Function to get the current timestamp in IST
   const getCurrentTimestampInIST = () => {
@@ -172,14 +168,15 @@ function Home() {
       {error && <div className="text-red-500 text-center">Error: {error}</div>}
 
       {data &&
-        data.map((item) => (
-          <FixtureItem
-            key={item.season_game_uid}
-            item={item}
-            getCountdownTime={getCountdownTime}
-          />
-        ))}
-      
+        [...data]
+          .sort((a, b) => Number(b.is_pin || 0) - Number(a.is_pin || 0))
+          .map((item) => (
+            <FixtureItem
+              key={item.season_game_uid}
+              item={item}
+              getCountdownTime={getCountdownTime}
+            />
+          ))}
     </div>
   );
 }

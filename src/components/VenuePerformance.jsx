@@ -9,15 +9,16 @@ import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 const COLORS = ["#D0ECF6", "#F9DACF"];
 
 // Base URL for flags
-const FLAG_BASE_URL = 'https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/';
+const FLAG_BASE_URL =
+  "https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/";
 
 // Helper function to format date to "DD MMM YYYY"
 const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
   });
 };
 
@@ -33,75 +34,78 @@ const groupMatchesByDate = (matches) => {
   }, {});
 };
 
-
 function MatchDetails({ matchData }) {
   // Group data and sort by date descending
   const groupedMatches = groupMatchesByDate(matchData);
-  const sortedDates = Object.keys(groupedMatches).sort((a, b) => new Date(b) - new Date(a));
-
+  const sortedDates = Object.keys(groupedMatches).sort(
+    (a, b) => new Date(b) - new Date(a)
+  );
 
   return (
     <div className="team-wise-match-container p-4 max-w-4xl">
-    <div className="header-text text-lg font-semibold mb-4">
-      Click on below recent matches to view RMC's performance on this venue.
-    </div>
-    <div className="past-fixture-list space-y-4">
-      {sortedDates.map((date) => (
-        <div key={date} className="match-group">
-          {/* Header for the date group */}
-          <div className="header-box flex items-center mb-2">
-            <div className="div-line flex-1 border-t border-gray-300"></div>
-            <div className="schedule-date mx-2 text-sm font-medium text-gray-700">{date}</div>
-            <div className="div-line flex-1 border-t border-gray-300"></div>
-          </div>
-          {groupedMatches[date].map((match, index) => (
-            <Link
-            to={`/match-report/Cricket/${match.es_season_game_uid}/${match.home}_vs_${match.away}/${match.league_id}/scorecard`}
-            state={{
-              matchInSights: match,
-              matchSessionIDs: match.es_season_game_uid,
-              matchleageIDs: match.league_id,
-            }}
-            className=""
-          >
-            <div
-              key={index}
-              onClick={() => console.log(match.title)}
-              className="past-fixture-item cursor-pointer bg-white p-4 rounded-md shadow-sm hover:shadow-md transition flex flex-col sm:flex-row items-center justify-between"
-            >
-              {/* Home team */}
-              <div className="team-info-box flex items-center space-x-2">
-                <img
-                  className="w-8 h-8 rounded-full"
-                  src={`${FLAG_BASE_URL}${match.home_flag}`}
-                  alt={`${match.home} flag`}
-                />
-                <div className="team-name font-medium">{match.home}</div>
+      <div className="header-text text-lg font-semibold mb-4">
+        Click on below recent matches to view RMC's performance on this venue.
+      </div>
+      <div className="past-fixture-list space-y-4">
+        {sortedDates.map((date) => (
+          <div key={date} className="match-group">
+            {/* Header for the date group */}
+            <div className="header-box flex items-center mb-2">
+              <div className="div-line flex-1 border-t border-gray-300"></div>
+              <div className="schedule-date mx-2 text-sm font-medium text-gray-700">
+                {date}
               </div>
-              {/* Center VS info */}
-              <div className="center-vs-box my-2 sm:my-0 text-center">
-                <div className="text-sm font-bold">VS</div>
-                <div className="league-name text-xs text-gray-500">{match.league_name}</div>
-              </div>
-              {/* Away team */}
-              <div className="team-info-box flex items-center space-x-2">
-                <div className="team-name font-medium">{match.away}</div>
-                <img
-                  className="w-8 h-8 rounded-full"
-                  src={`${FLAG_BASE_URL}${match.away_flag}`}
-                  alt={`${match.away} flag`}
-                />
-              </div>
+              <div className="div-line flex-1 border-t border-gray-300"></div>
             </div>
-           </Link>
-          ))}
-        </div>
-      ))}
+            {groupedMatches[date].map((match, index) => (
+              <Link
+                to={`/match-report/Cricket/${match.es_season_game_uid}/${match.home}_vs_${match.away}/${match.league_id}/scorecard`}
+                state={{
+                  matchInSights: match,
+                  matchSessionIDs: match.es_season_game_uid,
+                  matchleageIDs: match.league_id,
+                }}
+                className=""
+              >
+                <div
+                  key={index}
+                  onClick={() => console.log(match.title)}
+                  className="past-fixture-item cursor-pointer bg-white p-4 rounded-md shadow-sm hover:shadow-md transition flex flex-col sm:flex-row items-center justify-between"
+                >
+                  {/* Home team */}
+                  <div className="team-info-box flex items-center space-x-2">
+                    <img
+                      className="w-8 h-8 rounded-full"
+                      src={`${FLAG_BASE_URL}${match.home_flag}`}
+                      alt={`${match.home} flag`}
+                    />
+                    <div className="team-name font-medium">{match.home}</div>
+                  </div>
+                  {/* Center VS info */}
+                  <div className="center-vs-box my-2 sm:my-0 text-center">
+                    <div className="text-sm font-bold">VS</div>
+                    <div className="league-name text-xs text-gray-500">
+                      {match.league_name}
+                    </div>
+                  </div>
+                  {/* Away team */}
+                  <div className="team-info-box flex items-center space-x-2">
+                    <div className="team-name font-medium">{match.away}</div>
+                    <img
+                      className="w-8 h-8 rounded-full"
+                      src={`${FLAG_BASE_URL}${match.away_flag}`}
+                      alt={`${match.away} flag`}
+                    />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
-  </div>
   );
 }
-
 
 function Playerinformations({ players, matchInSights }) {
   const [activeTab, setActiveTab] = useState("Top Players");
@@ -130,30 +134,41 @@ function Playerinformations({ players, matchInSights }) {
   // Filter players who have played at least one match in the relevant category
   let filteredPlayers = [];
   if (activeTab === "Top Players") {
-    filteredPlayers = players.filter(p => p.total_matches > 0);
+    filteredPlayers = players.filter((p) => p.total_matches > 0);
     filteredPlayers.sort((a, b) => getAverage(b) - getAverage(a));
   } else if (activeTab === "Batting First") {
-    filteredPlayers = players.filter(p => p.batting_first_matches > 0);
+    filteredPlayers = players.filter((p) => p.batting_first_matches > 0);
     filteredPlayers.sort((a, b) => getAverage(b) - getAverage(a));
   } else if (activeTab === "Chasing") {
-    filteredPlayers = players.filter(p => p.chasing_matches > 0);
+    filteredPlayers = players.filter((p) => p.chasing_matches > 0);
     filteredPlayers.sort((a, b) => getAverage(b) - getAverage(a));
   }
 
   // Determine maximum average for slider calculation (fallback to 86 if none)
   let maxPoints;
   if (activeTab === "Top Players") {
-    maxPoints = Math.max(...filteredPlayers.map(p =>
-      p.total_matches > 0 ? p.total_fantasy_points / p.total_matches : 0
-    ), 0);
+    maxPoints = Math.max(
+      ...filteredPlayers.map((p) =>
+        p.total_matches > 0 ? p.total_fantasy_points / p.total_matches : 0
+      ),
+      0
+    );
   } else if (activeTab === "Batting First") {
-    maxPoints = Math.max(...filteredPlayers.map(p =>
-      p.batting_first_matches > 0 ? p.batting_first_fpts / p.batting_first_matches : 0
-    ), 0);
+    maxPoints = Math.max(
+      ...filteredPlayers.map((p) =>
+        p.batting_first_matches > 0
+          ? p.batting_first_fpts / p.batting_first_matches
+          : 0
+      ),
+      0
+    );
   } else if (activeTab === "Chasing") {
-    maxPoints = Math.max(...filteredPlayers.map(p =>
-      p.chasing_matches > 0 ? p.chasing_fpts / p.chasing_matches : 0
-    ), 0);
+    maxPoints = Math.max(
+      ...filteredPlayers.map((p) =>
+        p.chasing_matches > 0 ? p.chasing_fpts / p.chasing_matches : 0
+      ),
+      0
+    );
   }
 
   return (
@@ -181,7 +196,7 @@ function Playerinformations({ players, matchInSights }) {
         {/* Players List */}
         <div className="player-category-item">
           <div className="players-list space-y-4">
-            {filteredPlayers.map(player => {
+            {filteredPlayers.map((player) => {
               const average = getAverage(player);
               const matches =
                 activeTab === "Top Players"
@@ -192,63 +207,63 @@ function Playerinformations({ players, matchInSights }) {
               const sliderWidth = maxPoints ? (average / maxPoints) * 100 : 0;
               return (
                 <Link
-                key={player.player_uid}
-                to={`/player/${player.player_uid}/${
-                  player.display_name?.replace(/\s+/g, "_") ||
-                  player.full_name?.replace(/\s+/g, "_") ||
-                  "unknown"
-                }/${matchInSights.season_game_uid}/form`}
-                state={{
-                  playerInfo: player,
-                  matchID: matchInSights.season_game_uid,
-                  matchInSights: matchInSights,
-                }}
-              >
-                <div
-                  key={player.player_id}
-                  className="matchreport-players-list flex flex-col sm:flex-row items-center justify-between bg-white p-4 shadow rounded"
+                  key={player.player_uid}
+                  to={`/player/${player.player_uid}/${
+                    player.display_name?.replace(/\s+/g, "_") ||
+                    player.full_name?.replace(/\s+/g, "_") ||
+                    "unknown"
+                  }/${matchInSights.season_game_uid}/form`}
+                  state={{
+                    playerInfo: player,
+                    matchID: matchInSights.season_game_uid,
+                    matchInSights: matchInSights,
+                  }}
                 >
-                  <div className="player-graph-team flex flex-col sm:flex-row w-full">
-                    {/* Player Info */}
-                    <div className="player-info-box w-full sm:w-1/3">
-                      <div className="name-style font-bold text-lg">
-                        {player.nick_name}
+                  <div
+                    key={player.player_id}
+                    className="matchreport-players-list flex flex-col sm:flex-row items-center justify-between bg-white p-4 shadow rounded"
+                  >
+                    <div className="player-graph-team flex flex-col sm:flex-row w-full">
+                      {/* Player Info */}
+                      <div className="player-info-box w-full sm:w-1/3">
+                        <div className="name-style font-bold text-lg">
+                          {player.nick_name}
+                        </div>
+                        <div className="position-style text-sm text-gray-500 flex items-center">
+                          {player.position}
+                          <span className="dot inline-block w-2 h-2 bg-gray-500 rounded-full mx-1"></span>
+                          {player.team_abbr}
+                        </div>
                       </div>
-                      <div className="position-style text-sm text-gray-500 flex items-center">
-                        {player.position}
-                        <span className="dot inline-block w-2 h-2 bg-gray-500 rounded-full mx-1"></span>
-                        {player.team_abbr}
-                      </div>
-                    </div>
-                    {/* Slider */}
-                    
-                    {/* Progress bar */}
-                    <div className="relative flex-grow h-8 bg-gray-300 rounded self-center">
-                      <div
-                        className="absolute top-0 left-0 h-8 rounded"
-                        style={{
-                          width: `${sliderWidth}%`,
-                          backgroundColor: "rgba(80, 193, 232, 0.8)", // away team color
-                        }}
-                      />
-                    </div>
+                      {/* Slider */}
 
-                    {/* Display text for each tab */}
-                    <div className="text-sm text-gray-600 flex-shrink-0 w-32 text-right self-center">
-                    {average.toFixed(2)} Avg Pts in {matches} matches
+                      {/* Progress bar */}
+                      <div className="relative flex-grow h-8 bg-gray-300 rounded self-center">
+                        <div
+                          className="absolute top-0 left-0 h-8 rounded"
+                          style={{
+                            width: `${sliderWidth}%`,
+                            backgroundColor: "rgba(80, 193, 232, 0.8)", // away team color
+                          }}
+                        />
+                      </div>
+
+                      {/* Display text for each tab */}
+                      <div className="text-sm text-gray-600 flex-shrink-0 w-32 text-right self-center">
+                        {average.toFixed(2)} Avg Pts in {matches} matches
+                      </div>
+                    </div>
+                    {/* Lock Icon */}
+                    <div className="player-lock-box mt-2 sm:mt-0">
+                      <div className="lock-unlock-item">
+                        <img
+                          className="icon-ic_unlocked w-6 h-6"
+                          src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                          alt="lock icon"
+                        />
+                      </div>
                     </div>
                   </div>
-                  {/* Lock Icon */}
-                  <div className="player-lock-box mt-2 sm:mt-0">
-                    <div className="lock-unlock-item">
-                      <img
-                        className="icon-ic_unlocked w-6 h-6"
-                        src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
-                        alt="lock icon"
-                      />
-                    </div>
-                  </div>
-                </div>
                 </Link>
               );
             })}
@@ -259,9 +274,8 @@ function Playerinformations({ players, matchInSights }) {
   );
 }
 
-function DreamTeamChart({data, matchInSights, total_matches}) {
-
-  const  {BOW, AR, BAT, WK} = data
+function DreamTeamChart({ data, matchInSights, total_matches }) {
+  const { BOW, AR, BAT, WK } = data;
   // Example chart options:
   const chartOptions = {
     chart: {
@@ -316,71 +330,73 @@ function DreamTeamChart({data, matchInSights, total_matches}) {
   // 2. We'll store the data array separately for easy use below
   const chartData = chartOptions.series[0].data;
 
-
   return (
     <div className="w-full max-w-4xl mx-auto border rounded-md bg-white p-4 shadow-sm">
-    {/* Header */}
-    <h2 className="text-base font-bold mb-1">
-       Fantasy Points For {matchInSights.home}
-    </h2>
-    <p className="text-sm text-gray-600 mb-4">
-    Showing data for {matchInSights.home}'s team based on recent {total_matches} matches
-    </p>
+      {/* Header */}
+      <h2 className="text-base font-bold mb-1">
+        Fantasy Points For {matchInSights.home}
+      </h2>
+      <p className="text-sm text-gray-600 mb-4">
+        Showing data for {matchInSights.home}'s team based on recent{" "}
+        {total_matches} matches
+      </p>
 
-    {/* Chart Container */}
-    <div className="overflow-hidden mb-6">
-      <HighchartsReact highcharts={Highcharts} options={chartOptions} />
-    </div>
+      {/* Chart Container */}
+      <div className="overflow-hidden mb-6">
+        <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+      </div>
 
-    {/* 3. Data Below the Chart */}
-    <div className="space-y-2">
-      <div className="font-semibold text-gray-800">Points Breakdown</div>
+      {/* 3. Data Below the Chart */}
+      <div className="space-y-2">
+        <div className="font-semibold text-gray-800">Points Breakdown</div>
 
-      {/* For a quick card/list style: */}
-      <div className="flex flex-col gap-2">
-        {chartData.map((item) => (
-          <div
-            key={item.name}
-            className="flex items-center justify-between rounded-md bg-gray-50 p-2 shadow-sm"
-          >
-            <div className="flex items-center space-x-2">
-              {/* Color Swatch */}
-              <div
-                className="h-4 w-4 rounded-full"
-                style={{ backgroundColor: item.color }}
-              />
-              {/* Position Name */}
-              <span className="font-medium text-gray-700">{item.name}</span>
+        {/* For a quick card/list style: */}
+        <div className="flex flex-col gap-2">
+          {chartData.map((item) => (
+            <div
+              key={item.name}
+              className="flex items-center justify-between rounded-md bg-gray-50 p-2 shadow-sm"
+            >
+              <div className="flex items-center space-x-2">
+                {/* Color Swatch */}
+                <div
+                  className="h-4 w-4 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                {/* Position Name */}
+                <span className="font-medium text-gray-700">{item.name}</span>
+              </div>
+              {/* Points */}
+              <div className="text-gray-800 font-semibold">{item.y} pts</div>
             </div>
-            {/* Points */}
-            <div className="text-gray-800 font-semibold">{item.y} pts</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
-  </div>
   );
 }
 
 const VenueTossTrends = ({ data }) => {
-  const {
-    bat_first_total,
-    bat_first_win,
-    bowl_first_total,
-    bowl_first_win,
-  } = data;
+  const { bat_first_total, bat_first_win, bowl_first_total, bowl_first_win } =
+    data;
 
   // Calculate overall totals (e.g., last 10 matches)
   const totalMatches = bat_first_total + bowl_first_total;
   const totalWins = bat_first_win + bowl_first_win;
-  const overallWinPercentage = totalMatches ? (totalWins / totalMatches) * 100 : 0;
+  const overallWinPercentage = totalMatches
+    ? (totalWins / totalMatches) * 100
+    : 0;
 
   // Batting first percentages
-  const batWinPercentage = bat_first_total ? (bat_first_win / bat_first_total) * 100 : 0;
+  const batWinPercentage = bat_first_total
+    ? (bat_first_win / bat_first_total) * 100
+    : 0;
   const batLossPercentage = 100 - batWinPercentage;
 
   // Chasing percentages
-  const bowlWinPercentage = bowl_first_total ? (bowl_first_win / bowl_first_total) * 100 : 0;
+  const bowlWinPercentage = bowl_first_total
+    ? (bowl_first_win / bowl_first_total) * 100
+    : 0;
   const bowlLossPercentage = 100 - bowlWinPercentage;
 
   return (
@@ -473,11 +489,10 @@ const VenueTossTrends = ({ data }) => {
   );
 };
 
-const HomeTeam = ({matchInSights}) => {
+const HomeTeam = ({ matchInSights }) => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
 
   useEffect(() => {
     if (!matchInSights?.season_game_uid) {
@@ -494,7 +509,7 @@ const HomeTeam = ({matchInSights}) => {
             season_game_uid: matchInSights.season_game_uid,
             league_id: matchInSights.league_id,
             sports_id: "7", // Assuming sports_id is always 7
-            team_uid : matchInSights.home_uid
+            team_uid: matchInSights.home_uid,
           },
           {
             headers: {
@@ -518,45 +533,48 @@ const HomeTeam = ({matchInSights}) => {
     fetchData();
   }, [matchInSights?.season_game_uid]);
 
-   // Render error/loading states if needed
-   if (loading) {
+  // Render error/loading states if needed
+  if (loading) {
     return <div className="text-center text-gray-600">Loading...</div>;
   }
   if (error) {
     return <div className="text-red-500 text-center">Error: {error}</div>;
   }
 
-  console.log("+++++++++++++++++++++++++++++data", data)
+  console.log("+++++++++++++++++++++++++++++data", data);
 
-  
   return (
     <>
-{data && (
-  <div className="w-full flex max-w-4xl mx-auto mt-4">
-  <div className="flex flex-col items-center w-full">
-    {/* winning trend */}
-    <VenueTossTrends data ={data.win_stats} />
+      {data && (
+        <div className="w-full flex max-w-4xl mx-auto mt-4">
+          <div className="flex flex-col items-center w-full">
+            {/* winning trend */}
+            <VenueTossTrends data={data.win_stats} />
 
-    {/* pei chart */}
-    <DreamTeamChart data ={data.position_wise_fpts} matchInSights={matchInSights} total_matches ={data.total_matches}/>
+            {/* pei chart */}
+            <DreamTeamChart
+              data={data.position_wise_fpts}
+              matchInSights={matchInSights}
+              total_matches={data.total_matches}
+            />
 
-    <Playerinformations players ={data.player_list} matchInSights = {matchInSights}/>
+            <Playerinformations
+              players={data.player_list}
+              matchInSights={matchInSights}
+            />
 
-     <MatchDetails matchData ={data.matches_on_venue} />
-  </div>
+            <MatchDetails matchData={data.matches_on_venue} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
-</div>
-)}
-
-</>
-
-)}
-
-const AwayTeam = ({matchInSights}) => {
+const AwayTeam = ({ matchInSights }) => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-
 
   useEffect(() => {
     if (!matchInSights?.season_game_uid) {
@@ -573,7 +591,7 @@ const AwayTeam = ({matchInSights}) => {
             season_game_uid: matchInSights.season_game_uid,
             league_id: matchInSights.league_id,
             sports_id: "7", // Assuming sports_id is always 7
-            team_uid : matchInSights.away_uid
+            team_uid: matchInSights.away_uid,
           },
           {
             headers: {
@@ -597,38 +615,41 @@ const AwayTeam = ({matchInSights}) => {
     fetchData();
   }, [matchInSights?.season_game_uid]);
 
-   // Render error/loading states if needed
-   if (loading) {
+  // Render error/loading states if needed
+  if (loading) {
     return <div className="text-center text-gray-600">Loading...</div>;
   }
   if (error) {
     return <div className="text-red-500 text-center">Error: {error}</div>;
   }
-  
+
   return (
+    <>
+      {data && (
+        <div className="w-full flex max-w-4xl mx-auto mt-4">
+          <div className="flex flex-col items-center w-full">
+            {/* winning trend */}
+            <VenueTossTrends data={data.win_stats} />
 
-     <>
-{data && (
-  <div className="w-full flex max-w-4xl mx-auto mt-4">
-  <div className="flex flex-col items-center w-full">
-    {/* winning trend */}
-    <VenueTossTrends data ={data.win_stats} />
+            {/* pei chart */}
+            <DreamTeamChart
+              data={data.position_wise_fpts}
+              matchInSights={matchInSights}
+              total_matches={data.total_matches}
+            />
 
-    {/* pei chart */}
-    <DreamTeamChart data ={data.position_wise_fpts} matchInSights={matchInSights} total_matches ={data.total_matches}/>
+            <Playerinformations
+              players={data.player_list}
+              matchInSights={matchInSights}
+            />
 
-    <Playerinformations players ={data.player_list} matchInSights = {matchInSights}/>
-
-     <MatchDetails matchData ={data.matches_on_venue} />
-  </div>
-
-</div>
-)}
-
-</>
-
-
-)}
+            <MatchDetails matchData={data.matches_on_venue} />
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
 
 const RechartsPieChart = ({ bat, bowl, width = 200, height = 200 }) => {
   const data = [
@@ -2040,16 +2061,14 @@ function VenuePerformance() {
           </>
         )}
 
+      {activeTab === matchInSights.home && (
+        <HomeTeam matchInSights={matchInSights} />
+      )}
 
-
-        {activeTab ===  matchInSights.home  && (
-        < HomeTeam matchInSights={matchInSights}   />
-        )}
-
-        {activeTab ===  matchInSights.away  && (
-        < AwayTeam matchInSights={matchInSights} />
-        )}
-    </div> 
+      {activeTab === matchInSights.away && (
+        <AwayTeam matchInSights={matchInSights} />
+      )}
+    </div>
   );
 }
 

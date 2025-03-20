@@ -1,4 +1,4 @@
-import React, { useState, useEffect  } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import { FaStar, FaLock, FaTimes } from "react-icons/fa";
@@ -11,9 +11,7 @@ import Graph from "./Graph";
 import Byformat from "./Byformat";
 import ByCometition from "./ByCometition";
 import News from "./News";
-import Getlocation from './Getlocation.jsx';
-
-
+import Getlocation from "./Getlocation.jsx";
 
 function PlayerDetails() {
   const [data, setData] = useState(null);
@@ -27,19 +25,19 @@ function PlayerDetails() {
   const matchID = location.state?.matchID;
   const matchInSights = location.state?.matchInSights;
 
-    // Helper to label format
-    const formatLabels = {
-      "1": "Test",
-      "2": "ODI",
-      "3": "T20",
-      "4": "T10",
-    };
-    const formatLabel = (format) =>
-      formatLabels[format] || format || "N/A";
+  // Helper to label format
+  const formatLabels = {
+    1: "Test",
+    2: "ODI",
+    3: "T20",
+    4: "T10",
+  };
+  const formatLabel = (format) => formatLabels[format] || format || "N/A";
 
-    // Predefine the label for the second tab so it’s consistent
-    const vsAwayTeamLabel = `VS ${matchInSights?.away_abbr || matchInSights?.away || "???"}`;
-
+  // Predefine the label for the second tab so it’s consistent
+  const vsAwayTeamLabel = `VS ${
+    matchInSights?.away_abbr || matchInSights?.away || "???"
+  }`;
 
   // Construct your top-level (sub) tabs for “FORM”
   const tabs = [
@@ -61,9 +59,6 @@ function PlayerDetails() {
 
   const [activeNav, setActiveNav] = useState(mainNavItems[0].path);
   const [activeTab, setActiveTab] = useState(tabs[0]); // default sub-tab
-
-
-
 
   // Fetch the data
   useEffect(() => {
@@ -127,10 +122,7 @@ function PlayerDetails() {
     AR: "All Rounder",
   };
 
-
-
-    console.log(Getlocation())
-
+  console.log(Getlocation());
 
   // -------------------------------- Render UI --------------------------------
   return (
@@ -195,9 +187,7 @@ function PlayerDetails() {
                 )}
                 <span>{player_detail.team_name}</span>
                 <span>|</span>
-                <span>
-                  {positionMap[player_detail.position] || "Batsman"}
-                </span>
+                <span>{positionMap[player_detail.position] || "Batsman"}</span>
                 <span>|</span>
                 <span>
                   {player_detail.batting_style === "Right Hand Bat"
@@ -208,6 +198,10 @@ function PlayerDetails() {
                 </span>
                 <span>|</span>
                 <span>{player_detail.bowling_style}</span>
+                <span>|</span>
+                <span className="text-red-600">
+                  Injured {player_detail.injury_status}
+                </span>
               </div>
 
               {/* Last Match Info */}
@@ -266,7 +260,10 @@ function PlayerDetails() {
                   key={path}
                   to={`/player/${
                     playerInfo?.player_uid
-                  }/${(playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name).replace(/\s+/g, "_")}/${
+                  }/${(playerInfo?.full_name
+                    ? playerInfo.full_name
+                    : playerInfo.display_name
+                  ).replace(/\s+/g, "_")}/${
                     matchInSights?.season_game_uid
                   }/${path}`}
                   state={{ playerInfo, matchID, matchInSights }}
@@ -347,9 +344,7 @@ function PlayerDetails() {
               </>
             )}
 
-            {activeNav === "powerranking" && (
-             <PowerRanking />
-            )}
+            {activeNav === "powerranking" && <PowerRanking />}
 
             {activeNav === "graph" && <Graph />}
 

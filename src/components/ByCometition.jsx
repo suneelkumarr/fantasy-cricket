@@ -52,7 +52,7 @@ const StatsTable = ({ headers, data }) => {
 
 export default function ByCompetition() {
   const location = useLocation();
-  
+
   // Store details in state to preserve them on reload
   const [playerDetails] = useState(location.state?.playerInfo || null);
   const [matchDetails] = useState(location.state?.matchID || null);
@@ -102,8 +102,10 @@ export default function ByCompetition() {
     fetchData();
   }, [matchDetails, playerDetails?.player_uid, selectedYear]); // FIXED: added selectedYear dependency
 
-  if (loading) return <div className="text-center text-gray-600 my-4">Loading...</div>;
-  if (error) return <div className="text-red-500 text-center my-4">Error: {error}</div>;
+  if (loading)
+    return <div className="text-center text-gray-600 my-4">Loading...</div>;
+  if (error)
+    return <div className="text-red-500 text-center my-4">Error: {error}</div>;
   if (!data) return null;
 
   const stats_data = data?.stats_data || {};
@@ -139,108 +141,133 @@ export default function ByCompetition() {
         </div>
 
         {/* Table Header Row (League, Rank, Fantasy Pts) */}
-  <div className="hidden sm:flex text-gray-600 font-medium text-sm border-b pb-2 justify-between">
-  <div className="w-2/5">League</div>
-  <div className="w-1/5 text-center">Rank</div>
-  <div className="w-1/5 text-right">Fantasy Pts</div>
-</div>
-
-{leagueStats.map((league, idx) => (
-  <div key={idx} className="py-2 text-sm">
-    {/* Desktop Layout */}
-    <div className="hidden sm:flex items-center justify-between">
-      <div className="w-2/5 truncate">{league.league_display_name || "N/A"}</div>
-      <div className="w-1/5 text-center">{league.total_rank || "-"}</div>
-      <div className="w-1/5 text-right">{league.total_fp || "0"}</div>
-    </div>
-
-    {/* Mobile Layout */}
-    <div className="sm:hidden flex flex-col space-y-1">
-      <div className="flex justify-between">
-        <span className="font-medium text-gray-800 truncate">{league.league_display_name || "N/A"}</span>
-        <span className="text-gray-600">{league.total_fp || "0"}</span>
-      </div>
-      <div className="flex justify-between text-gray-600">
-        <span>Rank: {league.total_rank || "-"}</span>
-      </div>
-    </div>
-
-    {/* Sub-row: Date + Team */}
-    <div className="mt-1 text-xs text-gray-500">
-      {formatLeagueDate(league.league_schedule_date)} | {league.team_name}
-    </div>
-
-    {/* Batting/Bowling/Fielding rows */}
-    <div className="flex flex-col w-full mt-3 border-t border-gray-200">
-      {/* Batting */}
-      <div 
-        className="flex items-center justify-between py-2 px-4 cursor-pointer"
-        onClick={() => handleToggle("batting")}
-      >
-        <div className="font-medium text-gray-600 w-2/5 text-left">Batting</div>
-        <div className="text-gray-800 font-medium text-center w-1/5">{league.batting_rank}</div>
-        <div className="flex items-center justify-end w-1/5">
-          <div className="font-medium text-gray-800 mr-4">{league.batting_fp}</div>
-          <div className="text-lg text-gray-400">
-            {openSection === "batting" ? "-" : "+"}
-          </div>
+        <div className="hidden sm:flex text-gray-600 font-medium text-sm border-b pb-2 justify-between">
+          <div className="w-2/5">League</div>
+          <div className="w-1/5 text-center">Rank</div>
+          <div className="w-1/5 text-right">Fantasy Pts</div>
         </div>
-      </div>
 
-      {/* Bowling */}
-      <div 
-        className="flex items-center justify-between py-2 px-4 cursor-pointer"
-        onClick={() => handleToggle("bowling")}
-      >
-        <div className="font-medium text-gray-600 w-2/5 text-left">Bowling</div>
-        <div className="text-gray-800 font-medium text-center w-1/5">{league.bowling_rank}</div>
-        <div className="flex items-center justify-end w-1/5">
-          <div className="font-medium text-gray-800 mr-4">{league.bowling_fp}</div>
-          <div className="text-lg text-gray-400">
-            {openSection === "bowling" ? "-" : "+"}
+        {leagueStats.map((league, idx) => (
+          <div key={idx} className="py-2 text-sm">
+            {/* Desktop Layout */}
+            <div className="hidden sm:flex items-center justify-between">
+              <div className="w-2/5 truncate">
+                {league.league_display_name || "N/A"}
+              </div>
+              <div className="w-1/5 text-center">
+                {league.total_rank || "-"}
+              </div>
+              <div className="w-1/5 text-right">{league.total_fp || "0"}</div>
+            </div>
+
+            {/* Mobile Layout */}
+            <div className="sm:hidden flex flex-col space-y-1">
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-800 truncate">
+                  {league.league_display_name || "N/A"}
+                </span>
+                <span className="text-gray-600">{league.total_fp || "0"}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Rank: {league.total_rank || "-"}</span>
+              </div>
+            </div>
+
+            {/* Sub-row: Date + Team */}
+            <div className="mt-1 text-xs text-gray-500">
+              {formatLeagueDate(league.league_schedule_date)} |{" "}
+              {league.team_name}
+            </div>
+
+            {/* Batting/Bowling/Fielding rows */}
+            <div className="flex flex-col w-full mt-3 border-t border-gray-200">
+              {/* Batting */}
+              <div
+                className="flex items-center justify-between py-2 px-4 cursor-pointer"
+                onClick={() => handleToggle("batting")}
+              >
+                <div className="font-medium text-gray-600 w-2/5 text-left">
+                  Batting
+                </div>
+                <div className="text-gray-800 font-medium text-center w-1/5">
+                  {league.batting_rank}
+                </div>
+                <div className="flex items-center justify-end w-1/5">
+                  <div className="font-medium text-gray-800 mr-4">
+                    {league.batting_fp}
+                  </div>
+                  <div className="text-lg text-gray-400">
+                    {openSection === "batting" ? "-" : "+"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bowling */}
+              <div
+                className="flex items-center justify-between py-2 px-4 cursor-pointer"
+                onClick={() => handleToggle("bowling")}
+              >
+                <div className="font-medium text-gray-600 w-2/5 text-left">
+                  Bowling
+                </div>
+                <div className="text-gray-800 font-medium text-center w-1/5">
+                  {league.bowling_rank}
+                </div>
+                <div className="flex items-center justify-end w-1/5">
+                  <div className="font-medium text-gray-800 mr-4">
+                    {league.bowling_fp}
+                  </div>
+                  <div className="text-lg text-gray-400">
+                    {openSection === "bowling" ? "-" : "+"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Fielding */}
+              <div
+                className="flex items-center justify-between py-2 px-4 cursor-pointer"
+                onClick={() => handleToggle("fielding")}
+              >
+                <div className="font-medium text-gray-600 w-2/5 text-left">
+                  Fielding
+                </div>
+                <div className="text-gray-800 font-medium text-center w-1/5">
+                  {league.fielding_rank}
+                </div>
+                <div className="flex items-center justify-end w-1/5">
+                  <div className="font-medium text-gray-800 mr-4">
+                    {league.fielding_fp}
+                  </div>
+                  <div className="text-lg text-gray-400">
+                    {openSection === "fielding" ? "-" : "+"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Expanded Stats (if clicked) */}
+            {openSection === "batting" && (
+              <StatsTable
+                headers={compData.batting_header}
+                data={league.batting_stats}
+              />
+            )}
+
+            {openSection === "bowling" && (
+              <StatsTable
+                headers={compData.bowling_header}
+                data={league.bowling_stats}
+              />
+            )}
+
+            {openSection === "fielding" && (
+              <StatsTable
+                headers={compData.fielding_header}
+                data={league.fielding_stats}
+              />
+            )}
           </div>
-        </div>
-      </div>
-
-      {/* Fielding */}
-      <div 
-        className="flex items-center justify-between py-2 px-4 cursor-pointer"
-        onClick={() => handleToggle("fielding")}
-      >
-        <div className="font-medium text-gray-600 w-2/5 text-left">Fielding</div>
-        <div className="text-gray-800 font-medium text-center w-1/5">{league.fielding_rank}</div>
-        <div className="flex items-center justify-end w-1/5">
-          <div className="font-medium text-gray-800 mr-4">{league.fielding_fp}</div>
-          <div className="text-lg text-gray-400">
-            {openSection === "fielding" ? "-" : "+"}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Expanded Stats (if clicked) */}
-    {openSection === "batting" && (
-      <StatsTable
-        headers={compData.batting_header}
-        data={league.batting_stats}
-      />
-    )}
-
-    {openSection === "bowling" && (
-      <StatsTable
-        headers={compData.bowling_header}
-        data={league.bowling_stats}
-      />
-    )}
-
-    {openSection === "fielding" && (
-      <StatsTable
-        headers={compData.fielding_header}
-        data={league.fielding_stats}
-      />
-    )}
-  </div>
-))}
+        ))}
       </div>
     </div>
   );

@@ -2,80 +2,89 @@ import React, { useState, useEffect } from "react";
 import { useLocation, Link } from "react-router-dom";
 import axios from "axios";
 
-
 function PlayerList({ playersData, fixture_info, matchInSights }) {
-    // Our three tabs: OVERALL, HOME, AWAY
-    const TABS = [
-      { label: 'OVERALL', value: 'OVERALL' },
-      { label: fixture_info.home, value: fixture_info.home },
-      { label: fixture_info.away, value: fixture_info.away },
-    ];
-  
-    // State for active tab and sorting order
-    const [activeTab, setActiveTab] = useState('OVERALL');
-    const [sortOrder, setSortOrder] = useState('desc');
-  
-    // Filter and sort players based on the active tab
-    let displayedPlayers = activeTab === 'OVERALL' ? playersData : playersData.filter((p) => p.team_abbr === activeTab);
-    
-    // Sorting logic
-    displayedPlayers = [...displayedPlayers].sort((a, b) => {
-      return sortOrder === 'asc' ? a.power_rate - b.power_rate : b.power_rate - a.power_rate;
-    });
-  
-    // Function to toggle sorting order
-    const toggleSortOrder = () => {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    };
-  
-    return (
-      <div className="top-player-container bg-white p-4 shadow-md rounded-md w-full max-w-4xl mx-auto">
-        <div className="rating-main-container mt-10">
-          <div className="performance-message text-gray-700 font-semibold mb-4">
-            Tap on any player to view detailed player card
-          </div>
-  
-          {/* Tabs */}
-          <div className="tab-container flex items-center justify-center space-x-6 mb-4">
-            {TABS.map((tab) => (
-              <div
-                key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
-                className={`tab-item cursor-pointer pb-2 ${
-                  activeTab === tab.value ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'
-                }`}
-              >
-                {tab.label}
-              </div>
-            ))}
-          </div>
-  
-          {/* List Header */}
-          <div className="list-header hidden md:grid md:grid-cols-4 border-b border-gray-200 pb-2 font-semibold text-gray-600">
-            <div className="rank-item">Rank</div>
-            <div className="player-item">Player</div>
-            <div className="graph-item flex items-center cursor-pointer" onClick={toggleSortOrder}>
-              Rating <i className="ml-1 icon-arrow-down"></i>
+  // Our three tabs: OVERALL, HOME, AWAY
+  const TABS = [
+    { label: "OVERALL", value: "OVERALL" },
+    { label: fixture_info.home, value: fixture_info.home },
+    { label: fixture_info.away, value: fixture_info.away },
+  ];
+
+  // State for active tab and sorting order
+  const [activeTab, setActiveTab] = useState("OVERALL");
+  const [sortOrder, setSortOrder] = useState("desc");
+
+  // Filter and sort players based on the active tab
+  let displayedPlayers =
+    activeTab === "OVERALL"
+      ? playersData
+      : playersData.filter((p) => p.team_abbr === activeTab);
+
+  // Sorting logic
+  displayedPlayers = [...displayedPlayers].sort((a, b) => {
+    return sortOrder === "asc"
+      ? a.power_rate - b.power_rate
+      : b.power_rate - a.power_rate;
+  });
+
+  // Function to toggle sorting order
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
+  return (
+    <div className="top-player-container bg-white p-4 shadow-md rounded-md w-full max-w-4xl mx-auto">
+      <div className="rating-main-container mt-10">
+        <div className="performance-message text-gray-700 font-semibold mb-4">
+          Tap on any player to view detailed player card
+        </div>
+
+        {/* Tabs */}
+        <div className="tab-container flex items-center justify-center space-x-6 mb-4">
+          {TABS.map((tab) => (
+            <div
+              key={tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className={`tab-item cursor-pointer pb-2 ${
+                activeTab === tab.value
+                  ? "border-b-2 border-blue-600 text-blue-600"
+                  : "text-gray-500"
+              }`}
+            >
+              {tab.label}
             </div>
-            <div className="action-item text-right mr-6">Action</div>
+          ))}
+        </div>
+
+        {/* List Header */}
+        <div className="list-header hidden md:grid md:grid-cols-4 border-b border-gray-200 pb-2 font-semibold text-gray-600">
+          <div className="rank-item">Rank</div>
+          <div className="player-item">Player</div>
+          <div
+            className="graph-item flex items-center cursor-pointer"
+            onClick={toggleSortOrder}
+          >
+            Rating <i className="ml-1 icon-arrow-down"></i>
           </div>
-  
-          {/* Player Listing */}
-          <div className="player-listing space-y-4 mt-4">
-            {displayedPlayers.map((player) => (
-                                  <Link
-                                    key={player.player_uid}
-                                    to={`/player/${
-                                      player?.player_uid || "unknown"
-                                    }/${(player?.display_name ? player.display_name.replace(/\s+/g, "_") : player?.full_name?.replace(/\s+/g, "_") || "unknown")}/${
-                                      matchInSights.season_game_uid || "unknown"
-                                    }/form`}
-                                    state={{
-                                      playerInfo: player,
-                                      matchID: matchInSights.season_game_uid,
-                                      matchInSights: matchInSights,
-                                    }}
-                                  >
+          <div className="action-item text-right mr-6">Action</div>
+        </div>
+
+        {/* Player Listing */}
+        <div className="player-listing space-y-4 mt-4">
+          {displayedPlayers.map((player) => (
+            <Link
+              key={player.player_uid}
+              to={`/player/${player?.player_uid || "unknown"}/${
+                player?.display_name
+                  ? player.display_name.replace(/\s+/g, "_")
+                  : player?.full_name?.replace(/\s+/g, "_") || "unknown"
+              }/${matchInSights.season_game_uid || "unknown"}/form`}
+              state={{
+                playerInfo: player,
+                matchID: matchInSights.season_game_uid,
+                matchInSights: matchInSights,
+              }}
+            >
               <div
                 key={player.player_id}
                 className="player-item bg-white p-4 rounded shadow-sm flex flex-col md:grid md:grid-cols-4 items-center"
@@ -84,38 +93,42 @@ function PlayerList({ playersData, fixture_info, matchInSights }) {
                 <div className="player-rank-box flex items-center justify-start md:justify-start w-full md:w-auto">
                   <i className="icon-power-ranking text-xl text-blue-600 mr-2" />
                   <span className="text-orange-500 ml-1">⚡</span>
-                  <span className="text-gray-700 font-semibold">{player.power_rank}</span>
+                  <span className="text-gray-700 font-semibold">
+                    {player.power_rank}
+                  </span>
                 </div>
-  
+
                 {/* Player Info */}
                 <div className="player-info-box mt-2 md:mt-0 w-full md:w-auto">
-                  <div className="name-style font-semibold text-gray-800">{player.nick_name}</div>
+                  <div className="name-style font-semibold text-gray-800">
+                    {player.nick_name}
+                  </div>
                   <div className="position-style text-sm text-gray-600 flex items-center">
                     {player.position}
                     <span className="dot w-1 h-1 bg-gray-600 rounded-full inline-block mx-2"></span>
                     {player.team_abbr}
                   </div>
                 </div>
-  
+
                 {/* Rating Bar */}
                 <div className="player-graph-box-home mt-2 md:mt-0 w-full flex flex-col">
-                <div className="relative h-8 bg-gray-300 rounded mb-1 overflow-hidden">
-                  <div
-                    className="absolute h-8 left-0 top-0 rounded transition-all duration-500 ease-in-out flex items-center justify-center"
-                    style={{
-                      width: `${player.power_rate || 0}%`,
-                      backgroundColor:
-                        player.team_abbr === fixture_info.home
-                          ? 'rgba(244, 118, 76, 0.8)'  // Darker for better visibility
-                          : 'rgba(80, 193, 232, 0.8)',
-                      color: "white", // Ensure text contrast
-                    }}
-                  >
-                    {player.power_rate}
+                  <div className="relative h-8 bg-gray-300 rounded mb-1 overflow-hidden">
+                    <div
+                      className="absolute h-8 left-0 top-0 rounded transition-all duration-500 ease-in-out flex items-center justify-center"
+                      style={{
+                        width: `${player.power_rate || 0}%`,
+                        backgroundColor:
+                          player.team_abbr === fixture_info.home
+                            ? "rgba(244, 118, 76, 0.8)" // Darker for better visibility
+                            : "rgba(80, 193, 232, 0.8)",
+                        color: "white", // Ensure text contrast
+                      }}
+                    >
+                      {player.power_rate}
+                    </div>
                   </div>
                 </div>
-              </div>
-  
+
                 {/* Lock/Unlock Icon */}
                 <div className="player-lock-box mt-2 md:mt-0 w-full md:w-auto flex justify-end">
                   <div className="lock-unlock-item">
@@ -127,61 +140,61 @@ function PlayerList({ playersData, fixture_info, matchInSights }) {
                   </div>
                 </div>
               </div>
-              </Link>
-            ))}
-          </div>
+            </Link>
+          ))}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
 function PlayerPerformance() {
-    const [data, setData] = useState(null);
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const location = useLocation();
-    const matchInSights = location.state?.matchInSights;
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const location = useLocation();
+  const matchInSights = location.state?.matchInSights;
 
-    useEffect(() => {
-        if (!matchInSights?.season_game_uid) {
-          console.warn("season_game_uid is undefined or null");
-          return;
-        }
-    
-        const fetchData = async () => {
-          setLoading(true);
-          try {
-            const response = await axios.post(
-              "https://plapi.perfectlineup.in/fantasy/stats/player_power_ranking",
-              {
-                season_game_uid: matchInSights.season_game_uid,
-                league_id:matchInSights.league_id,
-                website_id: 1,
-                sports_id: "7", // Assuming sports_id is always 7
-              },
-              {
-                headers: {
-                  sessionkey: "3cd0fb996816c37121c765f292dd3f78",
-                  moduleaccess: "7",
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-    
-            console.log("API Response:", response.data);
-            setData(response.data.data);
-          } catch (error) {
-            console.error("API Error:", error);
-            setError(error.message || "An error occurred while fetching data.");
-          } finally {
-            setLoading(false);
+  useEffect(() => {
+    if (!matchInSights?.season_game_uid) {
+      console.warn("season_game_uid is undefined or null");
+      return;
+    }
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.post(
+          "https://plapi.perfectlineup.in/fantasy/stats/player_power_ranking",
+          {
+            season_game_uid: matchInSights.season_game_uid,
+            league_id: matchInSights.league_id,
+            website_id: 1,
+            sports_id: "7", // Assuming sports_id is always 7
+          },
+          {
+            headers: {
+              sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+              moduleaccess: "7",
+              "Content-Type": "application/json",
+            },
           }
-        };
-    
-        fetchData();
-      }, [matchInSights?.season_game_uid]);
+        );
 
-        // Render error/loading states if needed
+        console.log("API Response:", response.data);
+        setData(response.data.data);
+      } catch (error) {
+        console.error("API Error:", error);
+        setError(error.message || "An error occurred while fetching data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [matchInSights?.season_game_uid]);
+
+  // Render error/loading states if needed
   if (loading) {
     return <div className="text-center text-gray-600">Loading...</div>;
   }
@@ -192,29 +205,27 @@ function PlayerPerformance() {
     return null;
   }
 
-    // Countdown function that gets recalculated on each re-render
-    const getCountdownTime = (scheduledDate) => {
-        const now = new Date();
-        // Convert scheduledDate from UTC to IST (UTC +5:30)
-        const targetDate = new Date(scheduledDate);
-        targetDate.setHours(targetDate.getHours() + 5);
-        targetDate.setMinutes(targetDate.getMinutes() + 30);
-    
-        const diff = targetDate - now;
-    
-        if (diff <= 0) {
-          return "Event Started";
-        }
-    
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-        return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-      };
+  // Countdown function that gets recalculated on each re-render
+  const getCountdownTime = (scheduledDate) => {
+    const now = new Date();
+    // Convert scheduledDate from UTC to IST (UTC +5:30)
+    const targetDate = new Date(scheduledDate);
+    targetDate.setHours(targetDate.getHours() + 5);
+    targetDate.setMinutes(targetDate.getMinutes() + 30);
 
+    const diff = targetDate - now;
 
+    if (diff <= 0) {
+      return "Event Started";
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+  };
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-start justify-start">
@@ -319,9 +330,8 @@ function PlayerPerformance() {
           matchInSights={matchInSights}
         />
       )}
-
     </div>
-  )
+  );
 }
 
-export default PlayerPerformance
+export default PlayerPerformance;

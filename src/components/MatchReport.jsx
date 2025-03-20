@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useCallback  } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import { AiOutlineMenuFold } from "react-icons/ai";
-import HighchartsReact from 'highcharts-react-official';
-import Highcharts from 'highcharts';
-
+import HighchartsReact from "highcharts-react-official";
+import Highcharts from "highcharts";
 
 // import { AiOutlineStar } from "react-icons/ai"; // Unused import
 // import Getlocation from './Getlocation.jsx'; // Unused import
@@ -150,9 +149,8 @@ const TopPlayers = ({ matchData, stats_details }) => {
   );
 };
 
-function DreamTeamChart({ matchData ,stats_details }) {
-
-  const  {BOW, AR, BAT, WK} = stats_details.position_breakdown
+function DreamTeamChart({ matchData, stats_details }) {
+  const { BOW, AR, BAT, WK } = stats_details.position_breakdown;
   // Example chart options:
   const chartOptions = {
     chart: {
@@ -207,57 +205,54 @@ function DreamTeamChart({ matchData ,stats_details }) {
   // 2. We'll store the data array separately for easy use below
   const chartData = chartOptions.series[0].data;
 
-
   return (
     <div className="max-w-4xl mx-auto border rounded-md bg-white p-4 shadow-sm">
-    {/* Header */}
-    <h2 className="text-base font-bold mb-1">
-      Fantasy points contribution by position in Dream Team
-    </h2>
-    <p className="text-sm text-gray-600 mb-4">
-      Breakdown of fantasy points based on positions for players appearing in
-      the Dream Team of the last played at this venue
-    </p>
+      {/* Header */}
+      <h2 className="text-base font-bold mb-1">
+        Fantasy points contribution by position in Dream Team
+      </h2>
+      <p className="text-sm text-gray-600 mb-4">
+        Breakdown of fantasy points based on positions for players appearing in
+        the Dream Team of the last played at this venue
+      </p>
 
-    {/* Chart Container */}
-    <div className="overflow-hidden mb-6">
-      <HighchartsReact highcharts={Highcharts} options={chartOptions} />
-    </div>
+      {/* Chart Container */}
+      <div className="overflow-hidden mb-6">
+        <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+      </div>
 
-    {/* 3. Data Below the Chart */}
-    <div className="space-y-2">
-      <div className="font-semibold text-gray-800">Points Breakdown</div>
+      {/* 3. Data Below the Chart */}
+      <div className="space-y-2">
+        <div className="font-semibold text-gray-800">Points Breakdown</div>
 
-      {/* For a quick card/list style: */}
-      <div className="flex flex-col gap-2">
-        {chartData.map((item) => (
-          <div
-            key={item.name}
-            className="flex items-center justify-between rounded-md bg-gray-50 p-2 shadow-sm"
-          >
-            <div className="flex items-center space-x-2">
-              {/* Color Swatch */}
-              <div
-                className="h-4 w-4 rounded-full"
-                style={{ backgroundColor: item.color }}
-              />
-              {/* Position Name */}
-              <span className="font-medium text-gray-700">{item.name}</span>
+        {/* For a quick card/list style: */}
+        <div className="flex flex-col gap-2">
+          {chartData.map((item) => (
+            <div
+              key={item.name}
+              className="flex items-center justify-between rounded-md bg-gray-50 p-2 shadow-sm"
+            >
+              <div className="flex items-center space-x-2">
+                {/* Color Swatch */}
+                <div
+                  className="h-4 w-4 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                {/* Position Name */}
+                <span className="font-medium text-gray-700">{item.name}</span>
+              </div>
+              {/* Points */}
+              <div className="text-gray-800 font-semibold">{item.y} pts</div>
             </div>
-            {/* Points */}
-            <div className="text-gray-800 font-semibold">{item.y} pts</div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
-  </div>
   );
 }
 
-
-function DreamTeamChartfildeing({ matchData ,stats_details }) {
-
-  const  {BATTING, BOWLING, FIELDING} = stats_details.category_breakdown
+function DreamTeamChartfildeing({ matchData, stats_details }) {
+  const { BATTING, BOWLING, FIELDING } = stats_details.category_breakdown;
   // Example chart options:
   const chartOptions = {
     chart: {
@@ -298,7 +293,7 @@ function DreamTeamChartfildeing({ matchData ,stats_details }) {
             name: "FIELDING",
             y: FIELDING,
             color: "rgb(95,165,145)",
-          }
+          },
         ],
       },
     ],
@@ -307,205 +302,201 @@ function DreamTeamChartfildeing({ matchData ,stats_details }) {
   // 2. We'll store the data array separately for easy use below
   const chartData = chartOptions.series[0].data;
 
-
   return (
     <div className="max-w-4xl mx-auto border rounded-md bg-white p-4 shadow-sm">
-    {/* Header */}
-    <h2 className="text-base font-bold mb-1">
-    Dream Team Points Breakdown
-    </h2>
-    <p className="text-sm text-gray-600 mb-4">
-    Breakdown of fantasy points into Batting, Bowling and Fielding points for players appearing in the Dream Teams of the last played at this venue
-    </p>
+      {/* Header */}
+      <h2 className="text-base font-bold mb-1">Dream Team Points Breakdown</h2>
+      <p className="text-sm text-gray-600 mb-4">
+        Breakdown of fantasy points into Batting, Bowling and Fielding points
+        for players appearing in the Dream Teams of the last played at this
+        venue
+      </p>
 
-    {/* Chart Container */}
-    <div className="overflow-hidden mb-6">
-      <HighchartsReact highcharts={Highcharts} options={chartOptions} />
-    </div>
-
-    {/* 3. Data Below the Chart */}
-    <div className="space-y-2">
-      <div className="font-semibold text-gray-800">Points Breakdown</div>
-
-      {/* For a quick card/list style: */}
-      <div className="flex flex-col gap-2">
-        {chartData.map((item) => (
-          <div
-            key={item.name}
-            className="flex items-center justify-between rounded-md bg-gray-50 p-2 shadow-sm"
-          >
-            <div className="flex items-center space-x-2">
-              {/* Color Swatch */}
-              <div
-                className="h-4 w-4 rounded-full"
-                style={{ backgroundColor: item.color }}
-              />
-              {/* Position Name */}
-              <span className="font-medium text-gray-700">{item.name}</span>
-            </div>
-            {/* Points */}
-            <div className="text-gray-800 font-semibold">{item.y} pts</div>
-          </div>
-        ))}
+      {/* Chart Container */}
+      <div className="overflow-hidden mb-6">
+        <HighchartsReact highcharts={Highcharts} options={chartOptions} />
       </div>
-    </div>
-  </div>
-  );
-}
 
- function DreamTeam({ matchData ,stats_details }) {
-// 1) Filter players in perfect lineup
-const dreamTeamPlayers = stats_details.player_list.filter(
-  (player) => player.in_perfect_lineup === "1"
-);
+      {/* 3. Data Below the Chart */}
+      <div className="space-y-2">
+        <div className="font-semibold text-gray-800">Points Breakdown</div>
 
-// 2) State to toggle between Salary and Fantasy Points
-const [activeTab, setActiveTab] = useState("FantasyPoints");
-
-// 3) Sum total based on the active tab
-const totalValue = dreamTeamPlayers.reduce((sum, player) => {
-  const value =
-    activeTab === "FantasyPoints"
-      ? Number(player.pl_fantasy_points ?? 0)
-      : Number(player.player_salary ?? 0);
-  return sum + value;
-}, 0);
-
-// 4) Map short position codes to user-friendly labels
-const positionMap = {
-  WK: "Wicket Keeper",
-  BAT: "Batsman",
-  BOW: "Bowler",
-  AR: "All Rounder",
-};
-
-// 5) Group players by position
-const groupedByPosition = dreamTeamPlayers.reduce((acc, player) => {
-  const positionLabel = positionMap[player.player_position] || player.player_position;
-  if (!acc[positionLabel]) acc[positionLabel] = [];
-  acc[positionLabel].push(player);
-  return acc;
-}, {});
-
-// 6) Define the order we want to display positions in
-const positionOrder = ["Wicket Keeper", "Batsman", "All Rounder", "Bowler"];
-
-return (
-  <div className="max-w-4xl mx-auto p-4">
-    {/* Title & Points */}
-    <div className="flex items-center justify-between mb-4">
-      <h1 className="text-xl font-bold">Dream Team</h1>
-      <div className="flex items-center">
-        <div className="text-2xl font-semibold mr-2">{totalValue}</div>
-        <div className="text-sm leading-tight">
-          Dream team
-          <br />
-          {activeTab === "FantasyPoints" ? "points" : "salary"}
+        {/* For a quick card/list style: */}
+        <div className="flex flex-col gap-2">
+          {chartData.map((item) => (
+            <div
+              key={item.name}
+              className="flex items-center justify-between rounded-md bg-gray-50 p-2 shadow-sm"
+            >
+              <div className="flex items-center space-x-2">
+                {/* Color Swatch */}
+                <div
+                  className="h-4 w-4 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+                {/* Position Name */}
+                <span className="font-medium text-gray-700">{item.name}</span>
+              </div>
+              {/* Points */}
+              <div className="text-gray-800 font-semibold">{item.y} pts</div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
+  );
+}
 
-    {/* Tabs: Salary / Fantasy Points */}
-    <div className="mb-4 flex space-x-4 border-b border-gray-200 pb-2">
-      <button
-        className={
-          activeTab === "Salary"
-            ? "border-b-2 border-blue-600 text-blue-600 font-medium"
-            : "text-gray-500 hover:text-gray-700"
-        }
-        onClick={() => setActiveTab("Salary")}
-      >
-        Salary
-      </button>
-      <button
-        className={
-          activeTab === "FantasyPoints"
-            ? "border-b-2 border-blue-600 text-blue-600 font-medium"
-            : "text-gray-500 hover:text-gray-700"
-        }
-        onClick={() => setActiveTab("FantasyPoints")}
-      >
-        Fantasy Points
-      </button>
-    </div>
+function DreamTeam({ matchData, stats_details }) {
+  // 1) Filter players in perfect lineup
+  const dreamTeamPlayers = stats_details.player_list.filter(
+    (player) => player.in_perfect_lineup === "1"
+  );
 
-    {/* Stadium background container */}
-    <div
-      className="
+  // 2) State to toggle between Salary and Fantasy Points
+  const [activeTab, setActiveTab] = useState("FantasyPoints");
+
+  // 3) Sum total based on the active tab
+  const totalValue = dreamTeamPlayers.reduce((sum, player) => {
+    const value =
+      activeTab === "FantasyPoints"
+        ? Number(player.pl_fantasy_points ?? 0)
+        : Number(player.player_salary ?? 0);
+    return sum + value;
+  }, 0);
+
+  // 4) Map short position codes to user-friendly labels
+  const positionMap = {
+    WK: "Wicket Keeper",
+    BAT: "Batsman",
+    BOW: "Bowler",
+    AR: "All Rounder",
+  };
+
+  // 5) Group players by position
+  const groupedByPosition = dreamTeamPlayers.reduce((acc, player) => {
+    const positionLabel =
+      positionMap[player.player_position] || player.player_position;
+    if (!acc[positionLabel]) acc[positionLabel] = [];
+    acc[positionLabel].push(player);
+    return acc;
+  }, {});
+
+  // 6) Define the order we want to display positions in
+  const positionOrder = ["Wicket Keeper", "Batsman", "All Rounder", "Bowler"];
+
+  return (
+    <div className="max-w-4xl mx-auto p-4">
+      {/* Title & Points */}
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold">Dream Team</h1>
+        <div className="flex items-center">
+          <div className="text-2xl font-semibold mr-2">{totalValue}</div>
+          <div className="text-sm leading-tight">
+            Dream team
+            <br />
+            {activeTab === "FantasyPoints" ? "points" : "salary"}
+          </div>
+        </div>
+      </div>
+
+      {/* Tabs: Salary / Fantasy Points */}
+      <div className="mb-4 flex space-x-4 border-b border-gray-200 pb-2">
+        <button
+          className={
+            activeTab === "Salary"
+              ? "border-b-2 border-blue-600 text-blue-600 font-medium"
+              : "text-gray-500 hover:text-gray-700"
+          }
+          onClick={() => setActiveTab("Salary")}
+        >
+          Salary
+        </button>
+        <button
+          className={
+            activeTab === "FantasyPoints"
+              ? "border-b-2 border-blue-600 text-blue-600 font-medium"
+              : "text-gray-500 hover:text-gray-700"
+          }
+          onClick={() => setActiveTab("FantasyPoints")}
+        >
+          Fantasy Points
+        </button>
+      </div>
+
+      {/* Stadium background container */}
+      <div
+        className="
         relative 
         bg-no-repeat bg-cover bg-center 
         rounded-md p-4
         min-h-[400px]
       "
-      style={{
-        backgroundImage:
-          'url("https://www.perfectlineup.in/static/media/ic_cricket_stadium.7d551e28.png")',
-      }}
-    >
-      {/* Positions & Players */}
-      <div className="relative space-y-8">
-        {positionOrder.map((posLabel) => {
-          const players = groupedByPosition[posLabel];
-          if (!players) return null; // No players for this position
-          return (
-            <div key={posLabel} className="mb-6">
-              <div className="font-bold text-lg mb-2">{posLabel}</div>
+        style={{
+          backgroundImage:
+            'url("https://www.perfectlineup.in/static/media/ic_cricket_stadium.7d551e28.png")',
+        }}
+      >
+        {/* Positions & Players */}
+        <div className="relative space-y-8">
+          {positionOrder.map((posLabel) => {
+            const players = groupedByPosition[posLabel];
+            if (!players) return null; // No players for this position
+            return (
+              <div key={posLabel} className="mb-6">
+                <div className="font-bold text-lg mb-2">{posLabel}</div>
 
-              {/* Display players in a responsive grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {players.map((player) => (
-                  <div
-                    key={player.stats_player_id}
-                    className="flex items-center bg-white/80 p-2 rounded shadow"
-                  >
-                    {/* Jersey image */}
-                    <img
-                      className="w-8 h-8 mr-2"
-                      alt={player.display_name + " Jersey"}
-                      src={
-                        "https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/" +
-                        player.jersey
-                      }
-                    />
+                {/* Display players in a responsive grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {players.map((player) => (
+                    <div
+                      key={player.stats_player_id}
+                      className="flex items-center bg-white/80 p-2 rounded shadow"
+                    >
+                      {/* Jersey image */}
+                      <img
+                        className="w-8 h-8 mr-2"
+                        alt={player.display_name + " Jersey"}
+                        src={
+                          "https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/" +
+                          player.jersey
+                        }
+                      />
 
-                    {/* Captain or Vice-captain */}
-                    {player.C === 1 && (
-                      <span className="text-red-600 font-semibold mr-2">
-                        C
-                      </span>
-                    )}
-                    {player.C === 2 && (
-                      <span className="text-blue-600 font-semibold mr-2">
-                        VC
-                      </span>
-                    )}
+                      {/* Captain or Vice-captain */}
+                      {player.C === 1 && (
+                        <span className="text-red-600 font-semibold mr-2">
+                          C
+                        </span>
+                      )}
+                      {player.C === 2 && (
+                        <span className="text-blue-600 font-semibold mr-2">
+                          VC
+                        </span>
+                      )}
 
-                    {/* Player Name */}
-                    <div className="flex-1">{player.display_name}</div>
+                      {/* Player Name */}
+                      <div className="flex-1">{player.display_name}</div>
 
-                    {/* Value (Fantasy Points or player_salary) based on activeTab */}
-                    <div className="font-bold">
-                      {activeTab === "FantasyPoints"
-                        ? player.pl_fantasy_points
-                        : player.player_salary}
+                      {/* Value (Fantasy Points or player_salary) based on activeTab */}
+                      <div className="font-bold">
+                        {activeTab === "FantasyPoints"
+                          ? player.pl_fantasy_points
+                          : player.player_salary}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
-
-
-
 const Overview = ({ matchData }) => {
-
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -563,40 +554,36 @@ const Overview = ({ matchData }) => {
 
   return (
     <div className="min-h-screen bg-gray-100">
-    {data && data.stats && (
-      <DreamTeam
-        matchData={data.fixture_details} 
-        stats_details={data.stats }
-      />
-    )}
+      {data && data.stats && (
+        <DreamTeam
+          matchData={data.fixture_details}
+          stats_details={data.stats}
+        />
+      )}
 
+      {data && data.stats && (
+        <DreamTeamChart
+          matchData={data.fixture_details}
+          stats_details={data.stats}
+        />
+      )}
 
-    {data && data.stats && (
-      <DreamTeamChart
-        matchData={data.fixture_details} 
-        stats_details={data.stats }
-      />
-    )}
+      {data && data.stats && (
+        <DreamTeamChartfildeing
+          matchData={data.fixture_details}
+          stats_details={data.stats}
+        />
+      )}
 
-    {data && data.stats && (
-      <DreamTeamChartfildeing
-        matchData={data.fixture_details} 
-        stats_details={data.stats }
-      />
-    )}
-
-    {data && data.stats && (
-      <TopPlayers
-        matchData={data.fixture_details} 
-        stats_details={data.stats}
-      />
-    )}
-    
-
-  </div>
+      {data && data.stats && (
+        <TopPlayers
+          matchData={data.fixture_details}
+          stats_details={data.stats}
+        />
+      )}
+    </div>
   );
 };
-
 
 const Table = ({ headers = [], rows = [] }) => {
   return (
@@ -630,7 +617,6 @@ const Table = ({ headers = [], rows = [] }) => {
   );
 };
 
-
 const Accordion = ({ title, score, overs, children }) => {
   const [isOpen, setIsOpen] = useState(true);
 
@@ -659,15 +645,10 @@ const Accordion = ({ title, score, overs, children }) => {
       </div>
 
       {/* Accordion Body */}
-      {isOpen && (
-        <div className="p-4 border-t">
-          {children}
-        </div>
-      )}
+      {isOpen && <div className="p-4 border-t">{children}</div>}
     </div>
   );
 };
-
 
 const Scorecard = ({ matchData, stats_details }) => {
   // Parse the top-level match info
@@ -677,8 +658,8 @@ const Scorecard = ({ matchData, stats_details }) => {
   // Extract IDs and names
   const homeTeamId = matchData.home_uid;
   const awayTeamId = matchData.away_uid;
-  const homeTeamName = matchData.home_team_name; 
-  const awayTeamName = matchData.away_team_name; 
+  const homeTeamName = matchData.home_team_name;
+  const awayTeamName = matchData.away_team_name;
 
   // Score data (home vs. away)
   const homeScore = parsedScoreData[inningKey].home_team_score;
@@ -811,7 +792,11 @@ function ProjectedVsActual({ fixture_details, fantasy_data }) {
     //   "AR" for All Rounder
     //   "BOW" for Bowler
     // If your data is different, adjust the logic accordingly.
-    if (["BATSMAN", "WICKET-KEEPER", "ALL ROUNDER", "BOWLER"].includes(selectedFilter)) {
+    if (
+      ["BATSMAN", "WICKET-KEEPER", "ALL ROUNDER", "BOWLER"].includes(
+        selectedFilter
+      )
+    ) {
       // Map from the filter label to the data’s `player_position`
       const filterMap = {
         BATSMAN: "BAT",
@@ -852,7 +837,7 @@ function ProjectedVsActual({ fixture_details, fantasy_data }) {
       player.player_fppg,
       player.fantasy_points
     );
-  
+
     return (
       <div
         key={`${player.player_uid}-${player.team_abbr}`}
@@ -870,7 +855,7 @@ function ProjectedVsActual({ fixture_details, fantasy_data }) {
               {player.team_abbr}
             </div>
           </div>
-  
+
           {/* Bars Container */}
           <div className="second_table_column w-3/4 flex flex-col space-y-1">
             {/* Projected bar - top bar */}
@@ -887,7 +872,7 @@ function ProjectedVsActual({ fixture_details, fantasy_data }) {
                 </div>
               </div>
             </div>
-  
+
             {/* Actual bar - bottom bar */}
             <div className="flex items-center">
               <div
@@ -932,7 +917,10 @@ function ProjectedVsActual({ fixture_details, fantasy_data }) {
             {/* Actual Points */}
             <div className="actual_points flex items-center space-x-2">
               <div className="small_circle w-3 h-3 rounded-full bg-[#c2e4f0]"></div>
-              <div className="actual_text text-gray-700" style={{ width: "135px" }}>
+              <div
+                className="actual_text text-gray-700"
+                style={{ width: "135px" }}
+              >
                 Actual Points
               </div>
             </div>
@@ -947,69 +935,72 @@ function ProjectedVsActual({ fixture_details, fantasy_data }) {
           </div>
 
           {/* Filter Dropdown */}
-          <div className="filter_icon self-end sm:self-auto" style={{ textAlign: "right" }}>
-          <div className="createteam-drop-btn-style relative inline-block">
-            <button
-              type="button"
-              className="dropdown-toggle btn btn-primary bg-blue-600 text-white px-3 py-1 rounded flex items-center"
-              onClick={() => setFilterOpen((prev) => !prev)}
-            >
-              {/* Replace your <i className="icon-filter" ...> with the AiOutlineMenuFold icon */}
-              <AiOutlineMenuFold className="mr-1 text-xl" />
-            </button>
-  
-            {/* Dropdown Menu */}
-            {filterOpen && (
-              <div
-                className="dropdown-menu absolute right-0 mt-2 w-48 bg-white border rounded shadow py-1 z-10"
-                style={{ top: "100%", opacity: 1 }}
+          <div
+            className="filter_icon self-end sm:self-auto"
+            style={{ textAlign: "right" }}
+          >
+            <div className="createteam-drop-btn-style relative inline-block">
+              <button
+                type="button"
+                className="dropdown-toggle btn btn-primary bg-blue-600 text-white px-3 py-1 rounded flex items-center"
+                onClick={() => setFilterOpen((prev) => !prev)}
               >
-                <button
-                  onClick={() => handleFilterSelect("All")}
-                  className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                {/* Replace your <i className="icon-filter" ...> with the AiOutlineMenuFold icon */}
+                <AiOutlineMenuFold className="mr-1 text-xl" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {filterOpen && (
+                <div
+                  className="dropdown-menu absolute right-0 mt-2 w-48 bg-white border rounded shadow py-1 z-10"
+                  style={{ top: "100%", opacity: 1 }}
                 >
-                  All
-                </button>
-                <button
-                  onClick={() => handleFilterSelect("BATSMAN")}
-                  className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                >
-                  BATSMAN
-                </button>
-                <button
-                  onClick={() => handleFilterSelect("WICKET-KEEPER")}
-                  className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                >
-                  WICKET-KEEPER
-                </button>
-                <button
-                  onClick={() => handleFilterSelect("ALL ROUNDER")}
-                  className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                >
-                  ALL ROUNDER
-                </button>
-                <button
-                  onClick={() => handleFilterSelect("BOWLER")}
-                  className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                >
-                  BOWLER
-                </button>
-                <button
-                  onClick={() => handleFilterSelect(fixture_details.home)}
-                  className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                >
-                  {fixture_details.home}
-                </button>
-                <button
-                  onClick={() => handleFilterSelect(fixture_details.away)}
-                  className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                >
-                  {fixture_details.away}
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={() => handleFilterSelect("All")}
+                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => handleFilterSelect("BATSMAN")}
+                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    BATSMAN
+                  </button>
+                  <button
+                    onClick={() => handleFilterSelect("WICKET-KEEPER")}
+                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    WICKET-KEEPER
+                  </button>
+                  <button
+                    onClick={() => handleFilterSelect("ALL ROUNDER")}
+                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    ALL ROUNDER
+                  </button>
+                  <button
+                    onClick={() => handleFilterSelect("BOWLER")}
+                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    BOWLER
+                  </button>
+                  <button
+                    onClick={() => handleFilterSelect(fixture_details.home)}
+                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    {fixture_details.home}
+                  </button>
+                  <button
+                    onClick={() => handleFilterSelect(fixture_details.away)}
+                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                  >
+                    {fixture_details.away}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
         </div>
 
         {/* UNDERESTIMATED SECTION */}
@@ -1110,19 +1101,17 @@ const Fantasy = ({ matchData }) => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4">
-            {data && data.fixture_details && (
-<ProjectedVsActual
-        fixture_details={data?.fixture_details}
-        fantasy_data={data?.fantasy_data}
-      />
-
+      {data && data.fixture_details && (
+        <ProjectedVsActual
+          fixture_details={data?.fixture_details}
+          fantasy_data={data?.fantasy_data}
+        />
       )}
     </div>
   );
 };
 
 const MatchCard = ({ matchData, stats_details }) => {
-
   // Safely parse score data (it’s stored as a JSON string in matchData.score_data)
   const scoreData = JSON.parse(matchData.score_data);
   const {
@@ -1134,100 +1123,105 @@ const MatchCard = ({ matchData, stats_details }) => {
     home_team_score,
   } = scoreData["1"];
 
-const [activeTab, setActiveTab] = useState("SCORECARD");
-const toggleList =["OVERVIEW", "SCORECARD", "FANTASY"]
+  const [activeTab, setActiveTab] = useState("SCORECARD");
+  const toggleList = ["OVERVIEW", "SCORECARD", "FANTASY"];
   // You can format the date/time however you prefer. Below is a simplistic approach:
   // matchData.season_scheduled_date = "2025-03-04 18:01:00"
   // For the screenshot, you mentioned "04 March 11:31 pm" but we'll keep it simple here.
   const dateTime = new Date(matchData.season_scheduled_date);
-  const options = { day: "numeric", month: "long", hour: "numeric", minute: "2-digit" };
+  const options = {
+    day: "numeric",
+    month: "long",
+    hour: "numeric",
+    minute: "2-digit",
+  };
   const formattedDate = dateTime.toLocaleString("en-GB", options);
 
   return (
     <>
-    <div className="w-full max-w-4xl mx-auto bg-gray-100 shadow-lg rounded-lg p-4 my-4 flex flex-col">
-    {/* League Title */}
-    <h2 className="text-xl font-semibold text-center mb-1">
-      {matchData.league_name}
-    </h2>
+      <div className="w-full max-w-4xl mx-auto bg-gray-100 shadow-lg rounded-lg p-4 my-4 flex flex-col">
+        {/* League Title */}
+        <h2 className="text-xl font-semibold text-center mb-1">
+          {matchData.league_name}
+        </h2>
 
-    {/* Date and Venue Info */}
-    <div className="text-sm text-gray-500 text-center">
-      {formattedDate} | {matchData.ground_name}
-    </div>
+        {/* Date and Venue Info */}
+        <div className="text-sm text-gray-500 text-center">
+          {formattedDate} | {matchData.ground_name}
+        </div>
 
-    {/* Main Scoreboard Section */}
-    <div className="flex items-center justify-between mt-4">
-      {/* Home Team */}
-      <div className="flex flex-col -pr-40">
-        {/* If you have actual images, swap the src below with your own */}
+        {/* Main Scoreboard Section */}
+        <div className="flex items-center justify-between mt-4">
+          {/* Home Team */}
+          <div className="flex flex-col -pr-40">
+            {/* If you have actual images, swap the src below with your own */}
 
-        <img
-        src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchData.home_flag}`}
-        alt={`${matchData.home_team_name} flag`}
-        className="w-12 h-12 mb-2 sm:h-10 rounded-full"
-      />
-        <h3 className="font-bold">{matchData.home_team_name}</h3>
-        <p className="text-sm text-gray-600">
-          {home_team_score}/{home_wickets} ({home_overs} Overs)
-        </p>
+            <img
+              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchData.home_flag}`}
+              alt={`${matchData.home_team_name} flag`}
+              className="w-12 h-12 mb-2 sm:h-10 rounded-full"
+            />
+            <h3 className="font-bold">{matchData.home_team_name}</h3>
+            <p className="text-sm text-gray-600">
+              {home_team_score}/{home_wickets} ({home_overs} Overs)
+            </p>
+          </div>
+
+          {/* VS and Result */}
+          <div className="flex flex-col items-center">
+            <p className="text-gray-400">Vs</p>
+            {matchData.result_info && (
+              <p className="text-green-600 font-semibold mt-1">
+                {matchData.result_info}
+              </p>
+            )}
+          </div>
+
+          {/* Away Team */}
+          <div className="flex flex-col items-center">
+            <img
+              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchData.away_flag}`}
+              alt={`${matchData.away} flag`}
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+            />
+            <h3 className="font-bold">{matchData.away_team_name}</h3>
+            <p className="text-sm text-gray-600">
+              {away_team_score}/{away_wickets} ({away_overs} Overs)
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* VS and Result */}
-      <div className="flex flex-col items-center">
-        <p className="text-gray-400">Vs</p>
-        {matchData.result_info && (
-          <p className="text-green-600 font-semibold mt-1">
-            {matchData.result_info}
-          </p>
-        )}
-      </div>
-
-      {/* Away Team */}
-      <div className="flex flex-col items-center">
-        <img
-        src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchData.away_flag}`}
-        alt={`${matchData.away} flag`}
-        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
-      />
-        <h3 className="font-bold">{matchData.away_team_name}</h3>
-        <p className="text-sm text-gray-600">
-          {away_team_score}/{away_wickets} ({away_overs} Overs)
-        </p>
-      </div>
-    </div>
-  </div>
-
-     <div className="w-full max-w-4xl mx-auto bg-gray-100 shadow-lg rounded-lg p-4 my-4 flex flex-col items-center">
+      <div className="w-full max-w-4xl mx-auto bg-gray-100 shadow-lg rounded-lg p-4 my-4 flex flex-col items-center">
         <div className="w-full bg-white rounded shadow p-4 mt-4">
           {/* Heading */}
           {/* Main Tabs */}
           <div className="flex justify-center items-center mb-4">
-          {toggleList.map((tab) => (
-            <div
-              key={tab}
-              className={`text-tabItem px-4 py-1 cursor-pointer ${
-                activeTab === tab
-                  ? "border-b-2 border-[#212341] font-semibold text-[#999]"
-                  : "text-gray-600"
-              }`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab}
-            </div>
-          ))}
+            {toggleList.map((tab) => (
+              <div
+                key={tab}
+                className={`text-tabItem px-4 py-1 cursor-pointer ${
+                  activeTab === tab
+                    ? "border-b-2 border-[#212341] font-semibold text-[#999]"
+                    : "text-gray-600"
+                }`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </div>
+            ))}
           </div>
 
           {/* Tab Content */}
           <div className="mt-4">
-            {activeTab === "OVERVIEW" && <Overview  matchData={matchData}  />}
-            {activeTab === "SCORECARD" && <Scorecard matchData={matchData} stats_details= {stats_details}/>}
+            {activeTab === "OVERVIEW" && <Overview matchData={matchData} />}
+            {activeTab === "SCORECARD" && (
+              <Scorecard matchData={matchData} stats_details={stats_details} />
+            )}
             {activeTab === "FANTASY" && <Fantasy matchData={matchData} />}
           </div>
-
         </div>
       </div>
-    
     </>
   );
 };
@@ -1239,53 +1233,59 @@ function MatchReport() {
 
   const location = useLocation();
   const matchInSights = location.state?.matchInSights;
-  const matchSessionIDs = location.state?.matchSessionIDs
-  const matchleageIDs = location.state?.matchleageIDs
+  const matchSessionIDs = location.state?.matchSessionIDs;
+  const matchleageIDs = location.state?.matchleageIDs;
 
- useEffect(() => {
-  // Check if at least one of season_game_uid or es_season_game_uid exists, and league_id is required
-  const hasSeasonGameUid = matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
+  useEffect(() => {
+    // Check if at least one of season_game_uid or es_season_game_uid exists, and league_id is required
+    const hasSeasonGameUid =
+      matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
 
-  if (!hasSeasonGameUid || !matchInSights?.league_id) {
-    console.warn(
-      "Neither season_game_uid nor es_season_game_uid is defined, or league_id is undefined or null"
-    );
-    return;
-  }
-
-  // Use the available season_game_uid (primary or fallback)
-  const gameUid = matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
-
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        "https://plapi.perfectlineup.in/fantasy/completed_match/get_fixture_scorecard",
-        {
-          season_game_uid: gameUid, // Use the resolved value
-          league_id: matchInSights?.league_id, // Required field
-          sports_id: "7",
-        },
-        {
-          headers: {
-            sessionkey: "3cd0fb996816c37121c765f292dd3f78",
-            moduleaccess: "7",
-            "Content-Type": "application/json",
-          },
-        }
+    if (!hasSeasonGameUid || !matchInSights?.league_id) {
+      console.warn(
+        "Neither season_game_uid nor es_season_game_uid is defined, or league_id is undefined or null"
       );
-      console.log("API Response:", response.data);
-      setData(response.data.data);
-    } catch (error) {
-      console.error("API Error:", error);
-      setError(error.message || "An error occurred while fetching data.");
-    } finally {
-      setLoading(false);
+      return;
     }
-  };
 
-  fetchData();
-}, [matchInSights?.season_game_uid, matchInSights?.es_season_game_uid, matchInSights?.league_id]);
+    // Use the available season_game_uid (primary or fallback)
+    const gameUid =
+      matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const response = await axios.post(
+          "https://plapi.perfectlineup.in/fantasy/completed_match/get_fixture_scorecard",
+          {
+            season_game_uid: gameUid, // Use the resolved value
+            league_id: matchInSights?.league_id, // Required field
+            sports_id: "7",
+          },
+          {
+            headers: {
+              sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+              moduleaccess: "7",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("API Response:", response.data);
+        setData(response.data.data);
+      } catch (error) {
+        console.error("API Error:", error);
+        setError(error.message || "An error occurred while fetching data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [
+    matchInSights?.season_game_uid,
+    matchInSights?.es_season_game_uid,
+    matchInSights?.league_id,
+  ]);
 
   // Countdown function (if you need it)
   const getCountdownTime = (scheduledDate) => {
@@ -1302,9 +1302,7 @@ function MatchReport() {
     }
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
@@ -1324,44 +1322,52 @@ function MatchReport() {
     return null;
   }
 
-
   return (
     <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-start justify-start">
       {/* Navigation Bar */}
       <div className="relative flex items-center p-4 border-b w-full max-w-screen-lg mx-auto mt-4">
-      {/* Back Button, absolutely positioned on the left */}
-      <Link
-        key={matchInSights?.season_game_uid ? matchInSights?.season_game_uid : matchInSights?.es_season_game_uid}
-        to={`/stats-playground/Cricket/${matchInSights?.season_game_uid ? matchInSights?.season_game_uid : matchInSights?.es_season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
-        state={{ matchInSights: matchInSights }}
-        className="absolute left-4 flex items-center p-2 rounded-lg shadow-md bg-white hover:bg-gray-100"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+        {/* Back Button, absolutely positioned on the left */}
+        <Link
+          key={
+            matchInSights?.season_game_uid
+              ? matchInSights?.season_game_uid
+              : matchInSights?.es_season_game_uid
+          }
+          to={`/stats-playground/Cricket/${
+            matchInSights?.season_game_uid
+              ? matchInSights?.season_game_uid
+              : matchInSights?.es_season_game_uid
+          }/${matchInSights.home}_vs_${matchInSights.away}/${
+            matchInSights.league_id
+          }`}
+          state={{ matchInSights: matchInSights }}
+          className="absolute left-4 flex items-center p-2 rounded-lg shadow-md bg-white hover:bg-gray-100"
         >
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </Link>
-    
-      {/* Centered title */}
-      <span className="mx-auto font-semibold text-lg">Match Report</span>
-    </div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </Link>
+
+        {/* Centered title */}
+        <span className="mx-auto font-semibold text-lg">Match Report</span>
+      </div>
 
       {/* Render match data, scorecard, etc. here */}
       {/* Example: <pre>{JSON.stringify(data, null, 2)}</pre> */}
 
-
       {data && data.fixture_details && (
         <MatchCard
-          matchData={data.fixture_details} 
+          matchData={data.fixture_details}
           stats_details={data.stats_details}
         />
       )}

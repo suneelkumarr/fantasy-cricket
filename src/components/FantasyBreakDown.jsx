@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-import Getlocation from './Getlocation.jsx';
+import Getlocation from "./Getlocation.jsx";
 
 // Constants
 const FORMAT_LABELS = {
@@ -31,7 +31,7 @@ function FantasyBreakDown({ selectedPlayer }) {
   const playerInfo = location.state?.playerInfo;
   const statsPlayerId = selectedPlayer?.player_id;
   const statsSeasonId = selectedPlayer?.season_id;
-  console.log(Getlocation())
+  console.log(Getlocation());
 
   // Memoized request body
   const requestBody = useMemo(
@@ -88,7 +88,9 @@ function FantasyBreakDown({ selectedPlayer }) {
       <div className="p-4">
         {/* Header */}
         <h1 className="text-3xl font-bold text-gray-800">
-          { playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name || "Player Name"}
+          {playerInfo?.full_name
+            ? playerInfo.full_name
+            : playerInfo.display_name || "Player Name"}
         </h1>
 
         <p className="text-gray-600">

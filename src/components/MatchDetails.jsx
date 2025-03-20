@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { FiChevronRight } from "react-icons/fi";
-import Getlocation from './Getlocation.jsx';
+import Getlocation from "./Getlocation.jsx";
 
 function FixtureHeader({ fixtureDetails, getCountdownTime, data }) {
   const navigate = useNavigate();
@@ -111,7 +111,6 @@ function MatchDetails() {
   const [loading, setLoading] = useState(false);
   const location = useLocation();
   const fixtureDetails = location.state?.fixtureDetails;
-  console.log("+++++++++++++++++fixtureDetails", fixtureDetails)
 
   // Function to get the current timestamp in IST
   const getCurrentTimestampInIST = () => {
@@ -122,7 +121,8 @@ function MatchDetails() {
   };
 
   useEffect(() => {
-    const hasSeasonGameUid = fixtureDetails?.season_game_uid || fixtureDetails?.es_season_game_uid;
+    const hasSeasonGameUid =
+      fixtureDetails?.season_game_uid || fixtureDetails?.es_season_game_uid;
     if (!hasSeasonGameUid) return;
 
     const fetchData = async () => {
@@ -130,7 +130,11 @@ function MatchDetails() {
       try {
         const timestamp = getCurrentTimestampInIST();
         const response = await axios.get(
-          `https://plineup-prod.blr1.digitaloceanspaces.com/appstatic/plprod_match_7_${fixtureDetails?.season_game_uid ? fixtureDetails?.season_game_uid : fixtureDetails?.es_season_game_uid}.json?${timestamp}`
+          `https://plineup-prod.blr1.digitaloceanspaces.com/appstatic/plprod_match_7_${
+            fixtureDetails?.season_game_uid
+              ? fixtureDetails?.season_game_uid
+              : fixtureDetails?.es_season_game_uid
+          }.json?${timestamp}`
         );
 
         console.log("API response: ", response.data);
@@ -166,10 +170,11 @@ function MatchDetails() {
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   };
 
-
   // Render loading and error states
   if (loading) {
-    return <div className="text-center mt-4 text-lg font-semibold">Loading...</div>;
+    return (
+      <div className="text-center mt-4 text-lg font-semibold">Loading...</div>
+    );
   }
   if (error) {
     return <div className="text-red-500 text-center mt-4">Error: {error}</div>;
@@ -180,11 +185,25 @@ function MatchDetails() {
 
   const menuItems = [
     { label: "Squad", icon: "📋", header: "squad" },
-    { label: "Stats Playground", icon: "📊", isNew: true, header: "stats-playground" },
+    {
+      label: "Stats Playground",
+      icon: "📊",
+      isNew: true,
+      header: "stats-playground",
+    },
     { label: "Cheat Sheet", icon: "📝", header: "players-analyzer" },
     { label: "PL Power Ranking", icon: "⚡", header: "players-performace" },
-    { label: "Venue & Pitch Report", icon: "🏟️", subLabel: data[0].ground_name, header: "venue" },
-    { label: "Batting Order, Powerplay and Death Bowling", icon: "🏏", header: "batting-order" },
+    {
+      label: "Venue & Pitch Report",
+      icon: "🏟️",
+      subLabel: data[0].ground_name,
+      header: "venue",
+    },
+    {
+      label: "Batting Order, Powerplay and Death Bowling",
+      icon: "🏏",
+      header: "batting-order",
+    },
     { label: "Team H2H", icon: "🤝", header: "team-h2h" },
     { label: "All Player Overview", icon: "👥", header: "player-pick" },
     { label: "Bowler Corner", icon: "🎯", header: "bowler-corner" },
@@ -192,27 +211,24 @@ function MatchDetails() {
       label: "Team Stats",
       icon: "📈",
       note: "Use Laptop / Desktop to open this",
-      header: "datatable"
+      header: "datatable",
     },
   ];
 
-
-  console.log("+++++++++++++++++data", data)
-  console.log("+++++++++++++++++fixtureDetails", fixtureDetails)
+  console.log("+++++++++++++++++data", data);
+  console.log("+++++++++++++++++fixtureDetails", fixtureDetails);
 
   return (
     <div className="min-h-screen w-full flex flex-col bg-white">
       {/* Navigation Bar & Fixture Header */}
 
-      {
-        data && (
-          <FixtureHeader
+      {data && (
+        <FixtureHeader
           fixtureDetails={fixtureDetails}
           getCountdownTime={getCountdownTime}
           data={data[0]}
         />
-        )
-      }
+      )}
 
       {/* KEY MATCH INSIGHTS */}
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">

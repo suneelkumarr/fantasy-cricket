@@ -2,12 +2,12 @@ import React, { useState } from "react";
 import { TrendingUp, ArrowRight, Star } from "lucide-react";
 import FantasyBreakDown from "./FantasyBreakDown"; // Import your modal component
 import { Link } from "react-router-dom";
-import Getlocation from './Getlocation.jsx';
+import Getlocation from "./Getlocation.jsx";
 
 function OppositeTeam({ data, matchInSights, playerInfo }) {
   const [enabled, setEnabled] = useState(true);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
-  console.log(Getlocation())
+  console.log(Getlocation());
 
   const toggleSwitch = () => {
     setEnabled(!enabled);
@@ -47,7 +47,6 @@ function OppositeTeam({ data, matchInSights, playerInfo }) {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
-
 
   const oppositionFormatOverall =
     data?.stats_data?.form?.opposition_overall_stats;
@@ -358,7 +357,10 @@ function OppositeTeam({ data, matchInSights, playerInfo }) {
                           <Link
                             to={`/player/${
                               playerInfo?.player_uid
-                            }/${(playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name).replace(/\s+/g, "_")}/${
+                            }/${(playerInfo?.full_name
+                              ? playerInfo.full_name
+                              : playerInfo.display_name
+                            ).replace(/\s+/g, "_")}/${
                               matchInSights?.season_game_uid
                             }/form`}
                             state={{
@@ -707,7 +709,10 @@ function OppositeTeam({ data, matchInSights, playerInfo }) {
                           <Link
                             to={`/player/${
                               playerInfo?.player_uid
-                            }/${(playerInfo?.full_name ? playerInfo.full_name : playerInfo.display_name).replace(/\s+/g, "_")}/${
+                            }/${(playerInfo?.full_name
+                              ? playerInfo.full_name
+                              : playerInfo.display_name
+                            ).replace(/\s+/g, "_")}/${
                               matchInSights?.season_game_uid
                             }/form`}
                             state={{

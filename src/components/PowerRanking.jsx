@@ -10,7 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import Getlocation from './Getlocation.jsx';
+import Getlocation from "./Getlocation.jsx";
 
 // Reusable chart component:
 function MetricChart({
@@ -79,7 +79,7 @@ function MetricChart({
 
 function PowerRanking() {
   const location = useLocation();
-  console.log(Getlocation())
+  console.log(Getlocation());
   // Store details in state to preserve them on reload
   const [playerDetails] = useState(location.state?.playerInfo || null);
   const [matchDetails] = useState(location.state?.matchID || null);
@@ -161,7 +161,9 @@ function PowerRanking() {
         home: item.home,
         away: item.away,
         // e.g. "16/03"
-        dateLabel: `${day}/${(dateObj.getMonth() + 1).toString().padStart(2, "0")}`,
+        dateLabel: `${day}/${(dateObj.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}`,
         power_rank: Number(item.power_rank),
         fullDateLabel: `${monthAbbr} ${day}`, // for tooltip
       };
@@ -212,7 +214,8 @@ function PowerRanking() {
 
   const ContributionTooltip = ({ active, payload }) => {
     if (active && payload?.length) {
-      const { home, away, dateForTooltip, player_contribution } = payload[0].payload;
+      const { home, away, dateForTooltip, player_contribution } =
+        payload[0].payload;
       return (
         <div className="bg-white border border-gray-300 rounded p-2 text-xs shadow-md">
           <p>{`${home} vs ${away} on ${dateForTooltip}`}</p>
@@ -318,8 +321,12 @@ function PowerRanking() {
 
   return (
     <>
-      {loading && <div className="text-center text-gray-600 my-4">Loading...</div>}
-      {error && <div className="text-red-500 text-center my-4">Error: {error}</div>}
+      {loading && (
+        <div className="text-center text-gray-600 my-4">Loading...</div>
+      )}
+      {error && (
+        <div className="text-red-500 text-center my-4">Error: {error}</div>
+      )}
 
       <div className="w-full min-h-screen flex flex-col overflow-hidden items-center justify-start">
         {/* Rank & Rating Box */}

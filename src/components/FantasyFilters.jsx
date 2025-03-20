@@ -187,7 +187,7 @@ const FantasyFilters = ({ data, matchInSights }) => {
     }
   };
 
-  console.log("+++++++++++++++filteredPlayers", filteredPlayers)
+  console.log("+++++++++++++++filteredPlayers", filteredPlayers);
 
   function formatDate(inputDate) {
     const date = new Date(inputDate);
@@ -275,9 +275,11 @@ const FantasyFilters = ({ data, matchInSights }) => {
                     {/* Player Info */}
                     <Link
                       key={player.player_uid}
-                        to={`/player/${
-                        player?.player_uid || "unknown"
-                      }/${(player?.display_name ? player.display_name.replace(/\s+/g, "_") : player?.full_name?.replace(/\s+/g, "_") || "unknown")}/${
+                      to={`/player/${player?.player_uid || "unknown"}/${
+                        player?.display_name
+                          ? player.display_name.replace(/\s+/g, "_")
+                          : player?.full_name?.replace(/\s+/g, "_") || "unknown"
+                      }/${
                         data?.match_details?.season_game_uid || "unknown"
                       }/form`}
                       state={{
@@ -346,81 +348,89 @@ const FantasyFilters = ({ data, matchInSights }) => {
                         <div>FPts</div>
                       </div>
                       {player.filtered_match.map((match, idx) => (
-                                    <Link
-                                      key={idx}
-                                      to={`/match-report/Cricket/${match.season_game_uid}/${match.home}_vs_${match.away}/${match.league_id}/scorecard`}
-                                      state={{ matchInSights: matchInSights, matchSessionIDs: match.season_game_uid, matchleageIDs: match.league_id }}
-                                      className="block"
-                                    >
-
-                        <div
+                        <Link
                           key={idx}
-                          className="flex flex-wrap items-center justify-between text-sm py-1 border-b border-gray-200 px-3"
+                          to={`/match-report/Cricket/${match.season_game_uid}/${match.home}_vs_${match.away}/${match.league_id}/scorecard`}
+                          state={{
+                            matchInSights: matchInSights,
+                            matchSessionIDs: match.season_game_uid,
+                            matchleageIDs: match.league_id,
+                          }}
+                          className="block"
                         >
-                          {/* Match Details */}
-                          <div className="flex items-center space-x-2">
-                            <span>VS {match.home === player.team_abbr ? match.away : match.home}</span>
-                            <span className="text-xs text-gray-500">
-                              ({formatDate(match.season_scheduled_date)})
-                            </span>
+                          <div
+                            key={idx}
+                            className="flex flex-wrap items-center justify-between text-sm py-1 border-b border-gray-200 px-3"
+                          >
+                            {/* Match Details */}
+                            <div className="flex items-center space-x-2">
+                              <span>
+                                VS{" "}
+                                {match.home === player.team_abbr
+                                  ? match.away
+                                  : match.home}
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                ({formatDate(match.season_scheduled_date)})
+                              </span>
 
-                            {/* Conditional Icons Rendering */}
-                            {match.bat_first_team_uid === player.team_uid &&
-                              match.dt_appearances === "1" && (
-                                <>
-                                  <img
-                                    src={iconsData[1].src}
-                                    alt={iconsData[1].label}
-                                    className="w-4 h-4 object-contain"
-                                  />
+                              {/* Conditional Icons Rendering */}
+                              {match.bat_first_team_uid === player.team_uid &&
+                                match.dt_appearances === "1" && (
+                                  <>
+                                    <img
+                                      src={iconsData[1].src}
+                                      alt={iconsData[1].label}
+                                      className="w-4 h-4 object-contain"
+                                    />
+                                    <img
+                                      src={iconsData[2].src}
+                                      alt={iconsData[2].label}
+                                      className="w-4 h-4 object-contain"
+                                    />
+                                  </>
+                                )}
+
+                              {match.bat_first_team_uid !== player.team_uid &&
+                                match.dt_appearances === "1" && (
+                                  <>
+                                    <img
+                                      src={iconsData[1].src}
+                                      alt={iconsData[1].label}
+                                      className="w-4 h-4 object-contain"
+                                    />
+                                    <img
+                                      src={iconsData[3].src}
+                                      alt={iconsData[3].label}
+                                      className="w-4 h-4 object-contain"
+                                    />
+                                  </>
+                                )}
+
+                              {match.bat_first_team_uid === player.team_uid &&
+                                match.dt_appearances !== "1" && (
                                   <img
                                     src={iconsData[2].src}
                                     alt={iconsData[2].label}
                                     className="w-4 h-4 object-contain"
                                   />
-                                </>
-                              )}
+                                )}
 
-                            {match.bat_first_team_uid !== player.team_uid &&
-                              match.dt_appearances === "1" && (
-                                <>
-                                  <img
-                                    src={iconsData[1].src}
-                                    alt={iconsData[1].label}
-                                    className="w-4 h-4 object-contain"
-                                  />
+                              {match.bat_first_team_uid !== player.team_uid &&
+                                match.dt_appearances !== "1" && (
                                   <img
                                     src={iconsData[3].src}
                                     alt={iconsData[3].label}
                                     className="w-4 h-4 object-contain"
                                   />
-                                </>
-                              )}
+                                )}
+                            </div>
 
-                            {match.bat_first_team_uid === player.team_uid &&
-                              match.dt_appearances !== "1" && (
-                                <img
-                                  src={iconsData[2].src}
-                                  alt={iconsData[2].label}
-                                  className="w-4 h-4 object-contain"
-                                />
-                              )}
-
-                            {match.bat_first_team_uid !== player.team_uid &&
-                              match.dt_appearances !== "1" && (
-                                <img
-                                  src={iconsData[3].src}
-                                  alt={iconsData[3].label}
-                                  className="w-4 h-4 object-contain"
-                                />
-                              )}
+                            {/* Fantasy Points */}
+                            <div className="text-gray-700 font-medium">
+                              {match.fantasy_points}
+                            </div>
                           </div>
-
-                          {/* Fantasy Points */}
-                          <div className="text-gray-700 font-medium">
-                            {match.fantasy_points}
-                          </div>
-                        </div>
                         </Link>
                       ))}
                     </div>
