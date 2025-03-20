@@ -9,6 +9,7 @@ import StatsPlayground from './components/StatsPlayground.jsx'
 import MatchReport from './components/MatchReport.jsx'
 import PlayerPerformance from './components/PlayerPerformance.jsx'
 import VenuePerformance from './components/VenuePerformance.jsx'
+import BattingOrder from './components/BattingOrder.jsx'
 // import FantasyBreakDown from './components/FantasyBreakDown.jsx'
 // <Route path="/player/:playerId/:fullName/:matchId/form" element={<FantasyBreakDown />} />
 
@@ -32,6 +33,7 @@ function App() {
         <Route path="/match-report/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId/scorecard" element={<MatchReport />} />
         <Route path="/players-performace/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<PlayerPerformance />} />
         <Route path="/venue/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<VenuePerformance />} />
+        <Route path="/batting-order/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<BattingOrder />} />
       </Routes>
     </Router>
   )
