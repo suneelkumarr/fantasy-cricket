@@ -30,7 +30,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/fantasy-cricket//" element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/fixture-info/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<MatchDetails />} />
         <Route path="/insight-match/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<MatchInsights />} />
         <Route path="/player/:playerId/:fullName/:matchId/form" element={<PlayerDetails />} />
