@@ -712,7 +712,7 @@ function MatchDetails() {
       </div>
       
       
-      
+      {/*** LINEUP GENERATOR */}
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         <h2 className="text-xl font-bold text-gray-800 mb-4">
           Lineup Generator
@@ -766,6 +766,163 @@ function MatchDetails() {
         )}
 
         </div>
+
+
+        {/* Team Generator */}
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">
+          Team Generator
+        </h2>
+        <div className="mb-4">
+        <p className="text-gray-600">
+        Use these tools to create your custom teams.
+        </p>
+      </div>
+
+       {/* League Tabs */}
+       <div className="mx-auto max-w-4xl p-4 space-y-4">
+              <Link
+                 key={
+                   fixtureDetails?.season_game_uid
+                     ? fixtureDetails?.season_game_uid
+                     : fixtureDetails?.es_season_game_uid
+                 }
+                 to={`/create-team-score-based/Cricket/${
+                   fixtureDetails?.season_game_uid
+                     ? fixtureDetails?.season_game_uid
+                     : fixtureDetails?.es_season_game_uid
+                 }/${fixtureDetails.home}_vs_${fixtureDetails.away}/${
+                   fixtureDetails.league_id
+                 }`}
+                 state={{ matchInSights: fixtureDetails , data:data}}
+               >
+       {/* Team Based on Scores (BETA) */}
+       <div className="flex items-center p-4 bg-white rounded shadow hover:shadow-md transition">
+         <img
+           alt=""
+           src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_team_score.svg"
+           className="h-12 w-12 mr-4"
+         />
+         <div className="flex-grow">
+           <div className="font-semibold text-base sm:text-lg">
+             Create Team Based on Team Scores
+           </div>
+           <div className="text-gray-600 text-sm">
+             Draft lineups by simply predicting the final team scores
+           </div>
+         </div>
+         <div className="ml-4">
+           <span className="text-xs font-semibold text-white bg-gray-700 py-1 px-2 rounded">
+             BETA
+           </span>
+         </div>
+       </div>
+ 
+       {/* Custom Team Builder */}
+       <div className="flex flex-col md:flex-row items-start md:items-center p-4 bg-white rounded shadow hover:shadow-md transition">
+         {/* Left content */}
+         <div className="flex items-start md:items-center">
+           {/* Icon (you can replace with your own icon or image) */}
+           <span className="text-2xl mr-3">
+             <i className="icon-Custom-Team-Builder1x"></i>
+           </span>
+ 
+           <div>
+             <div className="text-blue-500 font-semibold text-base sm:text-lg">
+               Custom Team Builder
+             </div>
+             <div className="text-gray-600 text-sm">
+               Create custom lineups with your favorite players
+             </div>
+ 
+             {/* Action container (locks, etc.) */}
+             <div className="flex items-center space-x-4 mt-2">
+               <div className="flex items-center">
+                 <img
+                   className="h-4 w-4"
+                   src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                   alt="Lock Icon"
+                 />
+                 <span className="ml-2 text-sm">0</span>
+               </div>
+               <div className="flex items-center">
+                 <i className="icon-ic_locked"></i>
+                 <span className="ml-2 text-sm">0</span>
+               </div>
+               <div className="flex items-center">
+                 <i className="icon-close text-sm mr-1"></i>
+                 <span className="text-sm">0</span>
+               </div>
+             </div>
+           </div>
+         </div>
+ 
+         {/* Right image (jersey) */}
+         <div className="mt-4 md:mt-0 md:ml-auto">
+           <img
+             src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/jersey-CTB.png"
+             alt="CTB Jersey"
+             className="h-12 w-auto"
+           />
+         </div>
+       </div>
+ 
+       {/* My Teams */}
+       <div className="flex items-center p-4 bg-white rounded shadow hover:shadow-md transition">
+         <i className="icon-menu-jersey text-xl mr-4"></i>
+         <div className="flex-grow">
+           <div className="font-semibold text-base sm:text-lg">My Teams</div>
+         </div>
+         <div>
+           <img
+             alt=""
+             src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/arrow.svg"
+             className="h-4 w-4"
+           />
+         </div>
+       </div>
+       </Link>
+     </div>
+
+        </div>
+
+              {/* Perfect MATCH INSIGHTS */}
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        {data.map((item) => (
+          <Link
+            key={item.season_game_uid}
+            to={`/pl-labs/app/Cricket/${item.season_game_uid}/${item.home}_vs_${item.away}/${item.league_id}`}
+            state={{ matchInSights: item }}
+            className="block"
+          >
+            <div className="flex items-center justify-between px-4 py-3 bg-[#F5F7FA] h-32 shadow-lg rounded-md">
+              <div className="flex items-center space-x-3">
+                <img
+                  src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_stopwatch.svg"
+                  alt="Stopwatch"
+                  className="w-20 h-20"
+                />
+                <div className="flex flex-col justify-center">
+                  <span className="text-[#1D2B4F] text-3xl sm:text-4xl font-bold italic">
+                    Perfect MATCH INSIGHTS
+                  </span>
+                  <span className="text-[#1D2B4F] text-xl sm:text-2xl font-bold italic">
+                    Improve games
+                  </span>
+                </div>
+              </div>
+              <div>
+                <img
+                  src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/arrow.svg"
+                  alt="Arrow"
+                  className="w-5 h-5"
+                />
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+
 
 
 

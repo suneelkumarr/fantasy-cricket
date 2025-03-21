@@ -14,6 +14,13 @@ import CheatSheet from './components/CheatSheet.jsx'
 import TeamH2H from './components/TeamH2H.jsx'
 import PlayerPerformancelist from './components/PlayerPerformancelist.jsx'
 import BowlerCornar from './components/BowlerCornar.jsx'
+import CreateTeamBasedOnScore from './components/CreateTeamBasedOnScore.jsx'
+import Plabs from './components/Plabs.jsx'
+import CaptainSuggestion from './components/CaptainSuggestion.jsx'
+import PlayerCombination from './components/PlayerCombination.jsx'
+import CoverageIndex from './components/CoverageIndex.jsx'
+import ScorePredictor from './components/ScorePredictor.jsx'
+import DataTable from './components/DataTable.jsx'
 // import FantasyBreakDown from './components/FantasyBreakDown.jsx'
 // <Route path="/player/:playerId/:fullName/:matchId/form" element={<FantasyBreakDown />} />
 
@@ -42,6 +49,13 @@ function App() {
         <Route path="/team-h2h/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<TeamH2H />} />
         <Route path="/player-pick/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<PlayerPerformancelist />} />
         <Route path="/bowler-corner/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<BowlerCornar />} />
+        <Route path="/create-team-score-based/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<CreateTeamBasedOnScore />} />
+        <Route path="/pl-labs/app/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<Plabs />} />
+        <Route path="/pl-labs-mobile/score-predictor/:homeTeam_vs_awayTeam/:matchId/:eventId" element={<ScorePredictor />} />
+        <Route path="/pl-labs-mobile/coverage-index/:homeTeam_vs_awayTeam/:matchId/:eventId" element={<CoverageIndex />} />
+        <Route path="/pl-labs-mobile/player-combination/:homeTeam_vs_awayTeam/:matchId/:eventId" element={<PlayerCombination />} />
+        <Route path="/pl-labs-mobile/captain-suggestion/:homeTeam_vs_awayTeam/:matchId/:eventId" element={<CaptainSuggestion />} />
+        <Route path="/datatable/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<DataTable />} />
       </Routes>
     </Router>
   )
