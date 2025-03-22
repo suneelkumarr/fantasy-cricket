@@ -134,14 +134,14 @@ function TeamCard({ team, teamIndex, totalTeams, glHeadings }) {
   const orderedPositions = ["WK", "BAT", "AR", "BOW"];
 
   return (
-    <div className="relative bg-white bg-opacity-90 shadow p-4 rounded w-full max-w-md mx-auto text-center">
+    <div className="relative bg-white bg-opacity-90 shadow p-4 rounded w-full max-w-md sm:max-w-lg mx-auto text-center">
       <div className="mb-2">
-        <h2 className="text-lg font-bold">
+        <h2 className="text-lg sm:text-xl font-bold">
           TEAM {teamIndex + 1} ({glHeadings[team.algo_applied]})
         </h2>
       </div>
       <div className="mb-4">
-        <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded inline-block">
+        <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded inline-block text-xs sm:text-sm">
           ₹{remainingSalary} Remaining
         </span>
       </div>
@@ -153,35 +153,35 @@ function TeamCard({ team, teamIndex, totalTeams, glHeadings }) {
 
         return (
           <div key={pos} className="mb-3">
-            <div className="font-medium text-sm mb-1">
+            <div className="font-medium text-sm sm:text-base mb-1">
               {POSITION_MAP[pos] || pos}
             </div>
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
               {players.map((player) => (
                 <div
                   key={player.player_id}
-                  className="flex flex-col items-center text-xs"
+                  className="flex flex-col items-center text-xs sm:text-sm"
                 >
                   <div className="relative">
                     <img
-                      className="w-10 h-10 object-cover rounded-full"
+                      className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full"
                       src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
                       alt={player.display_name}
                     />
                     {/* C/VC labels */}
                     {player.C === 1 && (
-                      <span className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-1 rounded">
+                      <span className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] sm:text-[12px] px-1 rounded">
                         C
                       </span>
                     )}
                     {player.C === 2 && (
-                      <span className="absolute top-0 right-0 bg-green-500 text-white text-[10px] px-1 rounded">
+                      <span className="absolute top-0 right-0 bg-green-500 text-white text-[10px] sm:text-[12px] px-1 rounded">
                         VC
                       </span>
                     )}
                   </div>
                   <div className="text-center">{player.display_name}</div>
-                  <div className="text-gray-500">₹{player.salary}</div>
+                  <div className="text-gray-500 text-[10px] sm:text-xs">₹{player.salary}</div>
                 </div>
               ))}
             </div>
@@ -189,23 +189,23 @@ function TeamCard({ team, teamIndex, totalTeams, glHeadings }) {
         );
       })}
 
-      <div className="mt-4 flex justify-center gap-4">
-        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
+      <div className="mt-4 flex flex-col sm:flex-row justify-center gap-4">
+        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm sm:text-base">
           Save to my team
         </button>
-        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
+        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm sm:text-base">
           EXPORT TO
         </button>
       </div>
       
-      <div className="mt-4 text-xs text-gray-500">
+      <div className="mt-4 text-xs sm:text-sm text-gray-500">
         {teamIndex + 1} / {totalTeams}
       </div>
     </div>
   );
 }
 
-function TeamCardSL({ team, teamIndex, totalTeams}) {
+function TeamCardSL({ team, teamIndex, totalTeams }) {
   // Remaining salary if total is 100
   const remainingSalary = 100 - team.salary_costs;
 
@@ -222,9 +222,8 @@ function TeamCardSL({ team, teamIndex, totalTeams}) {
   const orderedPositions = ["WK", "BAT", "AR", "BOW"];
 
   return (
-    <div className="relative bg-white bg-opacity-90 shadow p-4 rounded w-full max-w-md mx-auto text-center">
-      <div className="mb-2">
-      </div>
+    <div className="relative bg-white bg-opacity-90 shadow p-4 rounded w-full max-w-md sm:max-w-lg mx-auto text-center">
+      <div className="mb-2"></div>
       <div className="mb-4">
         <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded inline-block">
           ₹{remainingSalary} Remaining
@@ -238,29 +237,29 @@ function TeamCardSL({ team, teamIndex, totalTeams}) {
 
         return (
           <div key={pos} className="mb-3">
-            <div className="font-medium text-sm mb-1">
+            <div className="font-medium text-sm sm:text-base mb-1">
               {POSITION_MAP[pos] || pos}
             </div>
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
               {players.map((player) => (
                 <div
                   key={player.player_id}
-                  className="flex flex-col items-center text-xs"
+                  className="flex flex-col items-center text-xs sm:text-sm"
                 >
                   <div className="relative">
                     <img
-                      className="w-10 h-10 object-cover rounded-full"
+                      className="w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-full"
                       src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
                       alt={player.display_name}
                     />
                     {/* C/VC labels */}
                     {player.C === 1 && (
-                      <span className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] px-1 rounded">
+                      <span className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] sm:text-[12px] px-1 rounded">
                         C
                       </span>
                     )}
                     {player.C === 2 && (
-                      <span className="absolute top-0 right-0 bg-green-500 text-white text-[10px] px-1 rounded">
+                      <span className="absolute top-0 right-0 bg-green-500 text-white text-[10px] sm:text-[12px] px-1 rounded">
                         VC
                       </span>
                     )}
@@ -274,16 +273,16 @@ function TeamCardSL({ team, teamIndex, totalTeams}) {
         );
       })}
 
-      <div className="mt-4 flex justify-center gap-4">
-        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
+      <div className="mt-4 flex flex-col sm:flex-row justify-center gap-4">
+        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm sm:text-base">
           Save to my team
         </button>
-        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
+        <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm sm:text-base">
           EXPORT TO
         </button>
       </div>
       
-      <div className="mt-4 text-xs text-gray-500">
+      <div className="mt-4 text-xs sm:text-sm text-gray-500">
         {teamIndex + 1} / {totalTeams}
       </div>
     </div>
@@ -309,11 +308,15 @@ function Carousel({ teams, glHeadings }) {
   };
 
   if (!teams || teams.length === 0) {
-    return <div className="text-center text-gray-500">No teams available</div>;
+    return (
+      <div className="text-center text-gray-500 py-4">
+        No teams available
+      </div>
+    );
   }
 
   return (
-    <div className="relative flex items-center justify-center w-full mt-6">
+    <div className="relative flex items-center justify-center w-full mt-6 sm:mt-8 md:mt-10">
       {/* Single TeamCard */}
       <TeamCard
         team={teams[currentIndex]}
@@ -326,20 +329,20 @@ function Carousel({ teams, glHeadings }) {
       <button
         onClick={prevSlide}
         disabled={currentIndex === 0}
-        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded disabled:opacity-50"
+        className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 sm:p-3 md:p-4 rounded disabled:opacity-50"
         aria-label="previous"
       >
-        &lt;
+        <span className="text-lg sm:text-xl md:text-2xl">&lt;</span>
       </button>
 
       {/* Right arrow */}
       <button
         onClick={nextSlide}
         disabled={currentIndex === totalTeams - 1}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded disabled:opacity-50"
+        className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 sm:p-3 md:p-4 rounded disabled:opacity-50"
         aria-label="next"
       >
-        &gt;
+        <span className="text-lg sm:text-xl md:text-2xl">&gt;</span>
       </button>
     </div>
   );
@@ -363,11 +366,15 @@ function CarouselSL({ teams }) {
   };
 
   if (!teams || teams.length === 0) {
-    return <div className="text-center text-gray-500">No teams available</div>;
+    return (
+      <div className="text-center text-gray-500 py-4">
+        No teams available
+      </div>
+    );
   }
 
   return (
-    <div className="relative flex items-center justify-center w-full mt-6">
+    <div className="relative flex items-center justify-center w-full mt-6 sm:mt-8 md:mt-10">
       {/* Single TeamCard */}
       <TeamCardSL
         team={teams[currentIndex]}
@@ -379,20 +386,20 @@ function CarouselSL({ teams }) {
       <button
         onClick={prevSlide}
         disabled={currentIndex === 0}
-        className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded disabled:opacity-50"
+        className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 sm:p-3 md:p-4 rounded disabled:opacity-50"
         aria-label="previous"
       >
-        &lt;
+        <span className="text-lg sm:text-xl md:text-2xl">&lt;</span>
       </button>
 
       {/* Right arrow */}
       <button
         onClick={nextSlide}
         disabled={currentIndex === totalTeams - 1}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 rounded disabled:opacity-50"
+        className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 bg-gray-300 p-2 sm:p-3 md:p-4 rounded disabled:opacity-50"
         aria-label="next"
       >
-        &gt;
+        <span className="text-lg sm:text-xl md:text-2xl">&gt;</span>
       </button>
     </div>
   );
@@ -400,8 +407,7 @@ function CarouselSL({ teams }) {
 
 
 
-function Glmatch({fixtureDetails}){
-
+function Glmatch({ fixtureDetails }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -445,37 +451,39 @@ function Glmatch({fixtureDetails}){
     fetchData();
   }, [fixtureDetails?.season_game_uid]);
 
-  // Handle Loading & Error States
+  // Render responsive loading, error, and empty states
   if (loading) {
-    return <div className="text-center text-gray-600">Loading...</div>;
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4 py-4 text-center text-gray-600">
+        Loading...
+      </div>
+    );
   }
   if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4 py-4 text-center text-red-500">
+        Error: {error}
+      </div>
+    );
   }
   if (!data) {
-    return <div className="text-center text-gray-600">No data available.</div>;
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4 py-4 text-center text-gray-600">
+        No data available.
+      </div>
+    );
   }
 
-
-
   return (
-    <>
-    
-    {data &&data.gl_count > 0 &&
-
-      (
+    <div className="w-full max-w-6xl mx-auto px-4 py-4">
+      {data && data.gl_count > 0 && (
         <Carousel teams={data.gl_team} glHeadings={data.gl_headings} />
-      )
-    }
-    
-    </>
-
-
-  )
+      )}
+    </div>
+  );
 }
 
-function SLmatch({fixtureDetails}){
-
+function SLmatch({ fixtureDetails }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -493,7 +501,7 @@ function SLmatch({fixtureDetails}){
           "https://plapi.perfectlineup.in/fantasy/lobby/get_sl_teams",
           {
             season_game_uid: fixtureDetails.season_game_uid,
-            no_of_teams: 2
+            no_of_teams: 2,
           },
           {
             headers: {
@@ -517,33 +525,34 @@ function SLmatch({fixtureDetails}){
     fetchData();
   }, [fixtureDetails?.season_game_uid]);
 
-  // Handle Loading & Error States
+  // Render loading and error states with responsive Tailwind classes
   if (loading) {
-    return <div className="text-center text-gray-600">Loading...</div>;
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4 py-4 text-center text-gray-600 text-lg">
+        Loading...
+      </div>
+    );
   }
   if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4 py-4 text-center text-red-500">
+        Error: {error}
+      </div>
+    );
   }
   if (!data) {
-    return <div className="text-center text-gray-600">No data available.</div>;
+    return (
+      <div className="w-full max-w-6xl mx-auto px-4 py-4 text-center text-gray-600">
+        No data available.
+      </div>
+    );
   }
 
-
-
   return (
-    <>
-    
-    {data &&
-
-      (
-        <CarouselSL teams={data.sl_teams}/>
-      )
-    }
-    
-    </>
-
-
-  )
+    <div className="w-full max-w-6xl mx-auto px-4 py-4">
+      {data && <CarouselSL teams={data.sl_teams} />}
+    </div>
+  );
 }
 
 
@@ -555,7 +564,7 @@ function MatchDetails() {
   const fixtureDetails = location.state?.fixtureDetails;
   const [selectedLeague, setSelectedLeague] = useState("GL");
 
-  const Leage= ["GL", "SL"]
+  const Leage = ["GL", "SL"];
 
   // Function to get the current timestamp in IST
   const getCurrentTimestampInIST = () => {
@@ -583,7 +592,7 @@ function MatchDetails() {
         );
 
         console.log("API response: ", response.data);
-        // Store response.data in an array for mapping convenience
+        // Wrap response.data in an array for mapping convenience
         setData([response.data]);
       } catch (error) {
         setError(error.message || "An error occurred while fetching data.");
@@ -608,7 +617,9 @@ function MatchDetails() {
     }
 
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const hours = Math.floor(
+      (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+    );
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
@@ -622,7 +633,9 @@ function MatchDetails() {
     );
   }
   if (error) {
-    return <div className="text-red-500 text-center mt-4">Error: {error}</div>;
+    return (
+      <div className="text-red-500 text-center mt-4">Error: {error}</div>
+    );
   }
   if (!data || data.length === 0) {
     return null;
@@ -660,12 +673,9 @@ function MatchDetails() {
     },
   ];
 
-
-
   return (
     <div className="min-h-screen w-full flex flex-col bg-white">
       {/* Navigation Bar & Fixture Header */}
-
       {data && (
         <FixtureHeader
           fixtureDetails={fixtureDetails}
@@ -683,23 +693,23 @@ function MatchDetails() {
             state={{ matchInSights: item }}
             className="block"
           >
-            <div className="flex items-center justify-between px-4 py-3 bg-[#F5F7FA] h-32 shadow-lg rounded-md">
+            <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-3 bg-[#F5F7FA] min-h-[8rem] shadow-lg rounded-md">
               <div className="flex items-center space-x-3">
                 <img
                   src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_stopwatch.svg"
                   alt="Stopwatch"
-                  className="w-20 h-20"
+                  className="w-16 h-16 sm:w-20 sm:h-20"
                 />
                 <div className="flex flex-col justify-center">
-                  <span className="text-[#1D2B4F] text-3xl sm:text-4xl font-bold italic">
+                  <span className="text-[#1D2B4F] text-2xl sm:text-3xl md:text-4xl font-bold italic">
                     KEY MATCH INSIGHTS
                   </span>
-                  <span className="text-[#1D2B4F] text-xl sm:text-2xl font-bold italic">
+                  <span className="text-[#1D2B4F] text-lg sm:text-xl md:text-2xl font-bold italic">
                     IN 2 MINS
                   </span>
                 </div>
               </div>
-              <div>
+              <div className="mt-2 sm:mt-0">
                 <img
                   src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/arrow.svg"
                   alt="Arrow"
@@ -710,267 +720,236 @@ function MatchDetails() {
           </Link>
         ))}
       </div>
-      
-      
-      {/*** LINEUP GENERATOR */}
+
+      {/* LINEUP GENERATOR */}
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         <h2 className="text-xl font-bold text-gray-800 mb-4">
           Lineup Generator
         </h2>
         <div className="mb-4">
-        <h3 className="text-2xl font-bold">Algorithm Suggested Teams</h3>
-        <p className="text-gray-600">
-          A selection of 11 teams, which have a good chance of winning according to our algorithm, are ready.
-        </p>
-      </div>
+          <h3 className="text-2xl font-bold">Algorithm Suggested Teams</h3>
+          <p className="text-gray-600">
+            A selection of 11 teams, which have a good chance of winning according
+            to our algorithm, are ready.
+          </p>
+        </div>
 
-       {/* League Tabs */}
-          <div className="player-specification-list w-full max-w-4xl mx-auto">
-            <div className="tab-container mb-4  mt-4">
-              {/* 
-      flex items-center => sets up a flex container
-      bg-gray-100 p-1 => a light gray background with padding
-      rounded-full => rounded "pill" shape
-    */}
-              <div className="flex items-center bg-gray-100 p-1 rounded-full">
-                {Leage.map((tab) => (
-                  <button
-                    key={tab}
-                    onClick={() => setSelectedLeague(tab)}
-                    className={`
-            flex-1                /* Each button fills an equal portion of the row */
-            text-center           /* Center text within each button */
-            px-4 py-2 text-sm font-medium focus:outline-none 
-            transition-colors duration-200
-            ${
-              selectedLeague === tab
-                ? "bg-white text-gray-900 shadow rounded-full" /* Active tab styling */
-                : "bg-transparent text-gray-500" /* Inactive tab styling */
-            }
-          `}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
+        {/* League Tabs */}
+        <div className="player-specification-list w-full max-w-4xl mx-auto">
+          <div className="tab-container mb-4 mt-4">
+            <div className="flex items-center bg-gray-100 p-1 rounded-full">
+              {Leage.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setSelectedLeague(tab)}
+                  className={`flex-1 text-center px-4 py-2 text-sm font-medium focus:outline-none transition-colors duration-200 ${
+                    selectedLeague === tab
+                      ? "bg-white text-gray-900 shadow rounded-full"
+                      : "bg-transparent text-gray-500"
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
           </div>
-
-
-        {selectedLeague  === "GL" && (
-          <Glmatch fixtureDetails={fixtureDetails}/>
-        )}
-
-        {selectedLeague  === "SL" && (
-          <SLmatch fixtureDetails={fixtureDetails}/>
-        )}
-
         </div>
 
-
-        {/* Team Generator */}
-        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">
-          Team Generator
-        </h2>
-        <div className="mb-4">
-        <p className="text-gray-600">
-        Use these tools to create your custom teams.
-        </p>
+        {selectedLeague === "GL" && (
+          <Glmatch fixtureDetails={fixtureDetails} />
+        )}
+        {selectedLeague === "SL" && (
+          <SLmatch fixtureDetails={fixtureDetails} />
+        )}
       </div>
 
-       {/* League Tabs */}
-       <div className="mx-auto max-w-4xl p-4 space-y-4">
-              <Link
-                 key={
-                   fixtureDetails?.season_game_uid
-                     ? fixtureDetails?.season_game_uid
-                     : fixtureDetails?.es_season_game_uid
-                 }
-                 to={`/create-team-score-based/Cricket/${
-                   fixtureDetails?.season_game_uid
-                     ? fixtureDetails?.season_game_uid
-                     : fixtureDetails?.es_season_game_uid
-                 }/${fixtureDetails.home}_vs_${fixtureDetails.away}/${
-                   fixtureDetails.league_id
-                 }`}
-                 state={{ matchInSights: fixtureDetails , data:data}}
-               >
-       {/* Team Based on Scores (BETA) */}
-       <div className="flex items-center p-4 bg-white rounded shadow hover:shadow-md transition">
-         <img
-           alt=""
-           src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_team_score.svg"
-           className="h-12 w-12 mr-4"
-         />
-         <div className="flex-grow">
-           <div className="font-semibold text-base sm:text-lg">
-             Create Team Based on Team Scores
-           </div>
-           <div className="text-gray-600 text-sm">
-             Draft lineups by simply predicting the final team scores
-           </div>
-         </div>
-         <div className="ml-4">
-           <span className="text-xs font-semibold text-white bg-gray-700 py-1 px-2 rounded">
-             BETA
-           </span>
-         </div>
-       </div>
- 
-       {/* Custom Team Builder */}
-       <div className="flex flex-col md:flex-row items-start md:items-center p-4 bg-white rounded shadow hover:shadow-md transition">
-         {/* Left content */}
-         <div className="flex items-start md:items-center">
-           {/* Icon (you can replace with your own icon or image) */}
-           <span className="text-2xl mr-3">
-             <i className="icon-Custom-Team-Builder1x"></i>
-           </span>
- 
-           <div>
-             <div className="text-blue-500 font-semibold text-base sm:text-lg">
-               Custom Team Builder
-             </div>
-             <div className="text-gray-600 text-sm">
-               Create custom lineups with your favorite players
-             </div>
- 
-             {/* Action container (locks, etc.) */}
-             <div className="flex items-center space-x-4 mt-2">
-               <div className="flex items-center">
-                 <img
-                   className="h-4 w-4"
-                   src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
-                   alt="Lock Icon"
-                 />
-                 <span className="ml-2 text-sm">0</span>
-               </div>
-               <div className="flex items-center">
-                 <i className="icon-ic_locked"></i>
-                 <span className="ml-2 text-sm">0</span>
-               </div>
-               <div className="flex items-center">
-                 <i className="icon-close text-sm mr-1"></i>
-                 <span className="text-sm">0</span>
-               </div>
-             </div>
-           </div>
-         </div>
- 
-         {/* Right image (jersey) */}
-         <div className="mt-4 md:mt-0 md:ml-auto">
-           <img
-             src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/jersey-CTB.png"
-             alt="CTB Jersey"
-             className="h-12 w-auto"
-           />
-         </div>
-       </div>
- 
-       {/* My Teams */}
-       <div className="flex items-center p-4 bg-white rounded shadow hover:shadow-md transition">
-         <i className="icon-menu-jersey text-xl mr-4"></i>
-         <div className="flex-grow">
-           <div className="font-semibold text-base sm:text-lg">My Teams</div>
-         </div>
-         <div>
-           <img
-             alt=""
-             src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/arrow.svg"
-             className="h-4 w-4"
-           />
-         </div>
-       </div>
-       </Link>
-     </div>
-
+      {/* Team Generator */}
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-4">Team Generator</h2>
+        <div className="mb-4">
+          <p className="text-gray-600">
+            Use these tools to create your custom teams.
+          </p>
         </div>
 
-              {/* Perfect MATCH INSIGHTS */}
-      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        {data.map((item) => (
+        <div className="mx-auto max-w-4xl p-4 space-y-4">
           <Link
-            key={item.season_game_uid}
-            to={`/pl-labs/app/Cricket/${item.season_game_uid}/${item.home}_vs_${item.away}/${item.league_id}`}
-            state={{ matchInSights: item }}
-            className="block"
+            key={
+              fixtureDetails?.season_game_uid
+                ? fixtureDetails?.season_game_uid
+                : fixtureDetails?.es_season_game_uid
+            }
+            to={`/create-team-score-based/Cricket/${
+              fixtureDetails?.season_game_uid
+                ? fixtureDetails?.season_game_uid
+                : fixtureDetails?.es_season_game_uid
+            }/${fixtureDetails.home}_vs_${fixtureDetails.away}/${fixtureDetails.league_id}`}
+            state={{ matchInSights: fixtureDetails, data: data }}
           >
-            <div className="flex items-center justify-between px-4 py-3 bg-[#F5F7FA] h-32 shadow-lg rounded-md">
-              <div className="flex items-center space-x-3">
-                <img
-                  src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_stopwatch.svg"
-                  alt="Stopwatch"
-                  className="w-20 h-20"
-                />
-                <div className="flex flex-col justify-center">
-                  <span className="text-[#1D2B4F] text-3xl sm:text-4xl font-bold italic">
-                    Perfect MATCH INSIGHTS
-                  </span>
-                  <span className="text-[#1D2B4F] text-xl sm:text-2xl font-bold italic">
-                    Improve games
-                  </span>
+            {/* Team Based on Scores (BETA) */}
+            <div className="flex flex-col md:flex-row items-center p-4 bg-white rounded shadow hover:shadow-md transition">
+              <img
+                alt="Team Score Icon"
+                src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_team_score.svg"
+                className="h-12 w-12 mr-4"
+              />
+              <div className="flex-grow">
+                <div className="font-semibold text-base sm:text-lg">
+                  Create Team Based on Team Scores
                 </div>
+                <div className="text-gray-600 text-sm">
+                  Draft lineups by simply predicting the final team scores
+                </div>
+              </div>
+              <div className="ml-4">
+                <span className="text-xs font-semibold text-white bg-gray-700 py-1 px-2 rounded">
+                  BETA
+                </span>
+              </div>
+            </div>
+
+            {/* Custom Team Builder */}
+            <div className="flex flex-col md:flex-row items-start md:items-center p-4 bg-white rounded shadow hover:shadow-md transition mt-4">
+              <div className="flex items-start md:items-center">
+                <span className="text-2xl mr-3">
+                  <i className="icon-Custom-Team-Builder1x"></i>
+                </span>
+                <div>
+                  <div className="text-blue-500 font-semibold text-base sm:text-lg">
+                    Custom Team Builder
+                  </div>
+                  <div className="text-gray-600 text-sm">
+                    Create custom lineups with your favorite players
+                  </div>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <div className="flex items-center">
+                      <img
+                        className="h-4 w-4"
+                        src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                        alt="Lock Icon"
+                      />
+                      <span className="ml-2 text-sm">0</span>
+                    </div>
+                    <div className="flex items-center">
+                      <i className="icon-ic_locked"></i>
+                      <span className="ml-2 text-sm">0</span>
+                    </div>
+                    <div className="flex items-center">
+                      <i className="icon-close text-sm mr-1"></i>
+                      <span className="text-sm">0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 md:mt-0 md:ml-auto">
+                <img
+                  src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/jersey-CTB.png"
+                  alt="CTB Jersey"
+                  className="h-12 w-auto"
+                />
+              </div>
+            </div>
+
+            {/* My Teams */}
+            <div className="flex items-center p-4 bg-white rounded shadow hover:shadow-md transition mt-4">
+              <i className="icon-menu-jersey text-xl mr-4"></i>
+              <div className="flex-grow">
+                <div className="font-semibold text-base sm:text-lg">My Teams</div>
               </div>
               <div>
                 <img
-                  src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/arrow.svg"
                   alt="Arrow"
-                  className="w-5 h-5"
+                  src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/arrow.svg"
+                  className="h-4 w-4"
                 />
               </div>
             </div>
           </Link>
-        ))}
+        </div>
       </div>
 
-
-
+      {/* Perfect MATCH INSIGHTS */}
+<div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+  {data.map((item) => (
+    <Link
+      key={item.season_game_uid}
+      to={`/pl-labs/app/Cricket/${item.season_game_uid}/${item.home}_vs_${item.away}/${item.league_id}`}
+      state={{ matchInSights: item }}
+      className="block"
+    >
+      <div className="flex flex-col sm:flex-row items-center justify-between px-2 py-2 sm:px-4 sm:py-3 bg-[#F5F7FA] min-h-[6rem] sm:min-h-[8rem] shadow-lg rounded-md">
+        <div className="flex items-center space-x-3">
+          <img
+            src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_stopwatch.svg"
+            alt="Stopwatch"
+            className="w-14 h-14 sm:w-20 sm:h-20"
+          />
+          <div className="flex flex-col justify-center">
+            <span className="text-[#1D2B4F] text-xl sm:text-3xl md:text-4xl font-bold italic">
+              Perfect MATCH INSIGHTS
+            </span>
+            <span className="text-[#1D2B4F] text-base sm:text-xl md:text-2xl font-bold italic">
+              Improve games
+            </span>
+          </div>
+        </div>
+        <div className="mt-2 sm:mt-0">
+          <img
+            src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/arrow.svg"
+            alt="Arrow"
+            className="w-5 h-5"
+          />
+        </div>
+      </div>
+    </Link>
+  ))}
+</div>
 
       {/* DATA AND ANALYTICS SECTION */}
-      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">
-          DATA AND ANALYTICS
-        </h2>
-        <ul className="space-y-2">
-          {menuItems.map((item, index) => (
-            <Link
-              key={`menu-${item.header}-${data[0].season_game_uid}-${index}`}
-              to={`/${item.header}/Cricket/${data[0].season_game_uid}/${data[0].home}_vs_${data[0].away}/${data[0].league_id}`}
-              state={{ matchInSights: data[0] }}
-              className="block"
-            >
-              <li className="flex items-center justify-between bg-white rounded-lg shadow p-3">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-2">
-                  <div className="text-2xl">{item.icon}</div>
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-gray-800">
-                      {item.label}
-                      {item.isNew && (
-                        <span className="ml-2 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
-                          NEW
-                        </span>
-                      )}
-                    </span>
-                    {item.subLabel && (
-                      <span className="text-sm text-gray-500">
-                        {item.subLabel}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col items-end">
-                  <FiChevronRight className="text-gray-400" />
-                  {item.note && (
-                    <span className="text-xs text-gray-400 mt-1 italic">
-                      {item.note}
-                    </span>
-                  )}
-                </div>
-              </li>
-            </Link>
-          ))}
-        </ul>
-      </div>
+ <div className="w-full max-w-full sm:max-w-6xl mx-auto px-2 sm:px-4 lg:px-8 mt-4 mb-8">
+  <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">
+    DATA AND ANALYTICS
+  </h2>
+  <ul className="space-y-2">
+    {menuItems.map((item, index) => (
+      <Link
+        key={`menu-${item.header}-${data[0].season_game_uid}-${index}`}
+        to={`/${item.header}/Cricket/${data[0].season_game_uid}/${data[0].home}_vs_${data[0].away}/${data[0].league_id}`}
+        state={{ matchInSights: data[0] }}
+        className="block"
+      >
+        <li className="flex items-center justify-between bg-white rounded-lg shadow p-2 sm:p-3">
+          <div className="flex items-center space-x-2">
+            <div className="text-xl sm:text-2xl">{item.icon}</div>
+            <div className="flex flex-col">
+              <span className="font-semibold text-gray-800 text-sm sm:text-base">
+                {item.label}
+                {item.isNew && (
+                  <span className="ml-2 bg-red-500 text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+                    NEW
+                  </span>
+                )}
+              </span>
+              {item.subLabel && (
+                <span className="text-xs sm:text-sm text-gray-500">
+                  {item.subLabel}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center space-x-1">
+            <FiChevronRight className="text-gray-400 text-xl" />
+            {item.note && (
+              <span className="text-xs text-gray-400 italic">
+                {item.note}
+              </span>
+            )}
+          </div>
+        </li>
+      </Link>
+    ))}
+  </ul>
+</div>
     </div>
   );
 }
