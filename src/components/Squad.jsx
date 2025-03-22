@@ -121,7 +121,7 @@ function PlayersListing({ teamsData, fixture_info }) {
             </span>
           </div>
           <ul className="w-full space-y-2">
-            {filteredBanPlayers.map((player) => (
+            {filteredGatPlayers.map((player) => (
               <Link
                 key={player.player_uid}
                 to={`/player/${player.player_uid}/${player.full_name.replace(
@@ -164,7 +164,7 @@ function PlayersListing({ teamsData, fixture_info }) {
           </div>
 
           <ul className="w-full space-y-2">
-            {filteredGatPlayers.map((player) => (
+            {filteredBanPlayers.map((player) => (
               <Link
                 key={player.player_uid}
                 to={`/player/${player.player_uid}/${player.full_name.replace(
