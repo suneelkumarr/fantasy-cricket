@@ -1116,7 +1116,7 @@ function MatchInsights() {
 
                 {/* TOP PLAYERS CHASING */}
 
-                <div className="win-container flex flex-col items-center w-full max-w-screen-lg mx-auto p-4 sm:p-6 lg:p-8">
+                <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 sm:p-6 lg:p-8">
                 {/* Header Section */}
                 <div className="view-win-container w-full mb-4">
                   <div className="flex items-center w-full">
@@ -1381,7 +1381,7 @@ function MatchInsights() {
 
                 {/* TOP PERFORMERS AT THIS VENUE */}
 
-                <div className="win-container flex flex-col items-center w-full max-w-screen-lg mx-auto p-4 -mt-2">
+                <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 -mt-2">
                   {/* Header Section */}
                   <div className="view-win-container w-full">
                     <div className="flex items-center w-full">
@@ -1520,7 +1520,7 @@ function MatchInsights() {
 
                 {/* PLAYERS WITH X FACTOR */}
 
-                <div className="win-container flex flex-col items-center w-full max-w-screen-lg mx-auto p-4 -mt-2">
+                <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 -mt-2">
                   {/* Header Section */}
                   <div className="view-win-container w-full">
                     <div className="flex items-center w-full">
@@ -1659,7 +1659,7 @@ function MatchInsights() {
 
                 {/* Power plays (batters) */}
 
-                <div className="win-container flex flex-col items-center w-full max-w-screen-lg mx-auto p-4 -mt-2">
+                <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 -mt-2">
                   {/* Header Section */}
                   <div className="view-win-container w-full">
                     <div className="flex items-center w-full">
@@ -1800,7 +1800,7 @@ function MatchInsights() {
                 </div>
 
                 {/* Power plays (bowlers) */}
-                <div className="win-container flex flex-col items-center w-full max-w-screen-lg mx-auto p-4 sm:p-6 md:p-8 lg:p-10 -mt-2">
+                <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 sm:p-6 md:p-8 lg:p-10 -mt-2">
                 {/* Header Section */}
                 <div className="view-win-container w-full">
                   <div className="flex flex-row md:flex-row items-center w-full">
@@ -1920,7 +1920,7 @@ function MatchInsights() {
 
                 {/* Death overs (Bowlers) */}
 
-                <div className="win-container flex flex-col items-center w-full max-w-screen-lg mx-auto p-4 sm:p-6 md:p-8 lg:p-10 -mt-2">
+                <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 sm:p-6 md:p-8 lg:p-10 -mt-2">
                 {/* Header Section */}
                 <div className="view-win-container w-full">
                   <div className="flex flex-row md:flex-row items-center w-full">
