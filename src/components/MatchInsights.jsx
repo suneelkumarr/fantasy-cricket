@@ -71,29 +71,6 @@ function MatchInsights() {
     fetchData();
   }, [matchInSights?.season_game_uid]);
 
-  // Memoized calculation for win percentages
-  const win = useMemo(() => {
-    if (!Array.isArray(data)) return [];
-    return data.map((item) => {
-      const tossTrend = item.data.venue_info.toss_trend_per;
-      return (tossTrend.toss_win_match_win / tossTrend.total_matches) * 100;
-    });
-  }, [data]);
-
-  const getFormatLabel = () => {
-    switch (matchInSights.format) {
-      case "1":
-        return "Test";
-      case "2":
-        return "ODI";
-      case "3":
-        return "T20";
-      case "4":
-        return "T10";
-      default:
-        return matchInSights.format;
-    }
-  };
 
   // Memoized extraction of fixture players
   const fixturePlayers = useMemo(() => {
@@ -184,6 +161,24 @@ function MatchInsights() {
   const teamNews = useMemo(() => {
     return Array.isArray(data) ? data[0].data.team_news : [];
   }, [data]);
+
+  // Extract relevant data safely
+  const fixtureInfo = useMemo(() => {
+    return Array.isArray(data) ? data[0].data.fixture_info : [];
+  }, [data]);;
+  const winProb = fixtureInfo?.win_probability;
+  
+  // Determine which side is referenced in win_probability
+  const isHomeTeam =
+    winProb?.team_uid?.toString() === fixtureInfo?.home_uid?.toString();
+
+  // Fallback if no win_probability is given
+  const winningPercentage = winProb?.winning_percentage ?? 0;
+
+  // Assign percentages based on who has the winning_probability
+  const homePercentage = isHomeTeam ? winningPercentage : 100 - winningPercentage;
+  const awayPercentage = isHomeTeam ? 100 - winningPercentage : winningPercentage;
+
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-start justify-start">
@@ -320,83 +315,70 @@ function MatchInsights() {
 
                 {/* Progress Containers */}
                 <div className="main-progress-container w-full">
-                  <div className="progress-container">
-                    {/* Home Team Progress */}
-                    <div className="view-progress flex items-center mb-4 sm:mb-6">
-                      <div
-                        className="filled-view-progress h-8 sm:h-12 rounded-l-full transition-all duration-300"
-                        style={{
-                          width: `${
-                            item?.data?.fixture_info?.win_probability
-                              ?.winning_percentage != null
-                              ? 100 -
-                                item.data.fixture_info.win_probability
-                                  .winning_percentage
-                              : 100
-                          }%`,
-                          backgroundColor: "rgb(111, 200, 248)",
-                        }}
-                      ></div>
-                      <div className="view-circle flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-md -ml-4 sm:-ml-6">
-                        <img
-                          src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.home_flag}`}
-                          alt={`${matchInSights.home} flag`}
-                          className="w-6 h-6 sm:w-8 sm:h-8"
-                        />
-                      </div>
-                      <div className="perc-container ml-2 sm:ml-4 flex flex-col">
-                        <div className="per-container flex items-baseline">
-                          <span className="txt-percentage text-lg sm:text-2xl font-bold text-gray-800">
-                            {100 -
-                              (item?.data?.fixture_info?.win_probability
-                                ?.winning_percentage ?? 0)}
-                          </span>
-                          <span className="txt-percentage1 text-base sm:text-lg font-medium text-gray-800">
-                            %
-                          </span>
-                        </div>
-                        <span className="txt-team-name text-sm sm:text-base font-medium text-gray-600">
-                          {item.data.fixture_info.home}
-                        </span>
-                      </div>
+                <div className="progress-container">
+                  {/* Home Team Progress */}
+                  <div className="view-progress flex items-center mb-4 sm:mb-6">
+                    <div
+                      className="filled-view-progress h-8 sm:h-12 rounded-l-full transition-all duration-300"
+                      style={{
+                        width: `${homePercentage}%`,
+                        backgroundColor: "rgb(111, 200, 248)",
+                      }}
+                    ></div>
+                    <div className="view-circle flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-md -ml-4 sm:-ml-6">
+                      <img
+                        src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.home_flag}`}
+                        alt={`${matchInSights.home} flag`}
+                        className="w-6 h-6 sm:w-8 sm:h-8"
+                      />
                     </div>
-
-                    {/* Away Team Progress */}
-                    <div className="view-progress flex items-center">
-                      <div
-                        className="filled-view-progress h-8 sm:h-12 rounded-l-full transition-all duration-300"
-                        style={{
-                          width: `${
-                            item?.data?.fixture_info?.win_probability
-                              ?.winning_percentage ?? 0
-                          }%`,
-                          backgroundColor: "rgb(250, 180, 165)",
-                        }}
-                      ></div>
-                      <div className="view-circle flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-md -ml-4 sm:-ml-6">
-                        <img
-                          src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.away_flag}`}
-                          alt={`${matchInSights.away} flag`}
-                          className="w-6 h-6 sm:w-8 sm:h-8"
-                        />
-                      </div>
-                      <div className="perc-container ml-2 sm:ml-4 flex flex-col">
-                        <div className="per-container flex items-baseline">
-                          <span className="txt-percentage text-lg sm:text-2xl font-bold text-gray-800">
-                            {item?.data?.fixture_info?.win_probability
-                              ?.winning_percentage ?? "N/A"}
-                          </span>
-                          <span className="txt-percentage1 text-base sm:text-lg font-medium text-gray-800">
-                            %
-                          </span>
-                        </div>
-                        <span className="txt-team-name text-sm sm:text-base font-medium text-gray-600">
-                          {item.data.fixture_info.away}
+                    <div className="perc-container ml-2 sm:ml-4 flex flex-col">
+                      <div className="per-container flex items-baseline">
+                        <span className="txt-percentage text-lg sm:text-2xl font-bold text-gray-800">
+                          {homePercentage}
+                        </span>
+                        <span className="txt-percentage1 text-base sm:text-lg font-medium text-gray-800">
+                          %
                         </span>
                       </div>
+                      <span className="txt-team-name text-sm sm:text-base font-medium text-gray-600">
+                        {fixtureInfo?.home}
+                      </span>
+                    </div>
+                  </div>
+          
+                  {/* Away Team Progress */}
+                  <div className="view-progress flex items-center">
+                    <div
+                      className="filled-view-progress h-8 sm:h-12 rounded-l-full transition-all duration-300"
+                      style={{
+                        width: `${awayPercentage}%`,
+                        backgroundColor: "rgb(250, 180, 165)",
+                      }}
+                    ></div>
+                    <div className="view-circle flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-md -ml-4 sm:-ml-6">
+                      <img
+                        src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.away_flag}`}
+                        alt={`${matchInSights.away} flag`}
+                        className="w-6 h-6 sm:w-8 sm:h-8"
+                      />
+                    </div>
+                    <div className="perc-container ml-2 sm:ml-4 flex flex-col">
+                      <div className="per-container flex items-baseline">
+                        <span className="txt-percentage text-lg sm:text-2xl font-bold text-gray-800">
+                          {awayPercentage}
+                        </span>
+                        <span className="txt-percentage1 text-base sm:text-lg font-medium text-gray-800">
+                          %
+                        </span>
+                      </div>
+                      <span className="txt-team-name text-sm sm:text-base font-medium text-gray-600">
+                        {fixtureInfo?.away}
+                      </span>
                     </div>
                   </div>
                 </div>
+              </div>
               </div>
 
               {/* Header Section   GROUND CONDITIONS*/}
