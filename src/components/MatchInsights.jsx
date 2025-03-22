@@ -2,23 +2,248 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { Link } from "react-router-dom";
-import { FaStar } from "react-icons/fa";
 import Getlocation from "./Getlocation.jsx";
 
 function MatchInsights() {
+
   const [data, setData] = useState(null);
+  const [playersave, setPlayersave] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const location = useLocation();
   const [tooltipVisible, setTooltipVisible] = useState(false);
-  const matchInSights = location.state?.matchInSights;
-  console.log(Getlocation());
+  const [preferredPlayers, setPreferredPlayers] = useState({});
 
-  // Function to get the countdown time in a formatted string
+  const location = useLocation();
+  const matchInSights = location.state?.matchInSights;
+
+  // -------------------------
+  // 1. Helper & Utility Hooks
+  // -------------------------
+
+  // A reusable sorting-and-slice function
+  const getTopPlayersByKey = (players, key, count = 5) => {
+    return [...players]
+      .sort((a, b) => b[key] - a[key])
+      .slice(0, count);
+  };
+
+  // Get a stable array of selected (preferred) player IDs
+  const getPreferredPlayerIds = useMemo(
+    () => Object.keys(preferredPlayers).filter((uid) => preferredPlayers[uid]),
+    [preferredPlayers]
+  );
+
+
+  // -----------------------------
+  // 2. Toggling "preferredPlayers"
+  // -----------------------------
+
+  const togglePreferred = (playerUid) => {
+    setPreferredPlayers((prev) => ({
+      ...prev,
+      [playerUid]: !prev[playerUid], // flip the boolean
+    }));
+  };
+
+  // -------------------------
+  // 3. Sync "preferredPlayers"
+  // -------------------------
+
+  useEffect(() => {
+    // If there are no preferred players, skip the API call
+    if (!getPreferredPlayerIds.length || !matchInSights) return;
+
+    const payload = {
+      season_game_uid: matchInSights.season_game_uid,
+      website_id: 1,
+      sports_id: "7",
+      league_id: matchInSights.league_id,
+      locked_players: [],
+      preferred_players: getPreferredPlayerIds,
+      excluded_players: [],
+    };
+
+    const savePreferredPlayers = async () => {
+      try {
+        const response = await axios.post(
+          "https://plapi.perfectlineup.in/fantasy/stats/save_lock_execlude",
+          payload,
+          {
+            headers: {
+              sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+              moduleaccess: "7",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("Preferred players updated:", response.data);
+      } catch (err) {
+        console.error("Error updating preferred players:", err);
+      }
+    };
+
+    savePreferredPlayers();
+  }, [getPreferredPlayerIds, matchInSights]);
+
+  // ------------------------------------
+  // 4. Single effect to fetch all needed
+  // ------------------------------------
+
+  useEffect(() => {
+    if (!matchInSights?.season_game_uid) {
+      console.warn("season_game_uid is undefined or null");
+      return;
+    }
+
+    const fetchAllData = async () => {
+      setLoading(true);
+      try {
+        const [insightRes, fixtureRes] = await Promise.all([
+          axios.post(
+            "https://plapi.perfectlineup.in/fantasy/stats/match_insight",
+            {
+              season_game_uid: matchInSights.season_game_uid,
+              league_id: matchInSights.league_id,
+              sports_id: "7", // assuming sports_id = 7
+            },
+            {
+              headers: {
+                sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+                moduleaccess: "7",
+                "Content-Type": "application/json",
+              },
+            }
+          ),
+          axios.post(
+            "https://plapi.perfectlineup.in/fantasy/lobby/get_user_fixture_data",
+            {
+              season_game_uid: matchInSights.season_game_uid,
+              website_id: 1,
+              sports_id: "7",
+              fixture_detail: 0,
+            },
+            {
+              headers: {
+                sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+                moduleaccess: "7",
+                "Content-Type": "application/json",
+              },
+            }
+          ),
+        ]);
+
+        console.log("match_insight response:", insightRes.data);
+        console.log("get_user_fixture_data response:", fixtureRes.data);
+
+        setData([insightRes.data]);
+        setPlayersave(fixtureRes.data?.data);
+      } catch (err) {
+        console.error("API Error:", err);
+        setError(err.message || "An error occurred while fetching data.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [matchInSights?.season_game_uid, matchInSights?.league_id]);
+
+  // ----------------------
+  // 5. Derived / Memo Data
+  // ----------------------
+
+  const fixtureInfo = useMemo(() => {
+    return Array.isArray(data) ? data[0]?.data?.fixture_info : {};
+  }, [data]);
+
+  const fixturePlayers = useMemo(() => {
+    return Array.isArray(data) ? data[0]?.data?.fixture_players || [] : [];
+  }, [data]);
+
+  const homeUid = fixtureInfo?.home_uid;
+  const awayUid = fixtureInfo?.away_uid;
+
+  // Helper to get top-5 sorted by batting order
+  const getPlayersByTeam = (teamUid) => {
+    return fixturePlayers
+      .filter(
+        (player) => player.team_uid === teamUid && player.avg_batting_order > 0
+      )
+      .sort(
+        (a, b) =>
+          parseInt(a.avg_batting_order, 10) - parseInt(b.avg_batting_order, 10)
+      )
+      .slice(0, 5);
+  };
+
+  const homePlayers = useMemo(() => getPlayersByTeam(homeUid), [homeUid, fixturePlayers]);
+  const awayPlayers = useMemo(() => getPlayersByTeam(awayUid), [awayUid, fixturePlayers]);
+
+  const top5           = useMemo(() => getTopPlayersByKey(fixturePlayers, "avg_bat_first_fpts"), [fixturePlayers]);
+  const topChase       = useMemo(() => getTopPlayersByKey(fixturePlayers, "avg_chase_fpts"), [fixturePlayers]);
+  const topH2H         = useMemo(() => getTopPlayersByKey(fixturePlayers, "avg_h2h_fpts"), [fixturePlayers]);
+  const topVenue       = useMemo(() => getTopPlayersByKey(fixturePlayers, "avg_venue_fpts"), [fixturePlayers]);
+  const powerPlayBat   = useMemo(() => getTopPlayersByKey(fixturePlayers, "power_play_bat_fpts"), [fixturePlayers]);
+  const powerPlayBowl  = useMemo(() => getTopPlayersByKey(fixturePlayers, "power_play_bowl_fpts"), [fixturePlayers]);
+  const deathOverBowl  = useMemo(() => getTopPlayersByKey(fixturePlayers, "death_over_bowl_fpts"), [fixturePlayers]);
+
+  const filteredPlayers = useMemo(() => {
+    return fixturePlayers.filter(
+      (player) => player.x_factor && player.x_factor.trim().length > 0
+    );
+  }, [fixturePlayers]);
+
+  const filteredTopFormPlayers = useMemo(() => {
+    return fixturePlayers
+      .filter((player) => player.top_category === "top_form")
+      .sort((a, b) => b.avg_fpts - a.avg_fpts)
+      .slice(0, 5);
+  }, [fixturePlayers]);
+
+  const teamNews = useMemo(() => {
+    return Array.isArray(data) ? data[0]?.data?.team_news : [];
+  }, [data]);
+
+  // Win Probability
+  const winProb = fixtureInfo?.win_probability;
+  const isHomeTeam =
+    winProb?.team_uid?.toString() === fixtureInfo?.home_uid?.toString();
+  const winningPercentage = winProb?.winning_percentage ?? 0;
+  const homePercentage = isHomeTeam ? winningPercentage : 100 - winningPercentage;
+  const awayPercentage = isHomeTeam ? 100 - winningPercentage : winningPercentage;
+
+  // --------------------------
+  // 6. Access `playersave` data
+  // --------------------------
+// 1) Safely get the string from 'playersave'
+const selectedPlayerData = playersave?.selected_player;
+
+// 2) Attempt to parse
+let parsedData = null;
+if (selectedPlayerData) {
+  try {
+    parsedData = JSON.parse(selectedPlayerData);
+  } catch (error) {
+    console.error("Error parsing selected_player data:", error);
+    parsedData = {};
+  }
+} else {
+  // If there's no string, default to empty object
+  parsedData = {};
+}
+
+// 3) Safely access each property with a fallback
+const eData = parsedData.e ?? [];
+const lData = parsedData.l ?? [];
+const pData = parsedData.p ?? [];
+  // --------------------------------
+  // 7. Countdown / Utility Functions
+  // --------------------------------
   const getCountdownTime = (scheduledDate) => {
     const now = new Date();
     const targetDate = new Date(scheduledDate);
-    // Convert from UTC to IST by adding 5 hours 30 minutes
+
+    // Convert from UTC to IST: +5:30
     targetDate.setHours(targetDate.getHours() + 5);
     targetDate.setMinutes(targetDate.getMinutes() + 30);
 
@@ -33,152 +258,12 @@ function MatchInsights() {
     return `${days}d ${hours}h ${minutes}m ${seconds}s`;
   };
 
-  // Data fetching effect
-  useEffect(() => {
-    if (!matchInSights?.season_game_uid) {
-      console.warn("season_game_uid is undefined or null");
-      return;
-    }
-
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.post(
-          "https://plapi.perfectlineup.in/fantasy/stats/match_insight",
-          {
-            season_game_uid: matchInSights.season_game_uid,
-            league_id: matchInSights.league_id,
-            sports_id: "7", // Assuming sports_id is always 7
-          },
-          {
-            headers: {
-              sessionkey: "3cd0fb996816c37121c765f292dd3f78",
-              moduleaccess: "7",
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        console.log("API Response:", response.data);
-        setData([response.data]);
-      } catch (err) {
-        console.error("API Error:", err);
-        setError(err.message || "An error occurred while fetching data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [matchInSights?.season_game_uid]);
-
-
-  // Memoized extraction of fixture players
-  const fixturePlayers = useMemo(() => {
-    return Array.isArray(data) ? data[0].data.fixture_players : [];
-  }, [data]);
-
-  // Memoized home and away UIDs
-  const homeUid = useMemo(() => {
-    return Array.isArray(data) ? data[0].data.fixture_info.home_uid : [];
-  }, [data]);
-
-  const awayUid = useMemo(() => {
-    return Array.isArray(data) ? data[0].data.fixture_info.away_uid : [];
-  }, [data]);
-
-  // Memoized filtered home players (sorted by player_order)
-  const homePlayers = useMemo(() => {
-    return fixturePlayers
-      .filter((player) => player.team_uid === homeUid && player.avg_batting_order > 0)
-      .sort((a, b) => parseInt(a.avg_batting_order) - parseInt(b.avg_batting_order))
-      .slice(0, 5);
-  }, [fixturePlayers, homeUid]);
-
-  // Memoized filtered away players (sorted by player_order)
-  const awayPlayers = useMemo(() => {
-    return fixturePlayers
-      .filter((player) => player.team_uid === awayUid && player.avg_batting_order > 0)
-      .sort((a, b) => parseInt(a.avg_batting_order) - parseInt(b.avg_batting_order))
-      .slice(0, 5);
-  }, [fixturePlayers, awayUid]);
-
-  // Memoized sorted arrays for various metrics
-  const top5 = useMemo(() => {
-    return [...fixturePlayers]
-      .sort((a, b) => b.avg_bat_first_fpts - a.avg_bat_first_fpts)
-      .slice(0, 5);
-  }, [fixturePlayers]);
-
-  const topChase = useMemo(() => {
-    return [...fixturePlayers]
-      .sort((a, b) => b.avg_chase_fpts - a.avg_chase_fpts)
-      .slice(0, 5);
-  }, [fixturePlayers]);
-
-  const topH2H = useMemo(() => {
-    return [...fixturePlayers]
-      .sort((a, b) => b.avg_h2h_fpts - a.avg_h2h_fpts)
-      .slice(0, 5);
-  }, [fixturePlayers]);
-
-  const topVenue = useMemo(() => {
-    return [...fixturePlayers]
-      .sort((a, b) => b.avg_venue_fpts - a.avg_venue_fpts)
-      .slice(0, 5);
-  }, [fixturePlayers]);
-
-  const filteredPlayers = useMemo(() => {
-    return fixturePlayers.filter(
-      (player) => player.x_factor && player.x_factor.trim().length > 0
-    );
-  }, [fixturePlayers]);
-
-  const powerPlayBat = useMemo(() => {
-    return [...fixturePlayers]
-      .sort((a, b) => b.power_play_bat_fpts - a.power_play_bat_fpts)
-      .slice(0, 5);
-  }, [fixturePlayers]);
-
-  const powerPlayBowl = useMemo(() => {
-    return [...fixturePlayers]
-      .sort((a, b) => b.power_play_bowl_fpts - a.power_play_bowl_fpts)
-      .slice(0, 5);
-  }, [fixturePlayers]);
-
-  const deathOverBowl = useMemo(() => {
-    return [...fixturePlayers]
-      .sort((a, b) => b.death_over_bowl_fpts - a.death_over_bowl_fpts)
-      .slice(0, 5);
-  }, [fixturePlayers]);
-
-  const filteredTopFormPlayers = useMemo(() => {
-    return [...fixturePlayers]
-      .filter((player) => player.top_category === "top_form")
-      .sort((a, b) => b.avg_fpts - a.avg_fpts)
-      .slice(0, 5);
-  }, [fixturePlayers]);
-
-  const teamNews = useMemo(() => {
-    return Array.isArray(data) ? data[0].data.team_news : [];
-  }, [data]);
-
-  // Extract relevant data safely
-  const fixtureInfo = useMemo(() => {
-    return Array.isArray(data) ? data[0].data.fixture_info : [];
-  }, [data]);;
-  const winProb = fixtureInfo?.win_probability;
-  
-  // Determine which side is referenced in win_probability
-  const isHomeTeam =
-    winProb?.team_uid?.toString() === fixtureInfo?.home_uid?.toString();
-
-  // Fallback if no win_probability is given
-  const winningPercentage = winProb?.winning_percentage ?? 0;
-
-  // Assign percentages based on who has the winning_probability
-  const homePercentage = isHomeTeam ? winningPercentage : 100 - winningPercentage;
-  const awayPercentage = isHomeTeam ? 100 - winningPercentage : winningPercentage;
-
+  // ----------------------------
+  // 8. Render / Return JSX below
+  // ----------------------------
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+    console.log("++++++++++++++++++++++++++++++++++++++pData", pData)
 
   return (
     <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-start justify-start">
@@ -315,70 +400,70 @@ function MatchInsights() {
 
                 {/* Progress Containers */}
                 <div className="main-progress-container w-full">
-                <div className="progress-container">
-                  {/* Home Team Progress */}
-                  <div className="view-progress flex items-center mb-4 sm:mb-6">
-                    <div
-                      className="filled-view-progress h-8 sm:h-12 rounded-l-full transition-all duration-300"
-                      style={{
-                        width: `${homePercentage}%`,
-                        backgroundColor: "rgb(111, 200, 248)",
-                      }}
-                    ></div>
-                    <div className="view-circle flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-md -ml-4 sm:-ml-6">
-                      <img
-                        src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.home_flag}`}
-                        alt={`${matchInSights.home} flag`}
-                        className="w-6 h-6 sm:w-8 sm:h-8"
-                      />
-                    </div>
-                    <div className="perc-container ml-2 sm:ml-4 flex flex-col">
-                      <div className="per-container flex items-baseline">
-                        <span className="txt-percentage text-lg sm:text-2xl font-bold text-gray-800">
-                          {homePercentage}
-                        </span>
-                        <span className="txt-percentage1 text-base sm:text-lg font-medium text-gray-800">
-                          %
+                  <div className="progress-container">
+                    {/* Home Team Progress */}
+                    <div className="view-progress flex items-center mb-4 sm:mb-6">
+                      <div
+                        className="filled-view-progress h-8 sm:h-12 rounded-l-full transition-all duration-300"
+                        style={{
+                          width: `${homePercentage}%`,
+                          backgroundColor: "rgb(111, 200, 248)",
+                        }}
+                      ></div>
+                      <div className="view-circle flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-md -ml-4 sm:-ml-6">
+                        <img
+                          src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.home_flag}`}
+                          alt={`${matchInSights.home} flag`}
+                          className="w-6 h-6 sm:w-8 sm:h-8"
+                        />
+                      </div>
+                      <div className="perc-container ml-2 sm:ml-4 flex flex-col">
+                        <div className="per-container flex items-baseline">
+                          <span className="txt-percentage text-lg sm:text-2xl font-bold text-gray-800">
+                            {homePercentage}
+                          </span>
+                          <span className="txt-percentage1 text-base sm:text-lg font-medium text-gray-800">
+                            %
+                          </span>
+                        </div>
+                        <span className="txt-team-name text-sm sm:text-base font-medium text-gray-600">
+                          {fixtureInfo?.home}
                         </span>
                       </div>
-                      <span className="txt-team-name text-sm sm:text-base font-medium text-gray-600">
-                        {fixtureInfo?.home}
-                      </span>
                     </div>
-                  </div>
-          
-                  {/* Away Team Progress */}
-                  <div className="view-progress flex items-center">
-                    <div
-                      className="filled-view-progress h-8 sm:h-12 rounded-l-full transition-all duration-300"
-                      style={{
-                        width: `${awayPercentage}%`,
-                        backgroundColor: "rgb(250, 180, 165)",
-                      }}
-                    ></div>
-                    <div className="view-circle flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-md -ml-4 sm:-ml-6">
-                      <img
-                        src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.away_flag}`}
-                        alt={`${matchInSights.away} flag`}
-                        className="w-6 h-6 sm:w-8 sm:h-8"
-                      />
-                    </div>
-                    <div className="perc-container ml-2 sm:ml-4 flex flex-col">
-                      <div className="per-container flex items-baseline">
-                        <span className="txt-percentage text-lg sm:text-2xl font-bold text-gray-800">
-                          {awayPercentage}
-                        </span>
-                        <span className="txt-percentage1 text-base sm:text-lg font-medium text-gray-800">
-                          %
+
+                    {/* Away Team Progress */}
+                    <div className="view-progress flex items-center">
+                      <div
+                        className="filled-view-progress h-8 sm:h-12 rounded-l-full transition-all duration-300"
+                        style={{
+                          width: `${awayPercentage}%`,
+                          backgroundColor: "rgb(250, 180, 165)",
+                        }}
+                      ></div>
+                      <div className="view-circle flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full shadow-md -ml-4 sm:-ml-6">
+                        <img
+                          src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.away_flag}`}
+                          alt={`${matchInSights.away} flag`}
+                          className="w-6 h-6 sm:w-8 sm:h-8"
+                        />
+                      </div>
+                      <div className="perc-container ml-2 sm:ml-4 flex flex-col">
+                        <div className="per-container flex items-baseline">
+                          <span className="txt-percentage text-lg sm:text-2xl font-bold text-gray-800">
+                            {awayPercentage}
+                          </span>
+                          <span className="txt-percentage1 text-base sm:text-lg font-medium text-gray-800">
+                            %
+                          </span>
+                        </div>
+                        <span className="txt-team-name text-sm sm:text-base font-medium text-gray-600">
+                          {fixtureInfo?.away}
                         </span>
                       </div>
-                      <span className="txt-team-name text-sm sm:text-base font-medium text-gray-600">
-                        {fixtureInfo?.away}
-                      </span>
                     </div>
                   </div>
                 </div>
-              </div>
               </div>
 
               {/* Header Section   GROUND CONDITIONS*/}
@@ -705,19 +790,19 @@ function MatchInsights() {
 
                 {/* Team News Section */}
                 <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 sm:p-6 -mt-2">
-                {/* Header Section */}
-                <div className="view-win-container w-full">
-                  <div className="flex items-center w-full">
-                    <span className="text-lg sm:text-xl font-bold text-gray-800 uppercase tracking-wide mr-2 italic">
-                    Team News Section
-                    </span>
+                  {/* Header Section */}
+                  <div className="view-win-container w-full">
+                    <div className="flex items-center w-full">
+                      <span className="text-lg sm:text-xl font-bold text-gray-800 uppercase tracking-wide mr-2 italic">
+                        Team News Section
+                      </span>
 
-                    <div className="border-t border-dotted border-gray-300 flex-1 h-px"></div>
+                      <div className="border-t border-dotted border-gray-300 flex-1 h-px"></div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="bg-white p-4 sm:p-6 rounded-lg w-full space-y-4">
-                  {teamNews.map((player) => (
+                  <div className="bg-white p-4 sm:p-6 rounded-lg w-full space-y-4">
+                    {teamNews.map((player) => (
                       <div
                         key={player.player_uid}
                         className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
@@ -734,9 +819,9 @@ function MatchInsights() {
                           </div>
                         </div>
                       </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
 
                 {/* Batting Order */}
                 <div className="win-container flex flex-col items-center w-full max-w-full sm:max-w-screen-lg mx-auto p-2 sm:p-4 -mt-2">
@@ -754,36 +839,54 @@ function MatchInsights() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-white p-2 sm:p-4 rounded-lg w-full max-w-full sm:max-w-screen-lg mx-auto">
                     {/* Left Team */}
                     <div className="flex flex-col items-center text-gray-900">
+                      {/* Flag */}
                       <img
                         src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.home_flag}`}
                         alt={`${matchInSights.home} flag`}
-                        className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2"
+                        className="w-6 h-6 sm:w-8 sm:h-8 mb-2"
                       />
+
                       {/* Player List */}
                       <ul className="w-full space-y-2">
-                        {homePlayers?.map((player) => (
-                          <Link
-                            key={player.player_uid}
-                            to={`/player/${
-                              player.player_uid
-                            }/${player.full_name.replace(/\s+/g, "_")}/${
-                              matchInSights.season_game_uid
-                            }/form`}
-                            state={{
-                              playerInfo: player,
-                              matchID: matchInSights.season_game_uid,
-                              matchInSights: matchInSights,
-                            }}
-                            className="flex justify-between items-center p-2 sm:p-3 rounded-lg shadow-md bg-white hover:bg-gray-100 w-full"
-                          >
-                            <li className="flex items-center justify-between w-full">
-                              <span className="text-sm sm:text-base font-semibold">
+                        {homePlayers?.map((player) => {
+                          const isPreferred =
+                          pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                          return (
+                            <li
+                              key={player.player_uid}
+                              className="flex items-center justify-between p-2 sm:p-3 rounded-lg shadow-md bg-white hover:bg-gray-100"
+                            >
+                              <Link
+                                to={`/player/${
+                                  player.player_uid
+                                }/${player.full_name.replace(/\s+/g, "_")}/${
+                                  matchInSights.season_game_uid
+                                }/form`}
+                                state={{
+                                  playerInfo: player,
+                                  matchID: matchInSights.season_game_uid,
+                                  matchInSights: matchInSights,
+                                }}
+                                className="text-sm sm:text-base font-semibold"
+                              >
                                 {player.avg_batting_order}. {player.nick_name}
-                              </span>
-                              <FaStar className="text-gray-400" />
+                              </Link>
+                              {/* Right: Toggle Icon */}
+                              <img
+                                src={
+                                  isPreferred
+                                    ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                    : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                                }
+                                alt="favorite toggle"
+                                className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer"
+                                onClick={() =>
+                                  togglePreferred(player.player_uid)
+                                }
+                              />
                             </li>
-                          </Link>
-                        ))}
+                          );
+                        })}
                       </ul>
                     </div>
 
@@ -792,33 +895,51 @@ function MatchInsights() {
                       <img
                         src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.away_flag}`}
                         alt={`${matchInSights.away} flag`}
-                        className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2"
+                        className="w-6 h-6 sm:w-8 sm:h-8 mb-2"
                       />
+
                       {/* Player List */}
                       <ul className="w-full space-y-2">
-                        {awayPlayers?.map((player) => (
-                          <Link
-                            key={player.player_uid}
-                            to={`/player/${
-                              player.player_uid
-                            }/${player.full_name.replace(/\s+/g, "_")}/${
-                              matchInSights.season_game_uid
-                            }/form`}
-                            state={{
-                              playerInfo: player,
-                              matchID: matchInSights.season_game_uid,
-                              matchInSights: matchInSights,
-                            }}
-                            className="flex justify-between items-center p-2 sm:p-3 rounded-lg shadow-md bg-white hover:bg-gray-100 w-full"
-                          >
-                            <li className="flex items-center justify-between w-full">
-                              <span className="text-sm sm:text-base font-semibold">
+                        {awayPlayers?.map((player) => {
+                          const isPreferred =
+                          pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                          return (
+                            <li
+                              key={player.player_uid}
+                              className="flex items-center justify-between p-2 sm:p-3 rounded-lg shadow-md bg-white hover:bg-gray-100"
+                            >
+                              <Link
+                                to={`/player/${
+                                  player.player_uid
+                                }/${player.full_name.replace(/\s+/g, "_")}/${
+                                  matchInSights.season_game_uid
+                                }/form`}
+                                state={{
+                                  playerInfo: player,
+                                  matchID: matchInSights.season_game_uid,
+                                  matchInSights: matchInSights,
+                                }}
+                                className="text-sm sm:text-base font-semibold"
+                              >
                                 {player.avg_batting_order}. {player.nick_name}
-                              </span>
-                              <FaStar className="text-gray-400" />
+                              </Link>
+
+                              {/* Right: Toggle Icon */}
+                              <img
+                                src={
+                                  isPreferred
+                                    ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                    : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                                }
+                                alt="favorite toggle"
+                                className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer"
+                                onClick={() =>
+                                  togglePreferred(player.player_uid)
+                                }
+                              />
                             </li>
-                          </Link>
-                        ))}
+                          );
+                        })}
                       </ul>
                     </div>
                   </div>
@@ -877,31 +998,32 @@ function MatchInsights() {
                       Avg. FPTS
                     </div>
 
-                    {filteredTopFormPlayers.map((player) => (
-                      <Link
-                        key={player.player_uid}
-                        to={`/player/${
-                          player.player_uid
-                        }/${player.full_name.replace(/\s+/g, "_")}/${
-                          matchInSights.season_game_uid
-                        }/form`}
-                        state={{
-                          playerInfo: player,
-                          matchID: matchInSights.season_game_uid,
-                          matchInSights: matchInSights,
-                        }}
-                        className="block"
-                      >
+                    {filteredTopFormPlayers.map((player) => {
+                      const isPreferred =
+                      pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                      return (
                         <div
                           key={player.player_id}
-                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                          className="flex items-center justify-between w-full shadow-md border-b pb-3 last:border-b-0"
                         >
-                          {/* Left: Player Info */}
-                          <div className="flex items-center space-x-3">
+                          {/* Left: Player Info (name, styles) */}
+                          <Link
+                            to={`/player/${
+                              player.player_uid
+                            }/${player.full_name.replace(/\s+/g, "_")}/${
+                              matchInSights.season_game_uid
+                            }/form`}
+                            state={{
+                              playerInfo: player,
+                              matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
+                            }}
+                            className="flex items-center space-x-3"
+                          >
                             <img
                               src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
                               alt={player.full_name}
-                              className="w-10 h-10 rounded-full bg-gray-200"
+                              className="w-10 h-10 rounded-full bg-gray-200 ml-2"
                             />
                             <div>
                               <div className="text-black font-bold text-sm">
@@ -911,34 +1033,27 @@ function MatchInsights() {
                                 {player.batting_style} | {player.bowling_style}
                               </div>
                             </div>
-                          </div>
+                          </Link>
 
-                          {/* Right: Points & Star */}
-                          <div className="flex items-center space-x-4">
-                            <span className="text-black font-semibold text-lg">
-                              {player.avg_fpts}
-                            </span>
-                            {/* Favorite Star Icon */}
-                            <div className="cursor-pointer">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                                />
-                              </svg>
-                            </div>
-                          </div>
+                          {/* Middle: Average Points */}
+                          <span className="block w-full text-right text-black font-semibold text-lg mr-5">
+                            {player.avg_fpts}
+                          </span>
+
+                          {/* Right: Favorite Star Icon */}
+                          <img
+                            src={
+                              isPreferred
+                                ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                            }
+                            alt="favorite toggle"
+                            className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer mr-4"
+                            onClick={() => togglePreferred(player.player_uid)}
+                          />
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -992,263 +1107,271 @@ function MatchInsights() {
                   </div>
 
                   <div className="bg-white p-4 sm:p-6 rounded-lg w-full space-y-4">
-                    {top5.map((player) => (
-                      <Link
-                        key={player.player_uid}
-                        to={`/player/${
-                          player.player_uid
-                        }/${player.full_name.replace(/\s+/g, "_")}/${
-                          matchInSights.season_game_uid
-                        }/form`}
-                        state={{
-                          playerInfo: player,
-                          matchID: matchInSights.season_game_uid,
-                          matchInSights: matchInSights,
-                        }}
-                        className="block"
-                      >
-                        <div className="flex flex-col md:flex-row items-center justify-between shadow-md border-b pb-3 last:border-b-0 mt-2 bg-white hover:bg-gray-100 p-3 rounded-md h-auto md:h-14">
-                          {/* Left: Player Info */}
-                          <div className="flex items-center gap-x-4 w-full md:w-1/3">
-                            <img
-                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
-                              alt={player.full_name}
-                              className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-gray-200"
-                            />
-                            <div>
-                              <div className="text-black font-bold text-sm">
-                                {player.full_name}
-                              </div>
-                              <div className="text-gray-500 text-xs">
-                                {player.batting_style} | {player.bowling_style}
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Middle: Batting First & Chasing Indicators */}
-                          <div className="flex items-center gap-x-3 w-full md:w-1/3 mt-2 md:mt-0 justify-center">
-                            <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
-                              <span className="text-gray-600 text-xs">
-                                Batting First
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                              <span className="text-gray-600 text-xs">
-                                Chasing
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Right: Points & Progress Bar */}
-                          <div className="flex items-center gap-x-4 w-full md:w-1/3 mt-2 md:mt-0">
-                            {/* Batting First Points */}
-                            <span className="text-black font-medium text-sm w-10 text-right">
-                              {player.avg_bat_first_fpts}
-                            </span>
-
-                            {/* Progress Bar Container */}
-                            <div className="relative flex-grow h-2 bg-gray-300 rounded-full">
-                              <div
-                                className="absolute left-0 h-2 bg-gray-800 rounded-full"
-                                style={{
-                                  width: `${Math.min(
-                                    100,
-                                    (player.avg_bat_first_fpts /
-                                      Math.max(
-                                        player.avg_bat_first_fpts +
-                                          player.avg_chase_fpts,
-                                        1
-                                      )) *
-                                      100
-                                  )}%`,
-                                }}
-                              ></div>
-                            </div>
-
-                            {/* Chasing Points */}
-                            <span className="text-gray-500 text-sm w-10 text-left">
-                              {player.avg_chase_fpts}
-                            </span>
-                          </div>
-
-                          {/* Favorite Star Icon */}
-                          <div className="cursor-pointer flex justify-end w-10 mt-2 md:mt-0">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
+                    {top5.map((player) => {
+                      const isPreferred =
+                      pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                      return (
+                        <div
+                          key={player.player_uid}
+                          className="flex items-center shadow-md border-b pb-3 last:border-b-0 bg-white hover:bg-gray-100 p-3 rounded-md h-14"
+                        >
+                          {/* Entire clickable area (split into 3 sections) */}
+                          <Link
+                            to={`/player/${
+                              player.player_uid
+                            }/${player.full_name.replace(/\s+/g, "_")}/${
+                              matchInSights.season_game_uid
+                            }/form`}
+                            state={{
+                              playerInfo: player,
+                              matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
+                            }}
+                            className="flex flex-grow items-center justify-evenly gap-x-4"
+                          >
+                            {/* Left: Player Info (1/3 width) */}
+                            <div className="flex items-center gap-x-2 w-1/3">
+                              <img
+                                src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
+                                alt={player.full_name}
+                                className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-gray-200"
                               />
-                            </svg>
-                          </div>
+                              <div>
+                                <div className="text-black font-bold text-sm">
+                                  {player.full_name}
+                                </div>
+                                <div className="text-gray-500 text-xs">
+                                  {player.batting_style} |{" "}
+                                  {player.bowling_style}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Middle: Batting / Chasing Indicators (1/3 width) */}
+                            <div className="flex items-center gap-x-4 w-1/3 justify-center">
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
+                                <span className="text-gray-600 text-xs">
+                                  Batting First
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                <span className="text-gray-600 text-xs">
+                                  Chasing
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Right: Points & Progress Bar (1/3 width) */}
+                            <div className="flex items-center gap-x-4 w-1/3">
+                              {/* Batting First Points */}
+                              <span className="text-black font-medium text-sm w-10 text-right">
+                                {player.avg_bat_first_fpts}
+                              </span>
+
+                              {/* Progress Bar */}
+                              <div className="relative w-32 h-2 bg-gray-300 rounded-full">
+                                <div
+                                  className="absolute left-0 h-2 bg-gray-800 rounded-full"
+                                  style={{
+                                    width: `${Math.min(
+                                      100,
+                                      (player.avg_bat_first_fpts /
+                                        Math.max(
+                                          player.avg_bat_first_fpts +
+                                            player.avg_chase_fpts,
+                                          1
+                                        )) *
+                                        100
+                                    )}%`,
+                                  }}
+                                ></div>
+                              </div>
+
+                              {/* Chasing Points */}
+                              <span className="text-gray-500 text-sm w-10 text-left">
+                                {player.avg_chase_fpts}
+                              </span>
+                            </div>
+                          </Link>
+
+                          {/* Favorite Star Icon (outside link) */}
+                          {/* Right: Toggle Icon */}
+                          <img
+                            src={
+                              isPreferred
+                                ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                            }
+                            alt="favorite toggle"
+                            className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer"
+                            onClick={() => togglePreferred(player.player_uid)}
+                          />
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* TOP PLAYERS CHASING */}
 
                 <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 sm:p-6 lg:p-8">
-                {/* Header Section */}
-                <div className="view-win-container w-full mb-4">
-                  <div className="flex items-center w-full">
-                    <span className="text-xl sm:text-2xl font-bold text-gray-800 uppercase tracking-wide mr-2 italic">
-                      TOP PLAYERS CHASING
-                    </span>
-          
-                    <div className="relative inline-block group">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth="1.5"
-                        stroke="currentColor"
-                        className="w-6 h-6 text-gray-600 cursor-pointer"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
-                        />
-                      </svg>
-          
-                      {/* Tooltip */}
-                      <div className="absolute hidden group-hover:block bottom-full left-1/2 mb-2 transform -translate-x-1/2 px-3 py-2 bg-black text-white text-base rounded shadow-lg whitespace-nowrap">
-                        Players who perform extremely well when their team is chasing.
-                      </div>
-                    </div>
-          
-                    <div className="border-t border-dotted border-gray-300 flex-1 h-px ml-2"></div>
-                  </div>
-          
-                  <span className="text-base md:text-lg font-bold text-gray-500 italic">
-                    Last 5{" "}
-                    {matchInSights.format === "1"
-                      ? "Test"
-                      : matchInSights.format === "2"
-                      ? "ODI"
-                      : matchInSights.format === "3"
-                      ? "T20"
-                      : matchInSights.format === "4"
-                      ? "T10"
-                      : matchInSights.format}
-                    's
-                  </span>
-                </div>
-          
-                <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-lg w-full space-y-4">
-                  {topChase.map((player) => (
-                    <Link
-                      key={player.player_uid}
-                      to={`/player/${player.player_uid}/${player.full_name.replace(
-                        /\s+/g,
-                        "_"
-                      )}/${matchInSights.season_game_uid}/form`}
-                      state={{
-                        playerInfo: player,
-                        matchID: matchInSights.season_game_uid,
-                        matchInSights: matchInSights,
-                      }}
-                      className="block"
-                    >
-                      <div
-                        className="flex flex-col md:flex-row items-center justify-between shadow-md border-b pb-3 last:border-b-0 bg-white hover:bg-gray-100 p-3 rounded-md h-auto"
-                      >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center gap-x-4 w-full md:w-1/3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
-                            alt={player.full_name}
-                            className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-gray-200"
+                  {/* Header Section */}
+                  <div className="view-win-container w-full mb-4">
+                    <div className="flex items-center w-full">
+                      <span className="text-xl sm:text-2xl font-bold text-gray-800 uppercase tracking-wide mr-2 italic">
+                        TOP PLAYERS CHASING
+                      </span>
+
+                      <div className="relative inline-block group">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth="1.5"
+                          stroke="currentColor"
+                          className="w-6 h-6 text-gray-600 cursor-pointer"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
                           />
-                          <div>
-                            <div className="text-black font-bold text-sm">
-                              {player.full_name}
-                            </div>
-                            <div className="text-gray-500 text-xs">
-                              {player.batting_style} | {player.bowling_style}
-                            </div>
-                          </div>
-                        </div>
-          
-                        {/* Middle: Batting First & Chasing Indicators */}
-                        <div className="flex items-center gap-x-3 w-full md:w-1/3 mt-2 md:mt-0 justify-center">
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
-                            <span className="text-gray-600 text-xs">Batting First</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                            <span className="text-gray-500 text-xs">Chasing</span>
-                          </div>
-                        </div>
-          
-                        {/* Right: Points & Progress Bar */}
-                        <div className="flex items-center gap-x-4 w-full md:w-1/3 mt-2 md:mt-0">
-                          {/* Batting First Points */}
-                          <span className="text-black font-medium text-sm w-10 text-right">
-                            {player.avg_bat_first_fpts}
-                          </span>
-          
-                          {/* Progress Bar Container */}
-                          <div className="relative w-full h-2 bg-gray-300 rounded-full">
-                            <div
-                              className="absolute left-0 h-2 bg-gray-800 rounded-full"
-                              style={{
-                                width: `${Math.min(
-                                  100,
-                                  (player.avg_bat_first_fpts /
-                                    Math.max(
-                                      player.avg_bat_first_fpts + player.avg_chase_fpts,
-                                      1
-                                    )) *
-                                    100
-                                )}%`,
-                              }}
-                            ></div>
-                          </div>
-          
-                          {/* Chasing Points */}
-                          <span className="text-gray-500 text-sm w-10 text-left">
-                            {player.avg_chase_fpts}
-                          </span>
-                        </div>
-          
-                        {/* Favorite Star Icon */}
-                        <div className="cursor-pointer flex justify-end w-10 mt-2 md:mt-0">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                            />
-                          </svg>
+                        </svg>
+
+                        {/* Tooltip */}
+                        <div className="absolute hidden group-hover:block bottom-full left-1/2 mb-2 transform -translate-x-1/2 px-3 py-2 bg-black text-white text-base rounded shadow-lg whitespace-nowrap">
+                          Players who perform extremely well when their team is
+                          chasing.
                         </div>
                       </div>
-                    </Link>
-                  ))}
+
+                      <div className="border-t border-dotted border-gray-300 flex-1 h-px ml-2"></div>
+                    </div>
+
+                    <span className="text-base md:text-lg font-bold text-gray-500 italic">
+                      Last 5{" "}
+                      {matchInSights.format === "1"
+                        ? "Test"
+                        : matchInSights.format === "2"
+                        ? "ODI"
+                        : matchInSights.format === "3"
+                        ? "T20"
+                        : matchInSights.format === "4"
+                        ? "T10"
+                        : matchInSights.format}
+                      's
+                    </span>
+                  </div>
+                  <div className="bg-white p-4 sm:p-6 lg:p-8 rounded-lg w-full space-y-4">
+                    {topChase.map((player) => {
+                      const isPreferred =
+                      pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                      return (
+                        <div
+                          key={player.player_uid}
+                          className="flex items-center justify-between shadow-md border-b pb-3 last:border-b-0 bg-white hover:bg-gray-100 p-3 rounded-md h-14"
+                        >
+                          {/* Entire clickable area, split into left/middle/right */}
+                          <Link
+                            to={`/player/${
+                              player.player_uid
+                            }/${player.full_name.replace(/\s+/g, "_")}/${
+                              matchInSights.season_game_uid
+                            }/form`}
+                            state={{
+                              playerInfo: player,
+                              matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
+                            }}
+                            className="flex items-center gap-x-4 flex-grow"
+                          >
+                            {/* LEFT: Player Info (1/3 width) */}
+                            <div className="flex items-center gap-x-4 w-1/3">
+                              <img
+                                src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
+                                alt={player.full_name}
+                                className="w-10 h-10 rounded-full object-cover border border-gray-300 bg-gray-200"
+                              />
+                              <div>
+                                <div className="text-black font-bold text-sm">
+                                  {player.full_name}
+                                </div>
+                                <div className="text-gray-500 text-xs">
+                                  {player.batting_style} |{" "}
+                                  {player.bowling_style}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* MIDDLE: Batting/Chasing Indicators (1/3 width) */}
+                            <div className="flex items-center gap-x-4 w-1/3 justify-center">
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
+                                <span className="text-gray-600 text-xs">
+                                  Batting First
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                                <span className="text-gray-600 text-xs">
+                                  Chasing
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* RIGHT: Points & Progress Bar (1/3 width) */}
+                            <div className="flex items-center gap-x-4 w-1/3">
+                              {/* Batting First Points */}
+                              <span className="text-black font-medium text-sm w-10 text-right">
+                                {player.avg_bat_first_fpts}
+                              </span>
+
+                              {/* Progress Bar Container */}
+                              <div className="relative w-32 h-2 bg-gray-300 rounded-full">
+                                <div
+                                  className="absolute left-0 h-2 bg-gray-800 rounded-full"
+                                  style={{
+                                    width: `${Math.min(
+                                      100,
+                                      (player.avg_bat_first_fpts /
+                                        Math.max(
+                                          player.avg_bat_first_fpts +
+                                            player.avg_chase_fpts,
+                                          1
+                                        )) *
+                                        100
+                                    )}%`,
+                                  }}
+                                />
+                              </div>
+
+                              {/* Chasing Points */}
+                              <span className="text-gray-500 text-sm w-10 text-left">
+                                {player.avg_chase_fpts}
+                              </span>
+                            </div>
+                          </Link>
+
+                          {/* Favorite Star Icon (far right) */}
+                          <img
+                            src={
+                              isPreferred
+                                ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                            }
+                            alt="favorite toggle"
+                            className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer"
+                            onClick={() => togglePreferred(player.player_uid)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
                 {/* TOP H2H PERFORMERS */}
-
                 <div className="win-container flex flex-col items-center w-full max-w-full sm:max-w-screen-lg mx-auto p-4 sm:p-6 -mt-2">
                   {/* Header Section */}
                   <div className="view-win-container w-full mb-4">
@@ -1298,27 +1421,28 @@ function MatchInsights() {
                     <div className="flex justify-end text-gray-500 text-sm font-semibold">
                       Avg. FPTS
                     </div>
-                    {topH2H.map((player) => (
-                      <Link
-                        key={player.player_uid}
-                        to={`/player/${
-                          player.player_uid
-                        }/${player.full_name.replace(/\s+/g, "_")}/${
-                          matchInSights.season_game_uid
-                        }/form`}
-                        state={{
-                          playerInfo: player,
-                          matchID: matchInSights.season_game_uid,
-                          matchInSights: matchInSights,
-                        }}
-                        className="block"
-                      >
+                    {topH2H.map((player) => {
+                      const isPreferred =
+                      pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                      return (
                         <div
                           key={player.player_id}
-                          className="flex flex-col md:flex-row items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                          className="flex items-center justify-between w-full shadow-md border-b pb-3 last:border-b-0"
                         >
-                          {/* Left: Player Info */}
-                          <div className="flex items-center space-x-3">
+                          {/* Left: Player Info (name, styles) */}
+                          <Link
+                            to={`/player/${
+                              player.player_uid
+                            }/${player.full_name.replace(/\s+/g, "_")}/${
+                              matchInSights.season_game_uid
+                            }/form`}
+                            state={{
+                              playerInfo: player,
+                              matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
+                            }}
+                            className="flex items-center space-x-3"
+                          >
                             <img
                               src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
                               alt={player.full_name}
@@ -1332,32 +1456,27 @@ function MatchInsights() {
                                 {player.batting_style} | {player.bowling_style}
                               </div>
                             </div>
-                          </div>
-                          {/* Right: Points & Star */}
-                          <div className="flex items-center space-x-4 mt-2 md:mt-0">
-                            <span className="text-black font-semibold text-lg">
-                              {player.avg_h2h_fpts}
-                            </span>
-                            <div className="cursor-pointer">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                                />
-                              </svg>
-                            </div>
-                          </div>
+                          </Link>
+
+                          {/* Middle: Average Points */}
+                          <span className="block w-full text-right text-black font-semibold text-lg mr-5">
+                            {player.avg_h2h_fpts}
+                          </span>
+
+                          {/* Right: Favorite Star Icon */}
+                          <img
+                            src={
+                              isPreferred
+                                ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                            }
+                            alt="favorite toggle"
+                            className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer mr-3"
+                            onClick={() => togglePreferred(player.player_uid)}
+                          />
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1434,29 +1553,31 @@ function MatchInsights() {
                       Avg. FPTS
                     </div>
 
-                    {topVenue.map((player) => (
-                      <Link
-                        key={player.player_uid}
-                        to={`/player/${
-                          player.player_uid
-                        }/${player.full_name.replace(/\s+/g, "_")}/${
-                          matchInSights.season_game_uid
-                        }/form`}
-                        state={{
-                          playerInfo: player,
-                          matchID: matchInSights.season_game_uid,
-                          matchInSights: matchInSights,
-                        }}
-                        className="block"
-                      >
+                    {topVenue.map((player) => {
+                      const isPreferred =
+                      pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+
+                      return (
                         <div
                           key={player.player_id}
-                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                          className="flex items-center justify-between w-full shadow-md border-b pb-3 last:border-b-0"
                         >
-                          {/* Left: Player Info */}
-                          <div className="flex items-center space-x-3">
+                          {/* Left: Player Info (name, styles) */}
+                          <Link
+                            to={`/player/${
+                              player.player_uid
+                            }/${player.full_name.replace(/\s+/g, "_")}/${
+                              matchInSights.season_game_uid
+                            }/form`}
+                            state={{
+                              playerInfo: player,
+                              matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
+                            }}
+                            className="flex items-center space-x-3"
+                          >
                             <img
-                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
                               alt={player.full_name}
                               className="w-10 h-10 rounded-full bg-gray-200"
                             />
@@ -1468,35 +1589,27 @@ function MatchInsights() {
                                 {player.batting_style} | {player.bowling_style}
                               </div>
                             </div>
-                          </div>
+                          </Link>
 
-                          {/* Right: Points & Star */}
-                          <div className="flex items-center space-x-4">
-                            <span className="text-black font-semibold text-lg">
-                              {player.avg_venue_fpts}
-                            </span>
+                          {/* Middle: Average Points */}
+                          <span className="block w-full text-right text-black font-semibold text-lg mr-5">
+                            {player.avg_venue_fpts}
+                          </span>
 
-                            {/* Favorite Star Icon */}
-                            <div className="cursor-pointer">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                                />
-                              </svg>
-                            </div>
-                          </div>
+                          {/* Right: Favorite Star Icon */}
+                          <img
+                            src={
+                              isPreferred
+                                ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                            }
+                            alt="favorite toggle"
+                            className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer mr-3"
+                            onClick={() => togglePreferred(player.player_uid)}
+                          />
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1573,29 +1686,30 @@ function MatchInsights() {
                       Avg. FPTS
                     </div>
 
-                    {filteredPlayers.map((player) => (
-                      <Link
-                        key={player.player_uid}
-                        to={`/player/${
-                          player.player_uid
-                        }/${player.full_name.replace(/\s+/g, "_")}/${
-                          matchInSights.season_game_uid
-                        }/form`}
-                        state={{
-                          playerInfo: player,
-                          matchID: matchInSights.season_game_uid,
-                          matchInSights: matchInSights,
-                        }}
-                        className="block"
-                      >
+                    {filteredPlayers.map((player) => {
+                      const isPreferred =
+                      pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                      return (
                         <div
                           key={player.player_id}
-                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                          className="flex items-center justify-between w-full shadow-md border-b pb-3 last:border-b-0"
                         >
-                          {/* Left: Player Info */}
-                          <div className="flex items-center space-x-3">
+                          {/* Left: Player Info (name, styles) */}
+                          <Link
+                            to={`/player/${
+                              player.player_uid
+                            }/${player.full_name.replace(/\s+/g, "_")}/${
+                              matchInSights.season_game_uid
+                            }/form`}
+                            state={{
+                              playerInfo: player,
+                              matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
+                            }}
+                            className="flex items-center space-x-3"
+                          >
                             <img
-                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
                               alt={player.full_name}
                               className="w-10 h-10 rounded-full bg-gray-200"
                             />
@@ -1607,35 +1721,27 @@ function MatchInsights() {
                                 {player.batting_style} | {player.bowling_style}
                               </div>
                             </div>
-                          </div>
+                          </Link>
 
-                          {/* Right: Points & Star */}
-                          <div className="flex items-center space-x-4">
-                            <span className="text-black font-semibold text-lg">
-                              {player.avg_venue_fpts}
-                            </span>
+                          {/* Middle: Average Points */}
+                          <span className="block w-full text-right text-black font-semibold text-lg mr-5">
+                            {player.avg_venue_fpts}
+                          </span>
 
-                            {/* Favorite Star Icon */}
-                            <div className="cursor-pointer">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                                />
-                              </svg>
-                            </div>
-                          </div>
+                          {/* Right: Favorite Star Icon */}
+                          <img
+                            src={
+                              isPreferred
+                                ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                            }
+                            alt="favorite toggle"
+                            className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer mr-3"
+                            onClick={() => togglePreferred(player.player_uid)}
+                          />
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1713,29 +1819,30 @@ function MatchInsights() {
                       Avg. FPTS
                     </div>
 
-                    {powerPlayBat.map((player) => (
-                      <Link
-                        key={player.player_uid}
-                        to={`/player/${
-                          player.player_uid
-                        }/${player.full_name.replace(/\s+/g, "_")}/${
-                          matchInSights.season_game_uid
-                        }/form`}
-                        state={{
-                          playerInfo: player,
-                          matchID: matchInSights.season_game_uid,
-                          matchInSights: matchInSights,
-                        }}
-                        className="block"
-                      >
+                    {powerPlayBat.map((player) => {
+                      const isPreferred =
+                      pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                      return (
                         <div
                           key={player.player_id}
-                          className="flex items-center shadow-md justify-between border-b pb-3 last:border-b-0"
+                          className="flex items-center justify-between w-full shadow-md border-b pb-3 last:border-b-0"
                         >
-                          {/* Left: Player Info */}
-                          <div className="flex items-center space-x-3">
+                          {/* Left: Player Info (name, styles) */}
+                          <Link
+                            to={`/player/${
+                              player.player_uid
+                            }/${player.full_name.replace(/\s+/g, "_")}/${
+                              matchInSights.season_game_uid
+                            }/form`}
+                            state={{
+                              playerInfo: player,
+                              matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
+                            }}
+                            className="flex items-center space-x-3"
+                          >
                             <img
-                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`} // Ensure the image is available in public folder
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
                               alt={player.full_name}
                               className="w-10 h-10 rounded-full bg-gray-200"
                             />
@@ -1747,275 +1854,303 @@ function MatchInsights() {
                                 {player.batting_style} | {player.bowling_style}
                               </div>
                             </div>
-                          </div>
+                          </Link>
 
-                          {/* Right: Points & Star */}
-                          <div className="flex items-center space-x-4">
-                            <span className="text-black font-semibold text-lg">
-                              {player.power_play_bat_fpts
-                                ? player.power_play_bat_fpts.toFixed(2)
-                                : "0.00"}
-                            </span>
+                          {/* Middle: Average Points */}
+                          <span className="block w-full text-right text-black font-semibold text-lg mr-5">
+                            {player.power_play_bat_fpts
+                              ? player.power_play_bat_fpts.toFixed(2)
+                              : "0.00"}
+                          </span>
 
-                            {/* Favorite Star Icon */}
-                            <div className="cursor-pointer">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                                />
-                              </svg>
-                            </div>
-                          </div>
+                          {/* Right: Favorite Star Icon */}
+                          <img
+                            src={
+                              isPreferred
+                                ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                            }
+                            alt="favorite toggle"
+                            className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer mr-3"
+                            onClick={() => togglePreferred(player.player_uid)}
+                          />
                         </div>
-                      </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
                 {/* Power plays (bowlers) */}
                 <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 sm:p-6 md:p-8 lg:p-10 -mt-2">
-                {/* Header Section */}
-                <div className="view-win-container w-full">
-                  <div className="flex flex-row md:flex-row items-center w-full">
-                    <span className="text-xl md:text-2xl font-bold text-gray-800 uppercase tracking-wide mr-2 italic">
-                      Power plays (bowlers)
-                    </span>
-          
-                    <div className="relative inline-flex items-end mt-2 md:mt-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="w-6 h-6 text-gray-600 cursor-pointer"
-                        onClick={() => setTooltipVisible(!tooltipVisible)}
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
-                        />
-                      </svg>
-          
-                      {tooltipVisible && (
-                        <div className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max max-w-xs px-3 py-2 bg-black text-white text-base rounded shadow-lg">
-                          Powerplay overs (first 6 overs) are a good time for bowlers to take advantage of any assistance in the pitch to take early wickets and boost fantasy points.
-                        </div>
-                      )}
-                    </div>
-          
-                    <div className="border-t border-dotted border-gray-300 flex-1 h-px mt-2 md:mt-0 md:ml-4"></div>
-                  </div>
-                  <span className="text-base md:text-lg font-bold text-gray-500 italic mt-2 block">
-                    Last 5{" "}
-                    {matchInSights.format === "1"
-                      ? "Test"
-                      : matchInSights.format === "2"
-                      ? "ODI"
-                      : matchInSights.format === "3"
-                      ? "T20"
-                      : matchInSights.format === "4"
-                      ? "T10"
-                      : matchInSights.format}
-                    's
-                  </span>
-                </div>
-          
-                <div className="bg-white p-4 rounded-lg w-full space-y-4 mt-4">
-                  <div className="flex justify-end text-gray-500 text-sm font-semibold">
-                    Avg. FPTS
-                  </div>
-          
-                  {powerPlayBowl.map((player) => (
-                    <Link
-                      key={player.player_uid}
-                      to={`/player/${player.player_uid}/${player.full_name.replace(/\s+/g, "_")}/${matchInSights.season_game_uid}/form`}
-                      state={{
-                        playerInfo: player,
-                        matchID: matchInSights.season_game_uid,
-                        matchInSights: matchInSights,
-                      }}
-                      className="block"
-                    >
-                      <div
-                        key={player.player_id}
-                        className="flex flex-col sm:flex-row items-center shadow-md justify-between border-b pb-3 last:border-b-0"
-                      >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
-                            alt={player.full_name}
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200"
+                  {/* Header Section */}
+                  <div className="view-win-container w-full">
+                    <div className="flex flex-row md:flex-row items-center w-full">
+                      <span className="text-xl md:text-2xl font-bold text-gray-800 uppercase tracking-wide mr-2 italic">
+                        Power plays (bowlers)
+                      </span>
+
+                      <div className="relative inline-flex items-end mt-2 md:mt-0">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6 text-gray-600 cursor-pointer"
+                          onClick={() => setTooltipVisible(!tooltipVisible)}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
                           />
-                          <div>
-                            <div className="text-black font-bold text-sm sm:text-base">
-                              {player.full_name}
-                            </div>
-                            <div className="text-gray-500 text-xs sm:text-sm">
-                              {player.batting_style} | {player.bowling_style}
-                            </div>
+                        </svg>
+
+                        {tooltipVisible && (
+                          <div className="absolute z-10 bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-max max-w-xs px-3 py-2 bg-black text-white text-base rounded shadow-lg">
+                            Powerplay overs (first 6 overs) are a good time for
+                            bowlers to take advantage of any assistance in the
+                            pitch to take early wickets and boost fantasy
+                            points.
                           </div>
-                        </div>
-          
-                        {/* Right: Points & Star */}
-                        <div className="flex items-center space-x-4 mt-2 sm:mt-0">
-                          <span className="text-black font-semibold text-lg">
+                        )}
+                      </div>
+
+                      <div className="border-t border-dotted border-gray-300 flex-1 h-px mt-2 md:mt-0 md:ml-4"></div>
+                    </div>
+                    <span className="text-base md:text-lg font-bold text-gray-500 italic mt-2 block">
+                      Last 5{" "}
+                      {matchInSights.format === "1"
+                        ? "Test"
+                        : matchInSights.format === "2"
+                        ? "ODI"
+                        : matchInSights.format === "3"
+                        ? "T20"
+                        : matchInSights.format === "4"
+                        ? "T10"
+                        : matchInSights.format}
+                      's
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-lg w-full space-y-4 mt-4">
+                    <div className="flex justify-end text-gray-500 text-sm font-semibold">
+                      Avg. FPTS
+                    </div>
+
+                    {powerPlayBowl.map((player) => {
+                      const isPreferred =
+                      pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                      return (
+                        <div
+                          key={player.player_id}
+                          className="flex items-center justify-between w-full shadow-md border-b pb-3 last:border-b-0"
+                        >
+                          {/* Left: Player Info (name, styles) */}
+                          <Link
+                            to={`/player/${
+                              player.player_uid
+                            }/${player.full_name.replace(/\s+/g, "_")}/${
+                              matchInSights.season_game_uid
+                            }/form`}
+                            state={{
+                              playerInfo: player,
+                              matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
+                            }}
+                            className="flex items-center space-x-3"
+                          >
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
+                            </div>
+                          </Link>
+
+                          {/* Middle: Average Points */}
+                          <span className="block w-full text-right text-black font-semibold text-lg mr-5">
                             {player.power_play_bowl_fpts
                               ? player.power_play_bowl_fpts.toFixed(2)
                               : "0.00"}
                           </span>
-          
-                          {/* Favorite Star Icon */}
-                          <div className="cursor-pointer">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                              />
-                            </svg>
-                          </div>
+
+                          {/* Right: Favorite Star Icon */}
+                          <img
+                            src={
+                              isPreferred
+                                ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                            }
+                            alt="favorite toggle"
+                            className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer mr-3"
+                            onClick={() => togglePreferred(player.player_uid)}
+                          />
                         </div>
-                      </div>
-                    </Link>
-                  ))}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
                 {/* Death overs (Bowlers) */}
 
                 <div className="win-container flex flex-col items-center w-full md:max-w-screen-lg mx-auto p-4 sm:p-6 md:p-8 lg:p-10 -mt-2">
-                {/* Header Section */}
-                <div className="view-win-container w-full">
-                  <div className="flex flex-row md:flex-row items-center w-full">
-                    <span className="text-xl md:text-2xl font-bold text-gray-800 uppercase tracking-wide mr-2 italic">
-                      Death overs (Bowlers)
-                    </span>
-              
-                    <div className="relative inline-block group mt-2 md:mt-0">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="w-6 h-6 text-gray-600 cursor-pointer"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
-                        />
-                      </svg>
-              
-                      <div className="absolute hidden group-hover:block bottom-full left-1/2 mb-2 transform -translate-x-1/2 px-3 py-2 bg-black text-white text-base rounded shadow-lg whitespace-nowrap">
-                        Player's performance in death overs
-                      </div>
-                    </div>
-              
-                    <div className="border-t border-dotted border-gray-300 flex-1 h-px mt-2 md:mt-0 md:ml-4"></div>
-                  </div>
-                  <span className="text-base md:text-lg font-bold text-gray-500 italic mt-2 block">
-                    Last 5{" "}
-                    {matchInSights.format === "1"
-                      ? "Test"
-                      : matchInSights.format === "2"
-                      ? "ODI"
-                      : matchInSights.format === "3"
-                      ? "T20"
-                      : matchInSights.format === "4"
-                      ? "T10"
-                      : matchInSights.format}
-                    's
-                  </span>
-                </div>
-              
-                <div className="bg-white p-4 rounded-lg w-full space-y-4 mt-4">
-                  <div className="flex justify-end text-gray-500 text-sm font-semibold">
-                    Avg. FPTS
-                  </div>
-              
-                  {deathOverBowl.map((player) => (
-                    <Link
-                      key={player.player_uid}
-                      to={`/player/${player.player_uid}/${player.full_name.replace(/\s+/g, "_")}/${matchInSights.season_game_uid}/form`}
-                      state={{
-                        playerInfo: player,
-                        matchID: matchInSights.season_game_uid,
-                        matchInSights: matchInSights,
-                      }}
-                      className="block"
-                    >
-                      <div
-                        key={player.player_id}
-                        className="flex flex-col sm:flex-row items-center shadow-md justify-between border-b pb-3 last:border-b-0"
-                      >
-                        {/* Left: Player Info */}
-                        <div className="flex items-center space-x-3">
-                          <img
-                            src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
-                            alt={player.full_name}
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200"
+                  {/* Header Section */}
+                  <div className="view-win-container w-full">
+                    <div className="flex flex-row md:flex-row items-center w-full">
+                      <span className="text-xl md:text-2xl font-bold text-gray-800 uppercase tracking-wide mr-2 italic">
+                        Death overs (Bowlers)
+                      </span>
+
+                      <div className="relative inline-block group mt-2 md:mt-0">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          strokeWidth={1.5}
+                          stroke="currentColor"
+                          className="w-6 h-6 text-gray-600 cursor-pointer"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z"
                           />
-                          <div>
-                            <div className="text-black font-bold text-sm sm:text-base">
-                              {player.full_name}
-                            </div>
-                            <div className="text-gray-500 text-xs sm:text-sm">
-                              {player.batting_style} | {player.bowling_style}
-                            </div>
-                          </div>
+                        </svg>
+
+                        <div className="absolute hidden group-hover:block bottom-full left-1/2 mb-2 transform -translate-x-1/2 px-3 py-2 bg-black text-white text-base rounded shadow-lg whitespace-nowrap">
+                          Player's performance in death overs
                         </div>
-              
-                        {/* Right: Points & Star */}
-                        <div className="flex items-center space-x-4 mt-2 sm:mt-0">
-                          <span className="text-black font-semibold text-lg">
+                      </div>
+
+                      <div className="border-t border-dotted border-gray-300 flex-1 h-px mt-2 md:mt-0 md:ml-4"></div>
+                    </div>
+                    <span className="text-base md:text-lg font-bold text-gray-500 italic mt-2 block">
+                      Last 5{" "}
+                      {matchInSights.format === "1"
+                        ? "Test"
+                        : matchInSights.format === "2"
+                        ? "ODI"
+                        : matchInSights.format === "3"
+                        ? "T20"
+                        : matchInSights.format === "4"
+                        ? "T10"
+                        : matchInSights.format}
+                      's
+                    </span>
+                  </div>
+
+                  <div className="bg-white p-4 rounded-lg w-full space-y-4 mt-4">
+                    <div className="flex justify-end text-gray-500 text-sm font-semibold">
+                      Avg. FPTS
+                    </div>
+
+                    {deathOverBowl.map((player) => {
+                      const isPreferred =
+                      pData?.includes(String(player.player_uid)) || preferredPlayers[player.player_uid];
+                      return(
+                        <div
+                          key={player.player_id}
+                          className="flex items-center justify-between w-full shadow-md border-b pb-3 last:border-b-0"
+                        >
+                          {/* Left: Player Info (name, styles) */}
+                          <Link
+                            to={`/player/${
+                              player.player_uid
+                            }/${player.full_name.replace(/\s+/g, "_")}/${
+                              matchInSights.season_game_uid
+                            }/form`}
+                            state={{
+                              playerInfo: player,
+                              matchID: matchInSights.season_game_uid,
+                              matchInSights: matchInSights,
+                            }}
+                            className="flex items-center space-x-3"
+                          >
+                            <img
+                              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${player.jersey}`}
+                              alt={player.full_name}
+                              className="w-10 h-10 rounded-full bg-gray-200"
+                            />
+                            <div>
+                              <div className="text-black font-bold text-sm">
+                                {player.full_name}
+                              </div>
+                              <div className="text-gray-500 text-xs">
+                                {player.batting_style} | {player.bowling_style}
+                              </div>
+                            </div>
+                          </Link>
+
+                          {/* Middle: Average Points */}
+                          <span className="block w-full text-right text-black font-semibold text-lg mr-5">
                             {player.death_over_bowl_fpts
                               ? player.death_over_bowl_fpts.toFixed(2)
                               : "0.00"}
                           </span>
-              
-                          {/* Favorite Star Icon */}
-                          <div className="cursor-pointer">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              strokeWidth={1.5}
-                              stroke="currentColor"
-                              className="w-5 h-5 text-gray-400 hover:text-yellow-500"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M11.998 4.5l1.948 3.947 4.354.632-3.151 3.067.744 4.34-3.895-2.047-3.895 2.047.744-4.34-3.151-3.067 4.354-.632L11.998 4.5z"
-                              />
-                            </svg>
-                          </div>
+
+                          {/* Right: Favorite Star Icon */}
+                          <img
+                            src={
+                              isPreferred
+                                ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+                                : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                            }
+                            alt="favorite toggle"
+                            className="w-5 h-5 text-gray-400 hover:text-yellow-500 cursor-pointer mr-3"
+                            onClick={() => togglePreferred(player.player_uid)}
+                          />
                         </div>
-                      </div>
-                    </Link>
-                  ))}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
+
+              {/* show selected player */}
+              <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-300 ">
+                <div className="win-container flex flex-col items-center w-full max-w-full sm:max-w-screen-lg mx-auto p-2 sm:p-4 -mt-6">
+                  {/* Left section (icons and text) */}
+                  <div className="flex items-center space-x-4">
+                    {/* Star icon + text */}
+                    <div className="flex items-center">
+                      <img
+                        src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+                        alt="star"
+                        className="w-4 h-4 mr-1"
+                      />
+                      <span>{pData ? pData.length : getPreferredPlayerIds.length}</span>
+                    </div>
+
+                    {/* Lock icon + text */}
+                    <div className="flex items-center">
+                      <img
+                        src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/unlock-ic.png"
+                        alt="lock"
+                        className="w-4 h-4 mr-1"
+                      />
+                      <span>{lData ? lData.length : 0}</span>
+                    </div>
+
+                    {/* Undo icon + text */}
+                    <div className="flex items-center">
+                      <i className="icon-ic_undo w-4 h-4 mr-1" />
+                      <span>{eData ? eData.length : 0}</span>
+                    </div>
+                  </div>
+
+                  {/* Right section (button) */}
+                  <button className="bg-[#212341] text-white px-4 py-2 rounded font-semibold w-full max-w-full sm:max-w-screen-lg mx-auto">
+                    Generate Team
+                  </button>
+                </div>
               </div>
             </div>
           </>
