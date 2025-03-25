@@ -21,6 +21,8 @@ import PlayerCombination from './components/PlayerCombination.jsx'
 import CoverageIndex from './components/CoverageIndex.jsx'
 import ScorePredictor from './components/ScorePredictor.jsx'
 import DataTable from './components/DataTable.jsx'
+import CreateTeamSetting from './components/CreateTeamSetting.jsx'
+import CreateTeamCvc from './components/CreateTeamCvc.jsx'
 // import FantasyBreakDown from './components/FantasyBreakDown.jsx'
 // <Route path="/player/:playerId/:fullName/:matchId/form" element={<FantasyBreakDown />} />
 
@@ -56,6 +58,8 @@ function App() {
         <Route path="/pl-labs-mobile/player-combination/:homeTeam_vs_awayTeam/:matchId/:eventId" element={<PlayerCombination />} />
         <Route path="/pl-labs-mobile/captain-suggestion/:homeTeam_vs_awayTeam/:matchId/:eventId" element={<CaptainSuggestion />} />
         <Route path="/datatable/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<DataTable />} />
+        <Route path="/create-team-setting/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<CreateTeamSetting />} />
+        <Route path="/create-team-cvc/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId/overall" element={<CreateTeamCvc />} />
       </Routes>
     </Router>
   )

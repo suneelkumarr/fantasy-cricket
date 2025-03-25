@@ -2147,9 +2147,14 @@ const pData = parsedData.p ?? [];
                   </div>
 
                   {/* Right section (button) */}
-                  <button className="bg-[#212341] text-white px-4 py-2 rounded font-semibold w-full max-w-full sm:max-w-screen-lg mx-auto">
-                    Generate Team
-                  </button>
+                  <Link
+                  to={`/create-team-setting/Cricket/${matchInSights.season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
+                  state={{
+                    matchID: matchInSights.season_game_uid,
+                    matchInSights: matchInSights,
+                  }}
+                  className="bg-[#212341] text-white px-4 py-2 rounded font-semibold w-full max-w-full sm:max-w-screen-lg mx-auto justify-center flex items-center"
+                >Generate Team</Link>
                 </div>
               </div>
             </div>

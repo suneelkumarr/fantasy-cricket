@@ -1327,10 +1327,6 @@ function MatchReport() {
     return <div className="text-center text-gray-600">No data available.</div>;
   }
 
-  console.log("datamatchreport++++++++++++++++++++++++++++++++++++",data)
-  console.log("datamatchreport++++++++++++++++++++++++++++++++++++",matchInSights)
-  console.log("datamatchreport++++++++++++++++++++++++++++++++++++",matchSessionIDs)
-  console.log("datamatchreport++++++++++++++++++++++++++++++++++++",matchleageIDs)
 
 
   return (
