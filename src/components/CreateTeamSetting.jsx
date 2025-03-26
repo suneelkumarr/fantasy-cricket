@@ -238,77 +238,56 @@ const PlayerList = ({ players }) => {
   );
 };
 
-const TierModal = ({ title, subtitle, players, onClose }) => (
-  <div className="modal-content">
-    <div className="modal-header">
-      <div className="modal-title">{title}</div>
-      <div className="modal-subtitle">{subtitle}</div>
-      <a className="modal-close" onClick={onClose}>
-        <i className="icon-close"></i>
-      </a>
-    </div>
-
-    <div className="player-list">
-      {players.map((p, i) => (
-        <div className="player-item-container" key={p.player_uid}>
-          <div className={p.team_abbr === "DEL" ? "home-bg" : "away-bg"}></div>
-          <div className="ct-player-item-large">
-            <div className="logo-mask">
-              <span>{i + 1}</span>
-              <img
-                src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${p.jersey}`}
-              />
-            </div>
-            <div className="player-data">
-              <div className="player-name">{p.nick_name}</div>
-              <div className="player-pos">
-                <span>{p.child_position}</span> <div className="dot"></div>{" "}
-                <span>{p.team_abbr}</span>
-              </div>
-            </div>
-          </div>
-          <div className="player-item-medium-new">
-            <div className="projected-pts-view bgTransparent">
-              {parseFloat(p.selected_percentage).toFixed(2)}%
-            </div>
-          </div>
-          <div className="player-item-salary-box">{p.salary}</div>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const TierBasedTeamFormation = () => {
+const TierBasedTeamFormation = ({matchInSights}) => {
   // State declarations
   const [selected, setSelected] = useState("default");
   const [tierData, setTierData] = useState([]);
   const [allPlayers, setAllPlayers] = useState([]);
   const [showModal, setShowModal] = useState(false);
+  const [showModalCount, setShowModalCount] = useState(false);
   const [selectedTier, setSelectedTier] = useState(null);
+
+  // For API calls
   const [fixtureInfo, setFixtureInfo] = useState(null);
+
+  // Toggling states
   const [preferredPlayers, setPreferredPlayers] = useState({});
   const [excludedMap, setExcludedMap] = useState({});
   const [lockedMap, setLockedMap] = useState({});
-  const [showModalCount, setShowModalCount] = useState(false);
-  const [min, setMin] = useState("-");
-  const [max, setMax] = useState("-");
 
+  // Tier range (min / max) for each tier
+  const [tierRanges, setTierRanges] = useState({});
+
+  // Options for the pick range (MIN/MAX)
   const options = ["-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
-  // Toggle handlers
-  const toggleLock = (uid) => setLockedMap(prev => ({ ...prev, [uid]: !prev[uid] }));
-  const toggleExclude = (uid) => setExcludedMap(prev => ({ ...prev, [uid]: !prev[uid] }));
-  const togglePreferred = (playerUid) => setPreferredPlayers(prev => ({ ...prev, [playerUid]: !prev[playerUid] }));
+  // Helper: Update tier range (min and max) in a single object
+  const updateTierRange = (tierKey, newMin, newMax) => {
+    setTierRanges((prev) => ({
+      ...prev,
+      [tierKey]: { min: newMin, max: newMax },
+    }));
+  };
 
-  // API call to fetch players
+  // Toggle handlers
+  const toggleLock = (uid) =>
+    setLockedMap((prev) => ({ ...prev, [uid]: !prev[uid] }));
+  const toggleExclude = (uid) =>
+    setExcludedMap((prev) => ({ ...prev, [uid]: !prev[uid] }));
+  const togglePreferred = (playerUid) =>
+    setPreferredPlayers((prev) => ({
+      ...prev,
+      [playerUid]: !prev[playerUid],
+    }));
+
+  // API call to fetch players when "Choose Your Own" is selected
   const handleChooseOwn = async () => {
     setSelected("custom");
     try {
       const response = await axios.post(
         "https://plapi.perfectlineup.in/fantasy/stats/get_fixture_players",
         {
-          season_game_uid: "87703",
+          season_game_uid: matchInSights?.season_game_uid,
           website_id: "1",
           sports_id: "7",
         },
@@ -321,20 +300,38 @@ const TierBasedTeamFormation = () => {
         }
       );
 
-      const players = response.data.data.players || [];
+      const players = response.data?.data?.players || [];
       setAllPlayers(players);
-      setFixtureInfo(response.data.data.fixture_info);
+      setFixtureInfo(response.data?.data?.fixture_info);
 
       const categorizePlayers = () => {
-        const getSortedPlayers = (players, condition) => 
-          players.filter(condition).sort((a, b) => 
-            parseFloat(b.selected_percentage) - parseFloat(a.selected_percentage)
+        // Sort helper
+        const sortPlayers = (arr) =>
+          arr.sort(
+            (a, b) =>
+              parseFloat(b.selected_percentage) -
+              parseFloat(a.selected_percentage)
           );
 
+        // Tiers based on selected_percentage
+        const topTier = sortPlayers(
+          players.filter((p) => parseFloat(p.selected_percentage) >= 66.66)
+        ).length;
+        const middleTier = sortPlayers(
+          players.filter(
+            (p) =>
+              parseFloat(p.selected_percentage) >= 33.33 &&
+              parseFloat(p.selected_percentage) < 66.66
+          )
+        ).length;
+        const lowerTier = sortPlayers(
+          players.filter((p) => parseFloat(p.selected_percentage) < 33.33)
+        ).length;
+
         return [
-          { name: "Top Tier", key: "top", players: getSortedPlayers(players, p => parseFloat(p.selected_percentage) >= 66.66).length },
-          { name: "Middle Tier", key: "middle", players: getSortedPlayers(players, p => parseFloat(p.selected_percentage) >= 33.33 && parseFloat(p.selected_percentage) < 66.66).length },
-          { name: "Lower Tier", key: "lower", players: getSortedPlayers(players, p => parseFloat(p.selected_percentage) < 33.33).length },
+          { name: "Top Tier", key: "top", players: topTier },
+          { name: "Middle Tier", key: "middle", players: middleTier },
+          { name: "Lower Tier", key: "lower", players: lowerTier },
         ];
       };
 
@@ -344,29 +341,57 @@ const TierBasedTeamFormation = () => {
     }
   };
 
-  // Player filtering by tier
-  const getPlayersByTier = useMemo(() => (tierKey) => {
-    const sortPlayers = (players) => 
-      players.sort((a, b) => parseFloat(b.selected_percentage) - parseFloat(a.selected_percentage));
-    
-    const filters = {
-      top: p => parseFloat(p.selected_percentage) >= 66.66,
-      middle: p => parseFloat(p.selected_percentage) >= 33.33 && parseFloat(p.selected_percentage) < 66.66,
-      lower: p => parseFloat(p.selected_percentage) < 33.33
-    };
-    
-    return sortPlayers(allPlayers.filter(filters[tierKey] || (() => false)));
-  }, [allPlayers]);
+  // Memoized function to get sorted players by tier
+  const getPlayersByTier = useMemo(
+    () => (tierKey) => {
+      const sortPlayers = (arr) =>
+        arr.sort(
+          (a, b) =>
+            parseFloat(b.selected_percentage) - parseFloat(a.selected_percentage)
+        );
 
-  // Memoized player ID arrays
-  const getPlayerIds = (map) => Object.keys(map).filter(uid => map[uid]);
-  const preferredPlayerIds = useMemo(() => getPlayerIds(preferredPlayers), [preferredPlayers]);
-  const lockedPlayerIds = useMemo(() => getPlayerIds(lockedMap), [lockedMap]);
-  const excludedPlayerIds = useMemo(() => getPlayerIds(excludedMap), [excludedMap]);
+      if (!allPlayers?.length) return [];
 
-  // Sync preferred players with API
+      switch (tierKey) {
+        case "top":
+          return sortPlayers(
+            allPlayers.filter((p) => parseFloat(p.selected_percentage) >= 66.66)
+          );
+        case "middle":
+          return sortPlayers(
+            allPlayers.filter(
+              (p) =>
+                parseFloat(p.selected_percentage) >= 33.33 &&
+                parseFloat(p.selected_percentage) < 66.66
+            )
+          );
+        case "lower":
+          return sortPlayers(
+            allPlayers.filter((p) => parseFloat(p.selected_percentage) < 33.33)
+          );
+        default:
+          return [];
+      }
+    },
+    [allPlayers]
+  );
+
+  // Extract array of IDs for each category
+  const getActiveIds = (map) =>
+    Object.keys(map).filter((uid) => map[uid] === true);
+
+  const preferredPlayerIds = useMemo(() => getActiveIds(preferredPlayers), [
+    preferredPlayers,
+  ]);
+  const lockedPlayerIds = useMemo(() => getActiveIds(lockedMap), [lockedMap]);
+  const excludedPlayerIds = useMemo(() => getActiveIds(excludedMap), [
+    excludedMap,
+  ]);
+
+  // Sync toggles (locked, preferred, excluded) with API
   useEffect(() => {
-    if (!preferredPlayerIds.length || !fixtureInfo) return;
+    // Avoid firing if no fixture or no toggled players
+    if (!fixtureInfo) return;
 
     const payload = {
       season_game_uid: fixtureInfo.season_game_uid,
@@ -391,9 +416,9 @@ const TierBasedTeamFormation = () => {
             },
           }
         );
-        console.log("Preferred players updated:", response.data);
+        console.log("Preferred/excluded/locked updated:", response.data);
       } catch (err) {
-        console.error("Error updating preferred players:", err);
+        console.error("Error updating preferred/excluded/locked players:", err);
       }
     };
 
@@ -408,27 +433,37 @@ const TierBasedTeamFormation = () => {
 
       {/* Option Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        {[
-          { value: "default", label: "Pick Top Player", subtext: "Default" },
-          { value: "custom", label: "Choose Your Own", onClick: handleChooseOwn }
-        ].map(({ value, label, subtext, onClick }) => (
-          <div
-            key={value}
-            onClick={onClick || (() => setSelected(value))}
-            className={`cursor-pointer border rounded-lg p-4 text-center transition-all duration-200 ${
-              selected === value ? "border-blue-800 shadow-lg" : "border-gray-300 hover:border-blue-500"
-            }`}
-          >
-            <p className="font-semibold text-blue-900 text-lg">{label}</p>
-            {subtext && <p className="text-sm text-gray-600">{subtext}</p>}
-          </div>
-        ))}
+        <div
+          onClick={() => setSelected("default")}
+          className={`cursor-pointer border rounded-lg p-4 text-center transition-all duration-200 ${
+            selected === "default"
+              ? "border-blue-800 shadow-lg"
+              : "border-gray-300 hover:border-blue-500"
+          }`}
+        >
+          <p className="font-semibold text-blue-900 text-lg">Pick Top Player</p>
+          <p className="text-sm text-gray-600">Default</p>
+        </div>
+
+        <div
+          onClick={handleChooseOwn}
+          className={`cursor-pointer border rounded-lg p-4 text-center transition-all duration-200 ${
+            selected === "custom"
+              ? "border-blue-800 shadow-lg"
+              : "border-gray-300 hover:border-blue-500"
+          }`}
+        >
+          <p className="font-semibold text-blue-900 text-lg">
+            Choose Your Own
+          </p>
+        </div>
       </div>
 
       {/* Instruction */}
       {selected === "custom" && (
         <div className="bg-gray-100 p-4 rounded-lg mb-6 text-sm text-gray-700">
-          Pick the number of players you want from each tier based on selection percentage
+          Pick how many players you want from each tier based on selection
+          percentage
         </div>
       )}
 
@@ -445,19 +480,33 @@ const TierBasedTeamFormation = () => {
               key={tier.key}
               className="grid grid-cols-1 md:grid-cols-12 items-center border-b py-3 px-2 hover:bg-gray-50 transition-colors"
             >
-              <div className="col-span-4 text-gray-800 font-medium md:mb-0 mb-2">{tier.name}</div>
+              <div className="col-span-4 text-gray-800 font-medium md:mb-0 mb-2">
+                {tier.name}
+              </div>
               <div
-                onClick={() => { setSelectedTier(tier.key); setShowModal(true); }}
+                onClick={() => {
+                  setSelectedTier(tier.key);
+                  setShowModal(true);
+                }}
                 className="col-span-4 text-center text-gray-600 font-semibold cursor-pointer md:mb-0 mb-2"
               >
                 {tier.players} Players
               </div>
               <div
-                onClick={() => { setSelectedTier(tier.key); setShowModalCount(true); }}
+                onClick={() => {
+                  setSelectedTier(tier.key);
+                  setShowModalCount(true);
+                }}
                 className="col-span-4 flex justify-end items-center cursor-pointer"
               >
                 <div className="border px-3 py-1 rounded-md flex items-center gap-2">
-                  <span className="text-gray-500">--</span>
+                  <span className="text-gray-500">
+                    {tierRanges[tier.key]?.min && tierRanges[tier.key]?.max
+                      ? `${tierRanges[tier.key].min} - ${
+                          tierRanges[tier.key].max
+                        }`
+                      : "--"}
+                  </span>
                   <img
                     src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_up_down_arrow.svg"
                     alt="toggle"
@@ -471,17 +520,22 @@ const TierBasedTeamFormation = () => {
       )}
 
       {/* Players Modal */}
-      {showModal && (
+      {showModal && selectedTier && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white w-full max-w-4xl rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
               <div className="flex-1 text-center">
                 <h3 className="text-xl font-semibold">
-                  Players in {selectedTier?.charAt(0).toUpperCase() + selectedTier?.slice(1)} Tier
+                  Players in{" "}
+                  {selectedTier.charAt(0).toUpperCase() +
+                    selectedTier.slice(1)}{" "}
+                  Tier
                 </h3>
-                <p className="text-sm text-gray-500">
-                  {fixtureInfo?.home_abbr} vs {fixtureInfo?.away_abbr}
-                </p>
+                {fixtureInfo && (
+                  <p className="text-sm text-gray-500">
+                    {fixtureInfo?.home_abbr} vs {fixtureInfo?.away_abbr}
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => setShowModal(false)}
@@ -507,7 +561,9 @@ const TierBasedTeamFormation = () => {
                   <div className="col-span-6 flex items-center gap-3 mb-2 md:mb-0">
                     <div
                       className={`w-1 h-10 rounded-sm ${
-                        p.team_abbr === fixtureInfo?.home_abbr ? "bg-blue-500" : "bg-red-500"
+                        p.team_abbr === fixtureInfo?.home_abbr
+                          ? "bg-blue-500"
+                          : "bg-red-500"
                       }`}
                     />
                     <img
@@ -523,12 +579,15 @@ const TierBasedTeamFormation = () => {
                       </div>
                     </div>
                   </div>
+
                   <div className="col-span-3 text-center text-sm font-semibold text-gray-700 mb-2 md:mb-0">
                     {parseFloat(p.selected_percentage).toFixed(2)}%
                   </div>
+
                   <div className="col-span-1 text-center text-sm font-medium mb-2 md:mb-0">
                     {p.salary}
                   </div>
+
                   <div className="col-span-2 flex justify-end gap-2">
                     <img
                       src={
@@ -541,13 +600,21 @@ const TierBasedTeamFormation = () => {
                       onClick={() => togglePreferred(p.player_uid)}
                     />
                     <i
-                      className={`cursor-pointer text-xl ${lockedMap[p.player_uid] ? "text-red-500" : "text-gray-500"}`}
+                      className={`cursor-pointer text-xl ${
+                        lockedMap[p.player_uid]
+                          ? "text-red-500"
+                          : "text-gray-500"
+                      }`}
                       onClick={() => toggleLock(p.player_uid)}
                     >
                       {lockedMap[p.player_uid] ? "🔒" : "🔓"}
                     </i>
                     <i
-                      className={`text-xl cursor-pointer ${excludedMap[p.player_uid] ? "text-red-500" : "text-gray-500"}`}
+                      className={`text-xl cursor-pointer ${
+                        excludedMap[p.player_uid]
+                          ? "text-red-500"
+                          : "text-gray-500"
+                      }`}
                       onClick={() => toggleExclude(p.player_uid)}
                     >
                       ✖️
@@ -561,15 +628,17 @@ const TierBasedTeamFormation = () => {
       )}
 
       {/* Range Selection Modal */}
-      {showModalCount && (
+      {showModalCount && selectedTier && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white w-full max-w-md rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
               <div className="flex-1 text-center">
                 <h3 className="text-xl font-semibold">Pick Range From Tier</h3>
-                <p className="text-sm text-gray-500">
-                  {fixtureInfo?.home_abbr} vs {fixtureInfo?.away_abbr}
-                </p>
+                {fixtureInfo && (
+                  <p className="text-sm text-gray-500">
+                    {fixtureInfo.home_abbr} vs {fixtureInfo.away_abbr}
+                  </p>
+                )}
               </div>
               <button
                 onClick={() => setShowModalCount(false)}
@@ -580,18 +649,38 @@ const TierBasedTeamFormation = () => {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-8 bg-gray-50 p-4 justify-center">
-              {["MIN", "MAX"].map((label, idx) => (
+              {["MIN", "MAX"].map((label) => (
                 <div key={label} className="w-24 flex flex-col items-center">
-                  <h2 className="text-gray-500 font-bold uppercase mb-4">{label}</h2>
+                  <h2 className="text-gray-500 font-bold uppercase mb-4">
+                    {label}
+                  </h2>
                   <div className="flex flex-col space-y-2 w-full max-h-64 overflow-y-auto">
                     {options.map((option) => (
                       <button
                         key={option}
                         type="button"
                         className={`px-4 py-2 text-black rounded w-full transition-colors ${
-                          (label === "MIN" ? min : max) === option ? "bg-blue-100 text-blue-800" : "hover:bg-gray-100"
+                          (label === "MIN"
+                            ? tierRanges[selectedTier]?.min
+                            : tierRanges[selectedTier]?.max) === option
+                            ? "bg-blue-100 text-blue-800"
+                            : "hover:bg-gray-100"
                         }`}
-                        onClick={() => (label === "MIN" ? setMin(option) : setMax(option))}
+                        onClick={() => {
+                          if (label === "MIN") {
+                            updateTierRange(
+                              selectedTier,
+                              option,
+                              tierRanges[selectedTier]?.max
+                            );
+                          } else {
+                            updateTierRange(
+                              selectedTier,
+                              tierRanges[selectedTier]?.min,
+                              option
+                            );
+                          }
+                        }}
                       >
                         {option}
                       </button>
@@ -603,6 +692,608 @@ const TierBasedTeamFormation = () => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+const TeamFormation = ({ matchInSights }) => {
+  // State for managing the active tab (Overall or Team Specific)
+  const [activeTab, setActiveTab] = useState("Overall");
+
+  // State for managing range values in "Overall" tab
+  const [ranges, setRanges] = useState({
+    WK: { min: 1, max: 8 },
+    BAT: { min: 1, max: 8 },
+    AR: { min: 1, max: 8 },
+    BOW: { min: 1, max: 8 },
+  });
+
+  // Define team names with fallbacks
+  const home = matchInSights?.home || "HomeTeam";
+  const away = matchInSights?.away || "AwayTeam";
+
+  // State for managing range values in "Team Specific" tab
+  const [teamRanges, setTeamRanges] = useState({
+    WK: { [home]: { min: null, max: null }, [away]: { min: null, max: null } },
+    BAT: { [home]: { min: null, max: null }, [away]: { min: null, max: null } },
+    AR: { [home]: { min: null, max: null }, [away]: { min: null, max: null } },
+    BOW: { [home]: { min: null, max: null }, [away]: { min: null, max: null } },
+  });
+
+  // State for managing the modal
+  const [showModalCount, setShowModalCount] = useState(false);
+  const [selectedTier, setSelectedTier] = useState(null); // e.g., { position: "WK", team: "HomeTeam" }
+  const fixtureInfo = { home_abbr: home, away_abbr: away }; // Fixture info using team names
+  const options = [0, 1, 2, 3, 4, 5, 6, 7, 8]; // Options for range selection
+
+  // Handle range changes in "Overall" tab
+  const handleRangeChange = (position, type, value) => {
+    const newValue = parseInt(value);
+    setRanges((prev) => {
+      const current = prev[position];
+      if (type === "min") {
+        if (newValue <= current.max) {
+          return { ...prev, [position]: { ...current, min: newValue } };
+        }
+      } else {
+        if (newValue >= current.min) {
+          return { ...prev, [position]: { ...current, max: newValue } };
+        }
+      }
+      return prev;
+    });
+  };
+
+  // Update range for a specific team in "Team Specific" tab
+  const updateTierRange = (tier, min, max) => {
+    const { position, team } = tier;
+    setTeamRanges((prev) => ({
+      ...prev,
+      [position]: {
+        ...prev[position],
+        [team]: { min, max },
+      },
+    }));
+  };
+
+  // Open modal for team range selection
+  const handleTeamClick = (position, team) => {
+    setSelectedTier({ position, team });
+    setShowModalCount(true);
+  };
+
+  // Reset all ranges to initial values
+  const handleReset = () => {
+    setRanges({
+      WK: { min: 1, max: 8 },
+      BAT: { min: 1, max: 8 },
+      AR: { min: 1, max: 8 },
+      BOW: { min: 1, max: 8 },
+    });
+    setTeamRanges({
+      WK: { [home]: { min: null, max: null }, [away]: { min: null, max: null } },
+      BAT: { [home]: { min: null, max: null }, [away]: { min: null, max: null } },
+      AR: { [home]: { min: null, max: null }, [away]: { min: null, max: null } },
+      BOW: { [home]: { min: null, max: null }, [away]: { min: null, max: null } },
+    });
+  };
+
+  // Array of positions for rendering
+  const positions = ["WK", "BAT", "AR", "BOW"];
+
+  return (
+    <div className="container mx-auto p-4">
+      {/* Title, Description, and Reset Button */}
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-800">
+            <span className="text-blue-500">5.</span> Pick Team Formation
+          </h2>
+          <p className="text-gray-600 text-sm">
+            Build teams with your favoured lineup configurations
+          </p>
+        </div>
+        <button onClick={handleReset} className="text-gray-600 hover:text-gray-800">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            />
+          </svg>
+        </button>
+      </div>
+
+      {/* Tabs for Switching Between Overall and Team Specific */}
+      <div className="flex space-x-4 mb-6">
+        <button
+          className={`px-4 py-2 border rounded-lg font-medium ${
+            activeTab === "Overall"
+              ? "border-blue-500 text-blue-500"
+              : "border-gray-300 text-gray-600"
+          }`}
+          onClick={() => setActiveTab("Overall")}
+        >
+          Overall
+        </button>
+        <button
+          className={`px-4 py-2 border rounded-lg font-medium ${
+            activeTab === "Team Specific"
+              ? "border-blue-500 text-blue-500"
+              : "border-gray-300 text-gray-600"
+          }`}
+          onClick={() => setActiveTab("Team Specific")}
+        >
+          Team Specific
+        </button>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === "Overall" ? (
+        <div className="space-y-6">
+          {positions.map((position) => (
+            <div key={position} className="flex items-center space-x-4">
+              <div className="w-12 text-gray-700 font-medium">{position}</div>
+              <div className="flex-1">
+                <div className="relative">
+                  <div className="relative h-2 bg-gray-300 rounded-full">
+                    <div
+                      className="absolute h-2 bg-blue-600 rounded-full"
+                      style={{
+                        left: `${((ranges[position].min - 1) / 7) * 100}%`,
+                        width: `${
+                          ((ranges[position].max - ranges[position].min) / 7) * 100
+                        }%`,
+                      }}
+                    ></div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="8"
+                      value={ranges[position].min}
+                      onChange={(e) => handleRangeChange(position, "min", e.target.value)}
+                      className="absolute w-full h-2 appearance-none cursor-pointer"
+                      style={{ zIndex: 5, background: "transparent" }}
+                    />
+                    <input
+                      type="range"
+                      min="1"
+                      max="8"
+                      value={ranges[position].max}
+                      onChange={(e) => handleRangeChange(position, "max", e.target.value)}
+                      className="absolute w-full h-2 appearance-none cursor-pointer"
+                      style={{ zIndex: 4, background: "transparent" }}
+                    />
+                    <div className="absolute w-full flex justify-between top-[-6px]">
+                      {[...Array(8)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`w-5 h-5 rounded-full border-2 ${
+                            i + 1 >= ranges[position].min && i + 1 <= ranges[position].max
+                              ? "border-blue-600 bg-blue-600"
+                              : "border-gray-300 bg-white"
+                          }`}
+                        ></div>
+                      ))}
+                    </div>
+                  </div>
+                  <style jsx>{`
+                    input[type="range"]::-webkit-slider-thumb {
+                      -webkit-appearance: none;
+                      appearance: none;
+                      width: 20px;
+                      height: 20px;
+                      background: #3b82f6;
+                      border: 2px solid #ffffff;
+                      border-radius: 50%;
+                      cursor: pointer;
+                      box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+                      z-index: 10;
+                    }
+                    input[type="range"]::-moz-range-thumb {
+                      width: 20px;
+                      height: 20px;
+                      background: #3b82f6;
+                      border: 2px solid #ffffff;
+                      border-radius: 50%;
+                      cursor: pointer;
+                      box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+                      z-index: 10;
+                    }
+                    input[type="range"] {
+                      pointer-events: none;
+                    }
+                    input[type="range"]::-webkit-slider-thumb {
+                      pointer-events: auto;
+                    }
+                    input[type="range"]::-moz-range-thumb {
+                      pointer-events: auto;
+                    }
+                  `}</style>
+                </div>
+              </div>
+              <div className="w-12 text-gray-700 font-medium">
+                {ranges[position].min}-{ranges[position].max}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div>
+          <div className="flex mb-4">
+            <div className="w-12"></div>
+            <div className="flex-1 flex justify-between">
+              <div className="w-1/2 text-center font-medium text-gray-700">{home}</div>
+              <div className="w-1/2 text-center font-medium text-gray-700">{away}</div>
+            </div>
+          </div>
+          {positions.map((position) => (
+            <div key={position} className="flex items-center space-x-4 mb-4">
+              <div className="w-12 text-gray-700 font-medium">{position}</div>
+              <div className="flex-1 flex space-x-4">
+                {[home, away].map((team) => {
+                  const range = teamRanges[position]?.[team];
+                  return (
+                    <div key={team} className="w-1/2">
+                      <button
+                        onClick={() => handleTeamClick(position, team)}
+                        className="flex items-center justify-between w-full px-4 py-2 border rounded-lg bg-white hover:bg-gray-50"
+                      >
+                        <span className="text-gray-700">
+                          {range && range.min !== null && range.max !== null
+                            ? `${range.min}-${range.max}`
+                            : "-"}
+                        </span>
+                        <svg
+                          className="w-4 h-4 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Modal for Range Selection */}
+      {showModalCount && selectedTier && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white w-full max-w-md rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+              <div className="flex-1 text-center">
+                <h3 className="text-xl font-semibold">Pick Range From Tier</h3>
+                <p className="text-sm text-gray-500">
+                  {fixtureInfo.home_abbr} vs {fixtureInfo.away_abbr}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowModalCount(false)}
+                className="text-gray-500 hover:text-red-500 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-8 bg-gray-50 p-4 justify-center">
+              {["MIN", "MAX"].map((label) => (
+                <div key={label} className="w-24 flex flex-col items-center">
+                  <h2 className="text-gray-500 font-bold uppercase mb-4">{label}</h2>
+                  <div className="flex flex-col space-y-2 w-full max-h-64 overflow-y-auto">
+                    {options.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        className={`px-4 py-2 text-black rounded w-full transition-colors ${
+                          (label === "MIN"
+                            ? teamRanges[selectedTier.position]?.[selectedTier.team]?.min
+                            : teamRanges[selectedTier.position]?.[selectedTier.team]?.max) === option
+                            ? "bg-blue-100 text-blue-800"
+                            : "hover:bg-gray-100"
+                        }`}
+                        onClick={() => {
+                          if (label === "MIN") {
+                            updateTierRange(
+                              selectedTier,
+                              option,
+                              teamRanges[selectedTier.position]?.[selectedTier.team]?.max ?? 8
+                            );
+                          } else {
+                            updateTierRange(
+                              selectedTier,
+                              teamRanges[selectedTier.position]?.[selectedTier.team]?.min ?? 1,
+                              option
+                            );
+                          }
+                        }}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+const TeamSelectionPreferences = ({matchInSights}) => {
+    // Define team names with fallbacks
+  const home = matchInSights?.home || "HomeTeam";
+  const away = matchInSights?.away || "AwayTeam";
+  console.log(matchInSights)
+  // State for selected team preference
+  const [selectedTeam, setSelectedTeam] = useState("NONE");
+
+  // State for the double range slider (min and max number of players)
+  const [playerRange, setPlayerRange] = useState({ min: 1, max: 10 });
+
+  // Handle team selection
+  const handleTeamSelect = (team) => {
+    setSelectedTeam(team);
+    // Reset range when switching teams
+    setPlayerRange({ min: 1, max: 10 });
+  };
+
+  // Handle range input changes for the double slider
+  const handleRangeChange = (type, value) => {
+    const newValue = parseInt(value);
+    setPlayerRange((prev) => {
+      if (type === "min") {
+        if (newValue <= prev.max) {
+          return { ...prev, min: newValue };
+        }
+      } else {
+        if (newValue >= prev.min) {
+          return { ...prev, max: newValue };
+        }
+      }
+      return prev;
+    });
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      {/* Header Section */}
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-800">
+          <span className="text-blue-500">6.</span> Team Selection Preferences
+        </h2>
+        <p className="text-gray-600 text-sm">
+          Pick more players from one team
+        </p>
+      </div>
+
+      {/* Team Preference Buttons */}
+      <div className="flex space-x-4 mb-6">
+        <button
+          onClick={() => handleTeamSelect("NONE")}
+          className={`flex items-center space-x-2 px-4 py-2 border rounded-lg ${
+            selectedTeam === "NONE"
+              ? "border-blue-500 text-blue-500"
+              : "border-gray-300 text-gray-600"
+          }`}
+        >
+          <img
+            src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_minus_setting.svg"
+            alt="None Icon"
+            className="w-6 h-6"
+          />
+          <span>NONE</span>
+        </button>
+        <button
+          onClick={() => handleTeamSelect(home)}
+          className={`flex items-center space-x-2 px-4 py-2 border rounded-lg ${
+            selectedTeam === home
+              ? "border-blue-500 text-blue-500"
+              : "border-gray-300 text-gray-600"
+          }`}
+        >
+          <img
+          src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.home_flag}`}
+          alt={matchInSights.home}
+          className="w-6 h-6 rounded-full"
+        />
+          <span>{matchInSights.home}</span>
+        </button>
+        <button
+          onClick={() => handleTeamSelect(away)}
+          className={`flex items-center space-x-2 px-4 py-2 border rounded-lg ${
+            selectedTeam === away
+              ? "border-blue-500 text-blue-500"
+              : "border-gray-300 text-gray-600"
+          }`}
+        >
+
+          <img
+          src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchInSights.away_flag}`}
+          alt={matchInSights.away}
+          className="w-6 h-6 rounded-full"
+        />
+          <span>{matchInSights.away}</span>
+        </button>
+      </div>
+
+      {/* Double Range Slider (Visible when FRD or LSG is selected) */}
+      {selectedTeam !== "NONE" && (
+        <div className="mt-6">
+          <label className="block text-gray-700 font-medium mb-2">
+            No. of Players: {playerRange.min}-{playerRange.max}
+          </label>
+          <div className="relative">
+            {/* Slider Track */}
+            <div className="relative h-2 bg-gray-300 rounded-full">
+              {/* Selected Range */}
+              <div
+                className="absolute h-2 bg-blue-600 rounded-full"
+                style={{
+                  left: `${((playerRange.min - 1) / 9) * 100}%`,
+                  width: `${((playerRange.max - playerRange.min) / 9) * 100}%`,
+                }}
+              ></div>
+
+              {/* Min Thumb */}
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={playerRange.min}
+                onChange={(e) => handleRangeChange("min", e.target.value)}
+                className="absolute w-full h-2 appearance-none cursor-pointer focus:outline-none"
+                style={{ zIndex: 5, background: "transparent" }}
+              />
+
+              {/* Max Thumb */}
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={playerRange.max}
+                onChange={(e) => handleRangeChange("max", e.target.value)}
+                className="absolute w-full h-2 appearance-none cursor-pointer focus:outline-none"
+                style={{ zIndex: 4, background: "transparent" }}
+              />
+
+              {/* Circles for Visual Representation */}
+              <div className="absolute w-full flex justify-between top-[-6px]">
+                {[...Array(10)].map((_, i) => (
+                  <div
+                    key={i}
+                    className={`w-5 h-5 rounded-full border-2 ${
+                      i + 1 >= playerRange.min && i + 1 <= playerRange.max
+                        ? "border-blue-600 bg-blue-600"
+                        : "border-gray-300 bg-white"
+                    }`}
+                  ></div>
+                ))}
+              </div>
+            </div>
+
+            {/* Labels for Min and Max */}
+            <div className="flex justify-between mt-2 text-gray-600">
+              <span>1</span>
+              <span>10</span>
+            </div>
+
+            {/* Custom Thumb Styling */}
+            <style jsx>{`
+              input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 20px;
+                height: 20px;
+                background: #3b82f6;
+                border: 2px solid #ffffff;
+                border-radius: 50%;
+                cursor: pointer;
+                box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+                z-index: 10;
+              }
+
+              input[type="range"]::-moz-range-thumb {
+                width: 20px;
+                height: 20px;
+                background: #3b82f6;
+                border: 2px solid #ffffff;
+                border-radius: 50%;
+                cursor: pointer;
+                box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+                z-index: 10;
+              }
+
+              input[type="range"] {
+                pointer-events: none;
+              }
+
+              input[type="range"]::-webkit-slider-thumb {
+                pointer-events: auto;
+              }
+
+              input[type="range"]::-moz-range-thumb {
+                pointer-events: auto;
+              }
+            `}</style>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
+
+const TeamVariation = () => {
+  // State to track the selected strategy, initialized to "Different Teams"
+  const [selectedStrategy, setSelectedStrategy] = useState('Different Teams');
+
+  return (
+    <div className="container mx-auto p-4">
+      <div className="max-w-3xl mx-auto p-4">
+        {/* Title Section */}
+        <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-800">
+          <span className="text-blue-500">7.</span> TEAM VARIATION
+        </h2>
+        <p className="text-gray-600 text-sm">
+        What’s your strategy?
+        </p>
+      </div>
+
+        {/* Strategy Options */}
+        <div className="flex justify-center space-x-4 mb-4">
+          <div
+            className={`px-4 py-2 border rounded-lg cursor-pointer hover:border-blue-300 hover:text-blue-400 ${
+              selectedStrategy === 'Different Teams'
+                ? 'border-blue-500 text-blue-500'
+                : 'border-gray-300 text-gray-600'
+            }`}
+            onClick={() => setSelectedStrategy('Different Teams')}
+          >
+            Different Teams
+          </div>
+          <div
+            className={`px-4 py-2 border rounded-lg cursor-pointer hover:border-blue-300 hover:text-blue-400 ${
+              selectedStrategy === 'Similar Teams'
+                ? 'border-blue-500 text-blue-500'
+                : 'border-gray-300 text-gray-600'
+            }`}
+            onClick={() => setSelectedStrategy('Similar Teams')}
+          >
+            Similar Teams
+            <span className="ml-2 text-sm">Different C & VC</span>
+          </div>
+        </div>
+
+        {/* Dynamic Description */}
+        <div className="text-center text-gray-600">
+          {selectedStrategy === 'Different Teams'
+            ? 'Get more player matches with Dream Team'
+            : 'Higher chances of getting C & VC right'}
+        </div>
+      </div>
     </div>
   );
 };
@@ -899,12 +1590,20 @@ const CreateTeamSetting = () => {
           </Link>
 
           {/* Player Data List */}
-          <TierBasedTeamFormation />
+          <TierBasedTeamFormation matchInSights={matchInSights}/>
+
+          {/* Pick Team Formation */}
+          <TeamFormation matchInSights={matchInSights}/>
+          {/* Team Selection Preferences */}
+          <TeamSelectionPreferences matchInSights={matchInSights} />
+          {/* TEAM VARIATION */}
+          <TeamVariation />
+
           {/* Next Button */}
-          <div className="mt-10 flex justify-end">
+          <div className="mt-10 flex w-full max-w-4xl">
             <button
               onClick={() => alert("Next clicked!")}
-              className="bg-gray-800 text-white px-6 py-2 rounded-md font-semibold hover:bg-gray-900 transition-colors"
+              className="bg-[#212341] text-white px-4 py-2 rounded font-semibold w-full max-w-full sm:max-w-screen-lg mx-auto justify-center flex items-center"
             >
               NEXT
             </button>
