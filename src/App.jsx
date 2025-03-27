@@ -23,6 +23,8 @@ import ScorePredictor from './components/ScorePredictor.jsx'
 import DataTable from './components/DataTable.jsx'
 import CreateTeamSetting from './components/CreateTeamSetting.jsx'
 import CreateTeamCvc from './components/CreateTeamCvc.jsx'
+import PlayerBattle from './components/PlayerBattle.jsx'
+import PlayerComparation from './components/PlayerComparation.jsx'
 // import FantasyBreakDown from './components/FantasyBreakDown.jsx'
 // <Route path="/player/:playerId/:fullName/:matchId/form" element={<FantasyBreakDown />} />
 
@@ -60,6 +62,8 @@ function App() {
         <Route path="/datatable/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<DataTable />} />
         <Route path="/create-team-setting/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<CreateTeamSetting />} />
         <Route path="/create-team-cvc/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId/overall" element={<CreateTeamCvc />} />
+        <Route path="/player-battle/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<PlayerBattle />} />
+        <Route path="/popular-comparisons/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<PlayerComparation />} />
       </Routes>
     </Router>
   )

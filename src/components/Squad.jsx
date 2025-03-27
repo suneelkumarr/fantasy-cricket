@@ -196,6 +196,30 @@ function PlayersListing({ teamsData, fixture_info }) {
   );
 }
 
+
+const FixedButtons = ({ matchInSights }) => {
+  return (
+    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 flex space-x-4 z-10">
+      <Link
+        key={matchInSights.season_game_uid}
+        to={`/player-battle/Cricket/${matchInSights.season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
+        state={{ matchInSights: matchInSights }}
+        className="bg-blue-900 hover:bg-blue-800 text-white border border-white rounded-lg font-bold text-lg w-60 h-12 uppercase transition duration-200 flex items-center justify-center"
+      >
+        View Player Battles
+      </Link>
+      <Link
+      key={matchInSights.season_game_uid}
+      to={`/popular-comparisons/Cricket/${matchInSights.season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
+      state={{ matchInSights: matchInSights }}
+        className="bg-blue-900 hover:bg-blue-800 text-white border border-white rounded-lg font-bold text-lg w-60 h-12 uppercase transition duration-200 flex items-center justify-center"
+      >
+        Compare Players
+      </Link>
+    </div>
+  );
+};
+
 function Squad() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -384,6 +408,9 @@ function Squad() {
           fixture_info={data.fixture_info}
         />
       )}
+
+      {/* */}
+      <FixedButtons matchInSights={matchInSights} />
     </div>
   );
 }
