@@ -1,38 +1,41 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { PieChart, Pie, Cell } from "recharts";
 
-
 const COLORS = ["#16a34a", "#0ea5e9", "#facc15", "#ef4444", "#6366f1"];
-
 
 const FantasyBreakdown = ({ bowlingData, totalPoints }) => {
   const formattedData = Object.entries(bowlingData).map(([key, value]) => ({
     name: key.replace(/_/g, " "),
-    value: value || 0
+    value: value || 0,
   }));
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
       <h3 className="text-lg font-semibold mb-4">Fantasy Points Breakdown</h3>
       <PieChart width={350} height={250}>
-        <Pie 
-          data={formattedData} 
-          dataKey="value" 
-          nameKey="name" 
-          cx="50%" 
-          cy="50%" 
+        <Pie
+          data={formattedData}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
           outerRadius={80}
           fill="#16a34a"
           label
         >
           {formattedData.map((_, index) => (
-            <Cell 
-              key={`cell-${index}`} 
-              fill={COLORS[index % COLORS.length]} 
-            />
+            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
         </Pie>
         <Tooltip />
@@ -43,7 +46,6 @@ const FantasyBreakdown = ({ bowlingData, totalPoints }) => {
     </div>
   );
 };
-
 
 const BowlingStats = ({ er, wickets, lbw, dotBalls }) => {
   const data = [
@@ -66,14 +68,15 @@ const BowlingStats = ({ er, wickets, lbw, dotBalls }) => {
   );
 };
 
-
 const PointsComposition = ({ breakdown }) => {
-  const data = [{
-    name: "Points",
-    ...breakdown.bowling,
-    ...breakdown.batting,
-    ...breakdown.others
-  }];
+  const data = [
+    {
+      name: "Points",
+      ...breakdown.bowling,
+      ...breakdown.batting,
+      ...breakdown.others,
+    },
+  ];
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg">
@@ -83,21 +86,21 @@ const PointsComposition = ({ breakdown }) => {
         <YAxis />
         <Tooltip />
         <Legend />
-        {Object.keys(data[0]).map((key, index) => 
-          key !== "name" && (
-            <Bar 
-              key={key} 
-              dataKey={key} 
-              fill={`hsl(${index * 60}, 70%, 50%)`} 
-              radius={[4, 4, 0, 0]}
-            />
-          )
+        {Object.keys(data[0]).map(
+          (key, index) =>
+            key !== "name" && (
+              <Bar
+                key={key}
+                dataKey={key}
+                fill={`hsl(${index * 60}, 70%, 50%)`}
+                radius={[4, 4, 0, 0]}
+              />
+            )
         )}
       </BarChart>
     </div>
   );
 };
-
 
 const StatCard = ({ label, value, icon }) => (
   <div className="flex items-center space-x-2 p-4 bg-white rounded-lg shadow-sm">
@@ -108,9 +111,6 @@ const StatCard = ({ label, value, icon }) => (
     </div>
   </div>
 );
-
-
-
 
 const getCountdownTime = (scheduledDate) => {
   const now = new Date();
@@ -229,17 +229,25 @@ const FixtureHeader = ({ matchInSights }) => {
   );
 };
 
-
 const PlayerPerformanceChart = ({ data }) => {
   // Processed data example
   const chartData = data
-    .filter(player => player.formatData.individual.length > 0)
-    .map(player => {
+    .filter((player) => player.formatData.individual.length > 0)
+    .map((player) => {
       const match = player.formatData.individual[0];
       const breakdown = match.pts_breakdown;
-      const batting = Object.values(breakdown.batting || {}).reduce((sum, val) => sum + (val || 0), 0);
-      const bowling = Object.values(breakdown.bowling || {}).reduce((sum, val) => sum + (val || 0), 0);
-      const fielding = Object.values(breakdown.fielding || {}).reduce((sum, val) => sum + (val || 0), 0);
+      const batting = Object.values(breakdown.batting || {}).reduce(
+        (sum, val) => sum + (val || 0),
+        0
+      );
+      const bowling = Object.values(breakdown.bowling || {}).reduce(
+        (sum, val) => sum + (val || 0),
+        0
+      );
+      const fielding = Object.values(breakdown.fielding || {}).reduce(
+        (sum, val) => sum + (val || 0),
+        0
+      );
       const others = breakdown.others?.starting_points || 0;
       return {
         name: player.player_name,
@@ -256,7 +264,10 @@ const PlayerPerformanceChart = ({ data }) => {
         Player Fantasy Points Breakdown
       </h2>
       <ResponsiveContainer width="100%" height={400}>
-        <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+        <BarChart
+          data={chartData}
+          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+        >
           <XAxis dataKey="name" angle={-45} textAnchor="end" height={120} />
           <YAxis />
           <Tooltip />
@@ -271,12 +282,12 @@ const PlayerPerformanceChart = ({ data }) => {
   );
 };
 
-
-
-
 const PlayerStatisticsTable = ({ data }) => {
   const [expandedRows, setExpandedRows] = useState({});
-  const [sortConfig, setSortConfig] = useState({ key: 'player_name', direction: 'asc' });
+  const [sortConfig, setSortConfig] = useState({
+    key: "player_name",
+    direction: "asc",
+  });
 
   // Helper function to flatten nested data
   const getSortableData = (player) => ({
@@ -306,10 +317,12 @@ const PlayerStatisticsTable = ({ data }) => {
       const valA = getSortableData(a)[sortConfig.key];
       const valB = getSortableData(b)[sortConfig.key];
 
-      if (typeof valA === 'string') {
-        return valA.localeCompare(valB) * (sortConfig.direction === 'asc' ? 1 : -1);
-      } else if (typeof valA === 'number') {
-        return (valA - valB) * (sortConfig.direction === 'asc' ? 1 : -1);
+      if (typeof valA === "string") {
+        return (
+          valA.localeCompare(valB) * (sortConfig.direction === "asc" ? 1 : -1)
+        );
+      } else if (typeof valA === "number") {
+        return (valA - valB) * (sortConfig.direction === "asc" ? 1 : -1);
       }
       return 0; // Fallback for unsupported types
     });
@@ -324,7 +337,7 @@ const PlayerStatisticsTable = ({ data }) => {
   const requestSort = (key) => {
     setSortConfig((prev) => ({
       key,
-      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
 
@@ -357,7 +370,9 @@ const PlayerStatisticsTable = ({ data }) => {
               <th
                 key={header}
                 className="px-4 py-2 cursor-pointer text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                onClick={() => requestSort(header.replace(/\s+/g, '_').toLowerCase())}
+                onClick={() =>
+                  requestSort(header.replace(/\s+/g, "_").toLowerCase())
+                }
               >
                 {header}
               </th>
@@ -368,27 +383,50 @@ const PlayerStatisticsTable = ({ data }) => {
           {sortedData.map((player) => (
             <React.Fragment key={player.player_uid}>
               <tr className="hover:bg-gray-50 text-sm">
-                <td className="px-4 py-2 cursor-pointer" onClick={() => toggleRow(player.player_uid)}>
-                  {expandedRows[player.player_uid] ? '▼' : '▶'}
+                <td
+                  className="px-4 py-2 cursor-pointer"
+                  onClick={() => toggleRow(player.player_uid)}
+                >
+                  {expandedRows[player.player_uid] ? "▼" : "▶"}
                 </td>
                 <td className="px-4 py-2">{player.player_name}</td>
                 <td className="px-4 py-2">{player.player_team}</td>
                 <td className="px-4 py-2">{player.position}</td>
                 <td className="px-4 py-2">{player.salary}</td>
-                <td className="px-4 py-2">{player.formatData.overall.fantasy_points}</td>
-                <td className="px-4 py-2">{player.formatData.overall.Avg_value.toFixed(2)}</td>
-                <td className="px-4 py-2">{player.formatData.overall.no_of_stats}</td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.fantasy_points}
+                </td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.Avg_value.toFixed(2)}
+                </td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.no_of_stats}
+                </td>
                 <td className="px-4 py-2">{player.formatData.overall.runs}</td>
-                <td className="px-4 py-2">{player.formatData.overall.century}</td>
-                <td className="px-4 py-2">{player.formatData.overall.half_century}</td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.century}
+                </td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.half_century}
+                </td>
                 <td className="px-4 py-2">{player.formatData.overall.sixes}</td>
                 <td className="px-4 py-2">{player.formatData.overall.fours}</td>
-                <td className="px-4 py-2">{player.formatData.overall.wickets}</td>
-                <td className="px-4 py-2">{player.formatData.overall.bowled}</td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.wickets}
+                </td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.bowled}
+                </td>
                 <td className="px-4 py-2">{player.formatData.overall.lbw}</td>
-                <td className="px-4 py-2">{player.formatData.overall.catches}</td>
-                <td className="px-4 py-2">{player.formatData.overall.Avg_ER.toFixed(2)}</td>
-                <td className="px-4 py-2">{player.formatData.overall.Avg_SR.toFixed(2)}</td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.catches}
+                </td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.Avg_ER.toFixed(2)}
+                </td>
+                <td className="px-4 py-2">
+                  {player.formatData.overall.Avg_SR.toFixed(2)}
+                </td>
               </tr>
               {expandedRows[player.player_uid] && (
                 <tr>
@@ -430,8 +468,12 @@ const PlayerStatisticsTable = ({ data }) => {
                             <td className="px-4 py-1">{match.title}</td>
                             <td className="px-4 py-1">{match.season_date}</td>
                             <td className="px-4 py-1">{match.salary}</td>
-                            <td className="px-4 py-1">{match.fantasy_points}</td>
-                            <td className="px-4 py-1">{match.value.toFixed(2)}</td>
+                            <td className="px-4 py-1">
+                              {match.fantasy_points}
+                            </td>
+                            <td className="px-4 py-1">
+                              {match.value.toFixed(2)}
+                            </td>
                             <td className="px-4 py-1">{match.runs}</td>
                             <td className="px-4 py-1">{match.century}</td>
                             <td className="px-4 py-1">{match.half_century}</td>
@@ -462,11 +504,10 @@ const PlayerStatisticsTable = ({ data }) => {
   );
 };
 
-
 const PlayerDashboard = ({ player }) => {
   // Handle empty array or multiple match data entries
   const matchDataArray = player.formatData.individual || [];
-  
+
   // Aggregate stats if there are multiple matches
   const aggregatedStats = matchDataArray.reduce(
     (acc, data) => ({
@@ -475,13 +516,17 @@ const PlayerDashboard = ({ player }) => {
       ER: data.ER ? (acc.ER + data.ER) / (acc.matchCount + 1) : acc.ER, // Average ER
       lbw: acc.lbw + (data.lbw || 0),
       dotBalls: acc.dotBalls + (data.pts_breakdown?.bowling?.DOT_BALL || 0),
+      runs: acc.runs + (data.runs || 0), // Total runs
+      fours: acc.fours + (data.fours || 0), // Total fours
+      sixes: acc.sixes + (data.sixes || 0), // Total sixes
+      SR: data.SR ? (acc.SR + data.SR) / (acc.matchCount + 1) : acc.SR,
       matchCount: acc.matchCount + 1,
       pts_breakdown: {
         bowling: {
           ...acc.pts_breakdown.bowling,
-          DOT_BALL: acc.dotBalls + (data.pts_breakdown?.bowling?.DOT_BALL || 0)
-        }
-      }
+          DOT_BALL: acc.dotBalls + (data.pts_breakdown?.bowling?.DOT_BALL || 0),
+        },
+      },
     }),
     {
       fantasy_points: 0,
@@ -489,41 +534,71 @@ const PlayerDashboard = ({ player }) => {
       ER: 0,
       lbw: 0,
       dotBalls: 0,
+      runs: 0, // Initialize runs
+      fours: 0, // Initialize fours
+      sixes: 0, // Initialize sixes
+      SR: 0, // Initialize average strike rate
       matchCount: 0,
-      pts_breakdown: { bowling: { DOT_BALL: 0 } }
+      pts_breakdown: { bowling: { DOT_BALL: 0 } },
     }
   );
 
   const quickStats = [
-    { 
-      label: "Total Fantasy Points", 
-      value: aggregatedStats.fantasy_points, 
-      icon: "⭐" 
+    {
+      label: "Total Fantasy Points",
+      value: aggregatedStats.fantasy_points,
+      icon: "⭐",
     },
-    { 
-      label: "Salary", 
-      value: `₹${player.salary} Cr`, 
-      icon: "💰" 
+    {
+      label: "Salary",
+      value: `₹${player.salary} Cr`,
+      icon: "💰",
     },
-    { 
-      label: "Total Wickets", 
-      value: aggregatedStats.wickets, 
-      icon: "🏏" 
+    {
+      label: "Total Wickets",
+      value: aggregatedStats.wickets,
+      icon: "🏏",
     },
-    { 
-      label: "Avg Economy Rate", 
-      value: aggregatedStats.matchCount > 0 
-        ? aggregatedStats.ER.toFixed(2) 
-        : "N/A", 
-      icon: "📊" 
-    }
+    {
+      label: "Avg Economy Rate",
+      value:
+        aggregatedStats.matchCount > 0 ? aggregatedStats.ER.toFixed(2) : "N/A",
+      icon: "📊",
+    },
+    {
+      label: "Total Runs",
+      value: aggregatedStats.runs,
+      icon: "🏃",
+    },
+    {
+      label: "Avg Strike Rate",
+      value:
+        aggregatedStats.matchCount > 0
+          ? aggregatedStats.SR.toFixed(2)
+          : "N/A",
+      icon: "⚡",
+    },
+    {
+      label: "Fours",
+      value: aggregatedStats.fours,
+      icon: "4️⃣",
+    },
+    {
+      label: "Sixes",
+      value: aggregatedStats.sixes,
+      icon: "6️⃣",
+    },
   ];
 
   const bowlingStats = {
     er: aggregatedStats.ER,
     wickets: aggregatedStats.wickets,
     lbw: aggregatedStats.lbw,
-    dotBalls: aggregatedStats.dotBalls
+    dotBalls: aggregatedStats.dotBalls,
+    runs: aggregatedStats.runs, // Added runs
+    strike_rate: aggregatedStats.SR, // Added strike rate
+    fours: aggregatedStats.fours, // Added fours
+    sixes: aggregatedStats.sixes, // Added sixes
   };
 
   return (
@@ -568,12 +643,6 @@ const PlayerDashboard = ({ player }) => {
     </div>
   );
 };
-
-
-
-
-
-
 
 function DataTable() {
   const [data, setData] = useState(null);
@@ -651,10 +720,6 @@ function DataTable() {
           formatData: item[selectedFormat][selectedStatsType.toLowerCase()],
         }))
     : [];
-
-  console.log("Filtered Data:", filterData);
-
-  
 
   return (
     <main className="flex-grow container mx-auto px-4 py-6">
@@ -797,29 +862,22 @@ function DataTable() {
         </h6>
       </div>
 
+      {filterData && <PlayerPerformanceChart data={filterData} />}
 
-      {filterData && (
-        <PlayerPerformanceChart data={filterData} />
-      )}
-
-
-      
-      {filterData && (
-
-      <PlayerStatisticsTable data={filterData} />
-      )}
-
+      {filterData && <PlayerStatisticsTable data={filterData} />}
 
       {filterData && (
         <div className="container mx-auto p-4">
-        <h1 className="text-3xl font-bold mb-8">Player Performance Dashboard</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filterData.map((player) => (
-            <PlayerDashboard key={player.player_uid} player={player} />
-          ))}
+          <h1 className="text-3xl font-bold mb-8">
+            Player Performance Dashboard
+          </h1>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {filterData.map((player) => (
+              <PlayerDashboard key={player.player_uid} player={player} />
+            ))}
+          </div>
         </div>
-      </div>
-        )}
+      )}
     </main>
   );
 }
