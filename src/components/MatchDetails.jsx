@@ -405,8 +405,6 @@ function CarouselSL({ teams }) {
   );
 }
 
-
-
 function Glmatch({ fixtureDetails }) {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);

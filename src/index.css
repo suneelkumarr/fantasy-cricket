@@ -111,3 +111,95 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+
+/* Slider Base Styles */
+.slider {
+  -webkit-appearance: none; /* Remove default styling */
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0; /* Light gray track */
+  border-radius: 5px; /* Rounded corners */
+  outline: none; /* Remove focus outline */
+  opacity: 0.7; /* Slightly transparent */
+  transition: opacity 0.2s; /* Smooth transition for hover effect */
+}
+
+/* Hover Effect */
+.slider:hover {
+  opacity: 1;
+}
+
+/* Slider Thumb (Webkit Browsers) */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Remove default thumb */
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: #4f46e5; /* Indigo color */
+  border-radius: 50%; /* Circular thumb */
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out; /* Smooth scaling effect */
+}
+
+/* Slider Thumb Hover/Active Effect */
+.slider::-webkit-slider-thumb:hover,
+.slider::-webkit-slider-thumb:active {
+  transform: scale(1.2); /* Slightly enlarge thumb on interaction */
+}
+
+/* Slider Thumb (Firefox) */
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: #4f46e5; /* Indigo color */
+  border-radius: 50%; /* Circular thumb */
+  cursor: pointer;
+  border: none; /* Remove border */
+  transition: transform 0.2s ease-in-out; /* Smooth scaling effect */
+}
+
+/* Firefox Hover/Active Effect */
+.slider::-moz-range-thumb:hover,
+.slider::-moz-range-thumb:active {
+  transform: scale(1.2); /* Slightly enlarge thumb on interaction */
+}
+
+/* Firefox Track Styling */
+.slider::-moz-range-track {
+  background: #e2e8f0; /* Light gray track */
+  border-radius: 5px; /* Rounded corners */
+}
+
+
+.circle-checkbox {
+  display: inline-block;
+  position: relative;
+  cursor: pointer;
+}
+
+.circle-checkbox input {
+  opacity: 0;
+  position: absolute;
+}
+
+.circle-checkbox .circle {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  background-color: white;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.circle-checkbox input:checked + .circle {
+  background-color: #4caf50; /* Green when checked */
+  border-color: #4caf50;
+}
+
+.circle-checkbox input:not(:checked) + .circle {
+  background-color: white;
+  border-color: #ccc;
+}

@@ -1,6 +1,33 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import debounce from "lodash/debounce";
+
+// const debounce = (func, delay) => {
+//   let timeoutId;
+//   return function (...args) {
+//     clearTimeout(timeoutId);
+//     timeoutId = setTimeout(() => {
+//       func.apply(this, args);
+//     }, delay);
+//   }
+// };
+
+
+
+function getOverallChanges(original, updated) {
+  let overall = {};
+
+  for (const key in original) {
+      if (!updated[key]) {
+          overall[key] = original[key]; // Key is missing in updated object
+      } else if (original[key].min !== updated[key].min || original[key].max !== updated[key].max) {
+          overall[key] = updated[key]; // Store only changed values
+      }
+  }
+
+  return { "overall": Object.keys(overall).length ? overall : {} };
+}
 
 // Countdown function with IST offset (5 hours 30 minutes)
 const getCountdownTime = (scheduledDate) => {
@@ -238,7 +265,500 @@ const PlayerList = ({ players }) => {
   );
 };
 
-const TierBasedTeamFormation = ({matchInSights}) => {
+// const TierBasedTeamFormation = ({matchInSights, onTierPicksUpdate }) => {
+//   // State declarations
+//   const [selected, setSelected] = useState("default");
+//   const [tierData, setTierData] = useState([]);
+//   const [allPlayers, setAllPlayers] = useState([]);
+//   const [showModal, setShowModal] = useState(false);
+//   const [showModalCount, setShowModalCount] = useState(false);
+//   const [selectedTier, setSelectedTier] = useState(null);
+
+//   // For API calls
+//   const [fixtureInfo, setFixtureInfo] = useState(null);
+
+//   // Toggling states
+//   const [preferredPlayers, setPreferredPlayers] = useState({});
+//   const [excludedMap, setExcludedMap] = useState({});
+//   const [lockedMap, setLockedMap] = useState({});
+
+//   // Tier range (min / max) for each tier
+//   const [tierRanges, setTierRanges] = useState({});
+
+//   // Options for the pick range (MIN/MAX)
+//   const options = ["-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+//   // Helper: Update tier range (min and max) in a single object
+//   const updateTierRange = (tierKey, newMin, newMax) => {
+//     setTierRanges((prev) => ({
+//       ...prev,
+//       [tierKey]: { min: newMin, max: newMax },
+//     }));
+//   };
+
+//   // Toggle handlers
+//   const toggleLock = (uid) =>
+//     setLockedMap((prev) => ({ ...prev, [uid]: !prev[uid] }));
+//   const toggleExclude = (uid) =>
+//     setExcludedMap((prev) => ({ ...prev, [uid]: !prev[uid] }));
+//   const togglePreferred = (playerUid) =>
+//     setPreferredPlayers((prev) => ({
+//       ...prev,
+//       [playerUid]: !prev[playerUid],
+//     }));
+
+//   // API call to fetch players when "Choose Your Own" is selected
+//   const handleChooseOwn = async () => {
+//     setSelected("custom");
+//     try {
+//       const response = await axios.post(
+//         "https://plapi.perfectlineup.in/fantasy/stats/get_fixture_players",
+//         {
+//           season_game_uid: matchInSights?.season_game_uid,
+//           website_id: "1",
+//           sports_id: "7",
+//         },
+//         {
+//           headers: {
+//             sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+//             moduleaccess: "7",
+//             "Content-Type": "application/json",
+//           },
+//         }
+//       );
+
+//       const players = response.data?.data?.players || [];
+//       setAllPlayers(players);
+//       setFixtureInfo(response.data?.data?.fixture_info);
+
+//       const categorizePlayers = () => {
+//         // Sort helper
+//         const sortPlayers = (arr) =>
+//           arr.sort(
+//             (a, b) =>
+//               parseFloat(b.selected_percentage) -
+//               parseFloat(a.selected_percentage)
+//           );
+
+//         // Tiers based on selected_percentage
+//         const topTier = sortPlayers(
+//           players.filter((p) => parseFloat(p.selected_percentage) >= 66.66)
+//         ).length;
+//         const middleTier = sortPlayers(
+//           players.filter(
+//             (p) =>
+//               parseFloat(p.selected_percentage) >= 33.33 &&
+//               parseFloat(p.selected_percentage) < 66.66
+//           )
+//         ).length;
+//         const lowerTier = sortPlayers(
+//           players.filter((p) => parseFloat(p.selected_percentage) < 33.33)
+//         ).length;
+
+//         return [
+//           { name: "Top Tier", key: "top", players: topTier },
+//           { name: "Middle Tier", key: "middle", players: middleTier },
+//           { name: "Lower Tier", key: "lower", players: lowerTier },
+//         ];
+//       };
+
+//       setTierData(categorizePlayers());
+//     } catch (error) {
+//       console.error("API call failed", error);
+//     }
+//   };
+
+//   // Memoized function to get sorted players by tier
+//   const getPlayersByTier = useMemo(
+//     () => (tierKey) => {
+//       const sortPlayers = (arr) =>
+//         arr.sort(
+//           (a, b) =>
+//             parseFloat(b.selected_percentage) - parseFloat(a.selected_percentage)
+//         );
+
+//       if (!allPlayers?.length) return [];
+
+//       switch (tierKey) {
+//         case "top":
+//           return sortPlayers(
+//             allPlayers.filter((p) => parseFloat(p.selected_percentage) >= 66.66)
+//           );
+//         case "middle":
+//           return sortPlayers(
+//             allPlayers.filter(
+//               (p) =>
+//                 parseFloat(p.selected_percentage) >= 33.33 &&
+//                 parseFloat(p.selected_percentage) < 66.66
+//             )
+//           );
+//         case "lower":
+//           return sortPlayers(
+//             allPlayers.filter((p) => parseFloat(p.selected_percentage) < 33.33)
+//           );
+//         default:
+//           return [];
+//       }
+//     },
+//     [allPlayers]
+//   );
+
+//   // Extract array of IDs for each category
+//   const getActiveIds = (map) =>
+//     Object.keys(map).filter((uid) => map[uid] === true);
+
+//   const preferredPlayerIds = useMemo(() => getActiveIds(preferredPlayers), [
+//     preferredPlayers,
+//   ]);
+//   const lockedPlayerIds = useMemo(() => getActiveIds(lockedMap), [lockedMap]);
+//   const excludedPlayerIds = useMemo(() => getActiveIds(excludedMap), [
+//     excludedMap,
+//   ]);
+
+//   // Sync toggles (locked, preferred, excluded) with API
+//   useEffect(() => {
+//     // Avoid firing if no fixture or no toggled players
+//     if (!fixtureInfo) return;
+
+//     const payload = {
+//       season_game_uid: fixtureInfo.season_game_uid,
+//       website_id: 1,
+//       sports_id: "7",
+//       league_id: fixtureInfo.league_id,
+//       locked_players: lockedPlayerIds,
+//       preferred_players: preferredPlayerIds,
+//       excluded_players: excludedPlayerIds,
+//     };
+
+//     const savePreferredPlayers = async () => {
+//       try {
+//         const response = await axios.post(
+//           "https://plapi.perfectlineup.in/fantasy/stats/save_lock_execlude",
+//           payload,
+//           {
+//             headers: {
+//               sessionkey: "3cd0fb996816c37121c765f292dd3f78",
+//               moduleaccess: "7",
+//               "Content-Type": "application/json",
+//             },
+//           }
+//         );
+//         console.log("Preferred/excluded/locked updated:", response.data);
+//       } catch (err) {
+//         console.error("Error updating preferred/excluded/locked players:", err);
+//       }
+//     };
+
+//     savePreferredPlayers();
+//   }, [preferredPlayerIds, lockedPlayerIds, excludedPlayerIds, fixtureInfo]);
+
+
+//   const newObj = {};
+
+// if (tierRanges.hasOwnProperty("top")) {
+//     newObj["1"] = tierRanges.top;
+// }
+
+// if (tierRanges.hasOwnProperty("middle")) {
+//     newObj["2"] = tierRanges.middle;
+// }
+
+// if (tierRanges.hasOwnProperty("lower")) {
+//     newObj["3"] = tierRanges.lower;
+// }
+
+// // Call the callback whenever tierRanges updates or modal closes
+// useEffect(() => {
+//   if (onTierPicksUpdate) {
+//     onTierPicksUpdate(newObj);
+//   }
+// }, [tierRanges, onTierPicksUpdate, newObj]);
+
+//   return (
+//     <div className="container mx-auto p-4 max-w-7xl">
+//       <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6">
+//         4. Tier Based Team Formation
+//       </h2>
+
+//       {/* Option Cards */}
+//       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+//         <div
+//           onClick={() => setSelected("default")}
+//           className={`cursor-pointer border rounded-lg p-4 text-center transition-all duration-200 ${
+//             selected === "default"
+//               ? "border-blue-800 shadow-lg"
+//               : "border-gray-300 hover:border-blue-500"
+//           }`}
+//         >
+//           <p className="font-semibold text-blue-900 text-lg">Pick Top Player</p>
+//           <p className="text-sm text-gray-600">Default</p>
+//         </div>
+
+//         <div
+//           onClick={handleChooseOwn}
+//           className={`cursor-pointer border rounded-lg p-4 text-center transition-all duration-200 ${
+//             selected === "custom"
+//               ? "border-blue-800 shadow-lg"
+//               : "border-gray-300 hover:border-blue-500"
+//           }`}
+//         >
+//           <p className="font-semibold text-blue-900 text-lg">
+//             Choose Your Own
+//           </p>
+//         </div>
+//       </div>
+
+//       {/* Instruction */}
+//       {selected === "custom" && (
+//         <div className="bg-gray-100 p-4 rounded-lg mb-6 text-sm text-gray-700">
+//           Pick how many players you want from each tier based on selection
+//           percentage
+//         </div>
+//       )}
+
+//       {/* Tier List */}
+//       {selected === "custom" && tierData.length > 0 && (
+//         <div className="space-y-2">
+//           <div className="hidden md:grid grid-cols-12 text-sm font-semibold text-gray-500 px-2 mb-2">
+//             <span className="col-span-4">Tier</span>
+//             <span className="col-span-4 text-center">No. of Players</span>
+//             <span className="col-span-4 text-right">In Every Lineup</span>
+//           </div>
+//           {tierData.map((tier) => (
+//             <div
+//               key={tier.key}
+//               className="grid grid-cols-1 md:grid-cols-12 items-center border-b py-3 px-2 hover:bg-gray-50 transition-colors"
+//             >
+//               <div className="col-span-4 text-gray-800 font-medium md:mb-0 mb-2">
+//                 {tier.name}
+//               </div>
+//               <div
+//                 onClick={() => {
+//                   setSelectedTier(tier.key);
+//                   setShowModal(true);
+//                 }}
+//                 className="col-span-4 text-center text-gray-600 font-semibold cursor-pointer md:mb-0 mb-2"
+//               >
+//                 {tier.players} Players
+//               </div>
+//               <div
+//                 onClick={() => {
+//                   setSelectedTier(tier.key);
+//                   setShowModalCount(true);
+//                 }}
+//                 className="col-span-4 flex justify-end items-center cursor-pointer"
+//               >
+//                 <div className="border px-3 py-1 rounded-md flex items-center gap-2">
+//                   <span className="text-gray-500">
+//                     {tierRanges[tier.key]?.min && tierRanges[tier.key]?.max
+//                       ? `${tierRanges[tier.key].min} - ${
+//                           tierRanges[tier.key].max
+//                         }`
+//                       : "--"}
+//                   </span>
+//                   <img
+//                     src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_up_down_arrow.svg"
+//                     alt="toggle"
+//                     className="w-4 h-4"
+//                   />
+//                 </div>
+//               </div>
+//             </div>
+//           ))}
+//         </div>
+//       )}
+
+//       {/* Players Modal */}
+//       {showModal && selectedTier && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white w-full max-w-4xl rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+//             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+//               <div className="flex-1 text-center">
+//                 <h3 className="text-xl font-semibold">
+//                   Players in{" "}
+//                   {selectedTier.charAt(0).toUpperCase() +
+//                     selectedTier.slice(1)}{" "}
+//                   Tier
+//                 </h3>
+//                 {fixtureInfo && (
+//                   <p className="text-sm text-gray-500">
+//                     {fixtureInfo?.home_abbr} vs {fixtureInfo?.away_abbr}
+//                   </p>
+//                 )}
+//               </div>
+//               <button
+//                  onClick={() => {
+//                   setShowModal(false);
+//                   if (onTierPicksUpdate) {
+//                     onTierPicksUpdate(newObj); // Send newObj to parent when modal closes
+//                   }
+//                 }}
+//                 className="text-gray-500 hover:text-red-500 text-2xl"
+//               >
+//                 ×
+//               </button>
+//             </div>
+
+//             <div className="p-4 space-y-3">
+//               <div className="hidden md:grid grid-cols-12 items-center px-2 text-xs text-gray-500 font-medium border-b pb-2">
+//                 <div className="col-span-6">Player</div>
+//                 <div className="col-span-3 text-center">Sel By</div>
+//                 <div className="col-span-1 text-center">₹</div>
+//                 <div className="col-span-2 text-right"></div>
+//               </div>
+
+//               {getPlayersByTier(selectedTier).map((p) => (
+//                 <div
+//                   key={p.player_uid}
+//                   className="grid grid-cols-1 md:grid-cols-12 items-center px-2 py-3 rounded hover:bg-gray-50 border-b"
+//                 >
+//                   <div className="col-span-6 flex items-center gap-3 mb-2 md:mb-0">
+//                     <div
+//                       className={`w-1 h-10 rounded-sm ${
+//                         p.team_abbr === fixtureInfo?.home_abbr
+//                           ? "bg-blue-500"
+//                           : "bg-red-500"
+//                       }`}
+//                     />
+//                     <img
+//                       src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/${p.jersey}`}
+//                       alt="jersey"
+//                       className="w-8 h-8 object-contain"
+//                       onError={(e) => (e.target.src = "/fallback-jersey.png")}
+//                     />
+//                     <div>
+//                       <div className="font-medium text-sm">{p.nick_name}</div>
+//                       <div className="text-xs text-gray-500">
+//                         {p.child_position} • {p.team_abbr}
+//                       </div>
+//                     </div>
+//                   </div>
+
+//                   <div className="col-span-3 text-center text-sm font-semibold text-gray-700 mb-2 md:mb-0">
+//                     {parseFloat(p.selected_percentage).toFixed(2)}%
+//                   </div>
+
+//                   <div className="col-span-1 text-center text-sm font-medium mb-2 md:mb-0">
+//                     {p.salary}
+//                   </div>
+
+//                   <div className="col-span-2 flex justify-end gap-2">
+//                     <img
+//                       src={
+//                         preferredPlayers[p.player_uid]
+//                           ? "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer.svg"
+//                           : "https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic_prefer_inactive.svg"
+//                       }
+//                       alt="favorite toggle"
+//                       className="w-5 h-5 cursor-pointer hover:opacity-75"
+//                       onClick={() => togglePreferred(p.player_uid)}
+//                     />
+//                     <i
+//                       className={`cursor-pointer text-xl ${
+//                         lockedMap[p.player_uid]
+//                           ? "text-red-500"
+//                           : "text-gray-500"
+//                       }`}
+//                       onClick={() => toggleLock(p.player_uid)}
+//                     >
+//                       {lockedMap[p.player_uid] ? "🔒" : "🔓"}
+//                     </i>
+//                     <i
+//                       className={`text-xl cursor-pointer ${
+//                         excludedMap[p.player_uid]
+//                           ? "text-red-500"
+//                           : "text-gray-500"
+//                       }`}
+//                       onClick={() => toggleExclude(p.player_uid)}
+//                     >
+//                       ✖️
+//                     </i>
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Range Selection Modal */}
+//       {showModalCount && selectedTier && (
+//         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+//           <div className="bg-white w-full max-w-md rounded-lg shadow-xl max-h-[90vh] overflow-y-auto">
+//             <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10">
+//               <div className="flex-1 text-center">
+//                 <h3 className="text-xl font-semibold">Pick Range From Tier</h3>
+//                 {fixtureInfo && (
+//                   <p className="text-sm text-gray-500">
+//                     {fixtureInfo.home_abbr} vs {fixtureInfo.away_abbr}
+//                   </p>
+//                 )}
+//               </div>
+//               <button
+//                 onClick={() => setShowModalCount(false)}
+//                 className="text-gray-500 hover:text-red-500 text-2xl"
+//                     state={{
+//                              tier_pick: newObj
+//                             }}
+//               >
+//                 ×
+//               </button>
+//             </div>
+
+//             <div className="flex flex-col sm:flex-row gap-8 bg-gray-50 p-4 justify-center">
+//               {["MIN", "MAX"].map((label) => (
+//                 <div key={label} className="w-24 flex flex-col items-center">
+//                   <h2 className="text-gray-500 font-bold uppercase mb-4">
+//                     {label}
+//                   </h2>
+//                   <div className="flex flex-col space-y-2 w-full max-h-64 overflow-y-auto">
+//                     {options.map((option) => (
+//                       <button
+//                         key={option}
+//                         type="button"
+//                         className={`px-4 py-2 text-black rounded w-full transition-colors ${
+//                           (label === "MIN"
+//                             ? tierRanges[selectedTier]?.min
+//                             : tierRanges[selectedTier]?.max) === option
+//                             ? "bg-blue-100 text-blue-800"
+//                             : "hover:bg-gray-100"
+//                         }`}
+//                         onClick={() => {
+//                           if (label === "MIN") {
+//                             updateTierRange(
+//                               selectedTier,
+//                               option,
+//                               tierRanges[selectedTier]?.max
+//                             );
+//                           } else {
+//                             updateTierRange(
+//                               selectedTier,
+//                               tierRanges[selectedTier]?.min,
+//                               option
+//                             );
+//                           }
+//                         }}
+//                       >
+//                         {option}
+//                       </button>
+//                     ))}
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+//         </div>
+//       )}
+//     </div>
+//   );
+// };
+
+
+// Wrap the component with React.memo to prevent re-renders when props don't change
+
+
+
+const TierBasedTeamFormation = React.memo(({ matchInSights, onTierPicksUpdate }) => {
   // State declarations
   const [selected, setSelected] = useState("default");
   const [tierData, setTierData] = useState([]);
@@ -246,42 +766,62 @@ const TierBasedTeamFormation = ({matchInSights}) => {
   const [showModal, setShowModal] = useState(false);
   const [showModalCount, setShowModalCount] = useState(false);
   const [selectedTier, setSelectedTier] = useState(null);
-
-  // For API calls
   const [fixtureInfo, setFixtureInfo] = useState(null);
-
-  // Toggling states
   const [preferredPlayers, setPreferredPlayers] = useState({});
   const [excludedMap, setExcludedMap] = useState({});
   const [lockedMap, setLockedMap] = useState({});
-
-  // Tier range (min / max) for each tier
   const [tierRanges, setTierRanges] = useState({});
 
-  // Options for the pick range (MIN/MAX)
   const options = ["-", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
-  // Helper: Update tier range (min and max) in a single object
-  const updateTierRange = (tierKey, newMin, newMax) => {
+  // Memoized function to get sorted players by tier
+  const getPlayersByTier = useMemo(() => {
+    return (tierKey) => {
+      const sortPlayers = (arr) =>
+        arr.sort((a, b) => parseFloat(b.selected_percentage) - parseFloat(a.selected_percentage));
+
+      if (!allPlayers?.length) return [];
+
+      switch (tierKey) {
+        case "top":
+          return sortPlayers(allPlayers.filter((p) => parseFloat(p.selected_percentage) >= 66.66));
+        case "middle":
+          return sortPlayers(
+            allPlayers.filter(
+              (p) => parseFloat(p.selected_percentage) >= 33.33 && parseFloat(p.selected_percentage) < 66.66
+            )
+          );
+        case "lower":
+          return sortPlayers(allPlayers.filter((p) => parseFloat(p.selected_percentage) < 33.33));
+        default:
+          return [];
+      }
+    };
+  }, [allPlayers]);
+
+  // Stabilize toggle handlers with useCallback
+  const toggleLock = useCallback((uid) => {
+    setLockedMap((prev) => ({ ...prev, [uid]: !prev[uid] }));
+  }, []);
+
+  const toggleExclude = useCallback((uid) => {
+    setExcludedMap((prev) => ({ ...prev, [uid]: !prev[uid] }));
+  }, []);
+
+  const togglePreferred = useCallback((playerUid) => {
+    setPreferredPlayers((prev) => ({ ...prev, [playerUid]: !prev[playerUid] }));
+  }, []);
+
+  // Stabilize updateTierRange with useCallback
+  const updateTierRange = useCallback((tierKey, newMin, newMax) => {
     setTierRanges((prev) => ({
       ...prev,
       [tierKey]: { min: newMin, max: newMax },
     }));
-  };
+  }, []);
 
-  // Toggle handlers
-  const toggleLock = (uid) =>
-    setLockedMap((prev) => ({ ...prev, [uid]: !prev[uid] }));
-  const toggleExclude = (uid) =>
-    setExcludedMap((prev) => ({ ...prev, [uid]: !prev[uid] }));
-  const togglePreferred = (playerUid) =>
-    setPreferredPlayers((prev) => ({
-      ...prev,
-      [playerUid]: !prev[playerUid],
-    }));
-
-  // API call to fetch players when "Choose Your Own" is selected
-  const handleChooseOwn = async () => {
+  // Stabilize handleChooseOwn with useCallback
+  const handleChooseOwn = useCallback(async () => {
     setSelected("custom");
     try {
       const response = await axios.post(
@@ -305,28 +845,16 @@ const TierBasedTeamFormation = ({matchInSights}) => {
       setFixtureInfo(response.data?.data?.fixture_info);
 
       const categorizePlayers = () => {
-        // Sort helper
         const sortPlayers = (arr) =>
-          arr.sort(
-            (a, b) =>
-              parseFloat(b.selected_percentage) -
-              parseFloat(a.selected_percentage)
-          );
+          arr.sort((a, b) => parseFloat(b.selected_percentage) - parseFloat(a.selected_percentage));
 
-        // Tiers based on selected_percentage
-        const topTier = sortPlayers(
-          players.filter((p) => parseFloat(p.selected_percentage) >= 66.66)
-        ).length;
+        const topTier = sortPlayers(players.filter((p) => parseFloat(p.selected_percentage) >= 66.66)).length;
         const middleTier = sortPlayers(
           players.filter(
-            (p) =>
-              parseFloat(p.selected_percentage) >= 33.33 &&
-              parseFloat(p.selected_percentage) < 66.66
+            (p) => parseFloat(p.selected_percentage) >= 33.33 && parseFloat(p.selected_percentage) < 66.66
           )
         ).length;
-        const lowerTier = sortPlayers(
-          players.filter((p) => parseFloat(p.selected_percentage) < 33.33)
-        ).length;
+        const lowerTier = sortPlayers(players.filter((p) => parseFloat(p.selected_percentage) < 33.33)).length;
 
         return [
           { name: "Top Tier", key: "top", players: topTier },
@@ -339,58 +867,16 @@ const TierBasedTeamFormation = ({matchInSights}) => {
     } catch (error) {
       console.error("API call failed", error);
     }
-  };
+  }, [matchInSights]);
 
-  // Memoized function to get sorted players by tier
-  const getPlayersByTier = useMemo(
-    () => (tierKey) => {
-      const sortPlayers = (arr) =>
-        arr.sort(
-          (a, b) =>
-            parseFloat(b.selected_percentage) - parseFloat(a.selected_percentage)
-        );
+  // Memoize active IDs extraction
+  const getActiveIds = useCallback((map) => Object.keys(map).filter((uid) => map[uid] === true), []);
+  const preferredPlayerIds = useMemo(() => getActiveIds(preferredPlayers), [preferredPlayers, getActiveIds]);
+  const lockedPlayerIds = useMemo(() => getActiveIds(lockedMap), [lockedMap, getActiveIds]);
+  const excludedPlayerIds = useMemo(() => getActiveIds(excludedMap), [excludedMap, getActiveIds]);
 
-      if (!allPlayers?.length) return [];
-
-      switch (tierKey) {
-        case "top":
-          return sortPlayers(
-            allPlayers.filter((p) => parseFloat(p.selected_percentage) >= 66.66)
-          );
-        case "middle":
-          return sortPlayers(
-            allPlayers.filter(
-              (p) =>
-                parseFloat(p.selected_percentage) >= 33.33 &&
-                parseFloat(p.selected_percentage) < 66.66
-            )
-          );
-        case "lower":
-          return sortPlayers(
-            allPlayers.filter((p) => parseFloat(p.selected_percentage) < 33.33)
-          );
-        default:
-          return [];
-      }
-    },
-    [allPlayers]
-  );
-
-  // Extract array of IDs for each category
-  const getActiveIds = (map) =>
-    Object.keys(map).filter((uid) => map[uid] === true);
-
-  const preferredPlayerIds = useMemo(() => getActiveIds(preferredPlayers), [
-    preferredPlayers,
-  ]);
-  const lockedPlayerIds = useMemo(() => getActiveIds(lockedMap), [lockedMap]);
-  const excludedPlayerIds = useMemo(() => getActiveIds(excludedMap), [
-    excludedMap,
-  ]);
-
-  // Sync toggles (locked, preferred, excluded) with API
+  // Debounced API sync for toggles
   useEffect(() => {
-    // Avoid firing if no fixture or no toggled players
     if (!fixtureInfo) return;
 
     const payload = {
@@ -403,7 +889,7 @@ const TierBasedTeamFormation = ({matchInSights}) => {
       excluded_players: excludedPlayerIds,
     };
 
-    const savePreferredPlayers = async () => {
+    const savePreferredPlayers = debounce(async () => {
       try {
         const response = await axios.post(
           "https://plapi.perfectlineup.in/fantasy/stats/save_lock_execlude",
@@ -420,11 +906,29 @@ const TierBasedTeamFormation = ({matchInSights}) => {
       } catch (err) {
         console.error("Error updating preferred/excluded/locked players:", err);
       }
-    };
+    }, 500); // Debounce for 500ms
 
     savePreferredPlayers();
+    return () => savePreferredPlayers.cancel(); // Cleanup debounce on unmount
   }, [preferredPlayerIds, lockedPlayerIds, excludedPlayerIds, fixtureInfo]);
 
+  // Memoize newObj to prevent reference changes
+  const newObj = useMemo(() => {
+    const obj = {};
+    if (tierRanges.hasOwnProperty("top")) obj["1"] = tierRanges.top;
+    if (tierRanges.hasOwnProperty("middle")) obj["2"] = tierRanges.middle;
+    if (tierRanges.hasOwnProperty("lower")) obj["3"] = tierRanges.lower;
+    return obj;
+  }, [tierRanges]);
+
+  // Trigger onTierPicksUpdate only when newObj changes
+  useEffect(() => {
+    if (onTierPicksUpdate) {
+      onTierPicksUpdate(newObj);
+    }
+  }, [newObj, onTierPicksUpdate]);
+
+  // JSX remains largely the same, so I'll omit it for brevity
   return (
     <div className="container mx-auto p-4 max-w-7xl">
       <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-6">
@@ -538,7 +1042,9 @@ const TierBasedTeamFormation = ({matchInSights}) => {
                 )}
               </div>
               <button
-                onClick={() => setShowModal(false)}
+                 onClick={() => {
+                  setShowModal(false);
+                }}
                 className="text-gray-500 hover:text-red-500 text-2xl"
               >
                 ×
@@ -643,6 +1149,9 @@ const TierBasedTeamFormation = ({matchInSights}) => {
               <button
                 onClick={() => setShowModalCount(false)}
                 className="text-gray-500 hover:text-red-500 text-2xl"
+                    state={{
+                             tier_pick: newObj
+                            }}
               >
                 ×
               </button>
@@ -694,9 +1203,10 @@ const TierBasedTeamFormation = ({matchInSights}) => {
       )}
     </div>
   );
-};
+});
 
-const TeamFormation = ({ matchInSights }) => {
+
+const TeamFormation = ({ matchInSights, onPositionCheckUpdate }) => {
   // State for managing the active tab (Overall or Team Specific)
   const [activeTab, setActiveTab] = useState("Overall");
 
@@ -778,6 +1288,29 @@ const TeamFormation = ({ matchInSights }) => {
     });
   };
 
+
+
+  // Memoize newObj to prevent reference changes
+  const newObj = useMemo(() => {
+
+    if(activeTab === "Overall"){
+      const originalObject = {
+        "WK": { "min": 1, "max": 8 },
+        "BAT": { "min": 1, "max": 8 },
+        "AR": { "min": 1, "max": 8 },
+        "BOW": { "min": 1, "max": 8 }
+    };
+    const obj = getOverallChanges(originalObject, ranges)
+    return obj;
+  }
+  }, [ranges]);
+
+    // Trigger onTierPicksUpdate only when newObj changes
+    useEffect(() => {
+      if (onPositionCheckUpdate) {
+        onPositionCheckUpdate(newObj);
+      }
+    }, [newObj, onPositionCheckUpdate]);
   // Array of positions for rendering
   const positions = ["WK", "BAT", "AR", "BOW"];
 
@@ -1040,11 +1573,10 @@ const TeamFormation = ({ matchInSights }) => {
 };
 
 
-const TeamSelectionPreferences = ({matchInSights}) => {
+const TeamSelectionPreferences = ({matchInSights, onTempCheckUpdate}) => {
     // Define team names with fallbacks
   const home = matchInSights?.home || "HomeTeam";
   const away = matchInSights?.away || "AwayTeam";
-  console.log(matchInSights)
   // State for selected team preference
   const [selectedTeam, setSelectedTeam] = useState("NONE");
 
@@ -1074,6 +1606,37 @@ const TeamSelectionPreferences = ({matchInSights}) => {
       return prev;
     });
   };
+
+  // Memoize newObj to prevent reference changes
+  const newObj = useMemo(() => {
+    let obj
+    if(selectedTeam === home) {
+      const homeTeamId = matchInSights.home_uid
+  
+       obj = {
+        [homeTeamId]:playerRange
+      }
+  
+    }else if(selectedTeam === away){
+      const awayTeamId = matchInSights.away_uid
+       obj = {
+        [awayTeamId]:playerRange
+      }
+      
+    }else{
+       obj = []
+    }
+
+    return obj;
+  }
+  , [playerRange, matchInSights]);
+
+    // Trigger onTierPicksUpdate only when newObj changes
+    useEffect(() => {
+      if (onTempCheckUpdate) {
+        onTempCheckUpdate(newObj);
+      }
+    }, [newObj, onTempCheckUpdate]);
 
   return (
     <div className="container mx-auto p-4">
@@ -1245,9 +1808,33 @@ const TeamSelectionPreferences = ({matchInSights}) => {
 
 
 
-const TeamVariation = () => {
+const TeamVariation = ({onTeamFlagCheckUpdate}) => {
   // State to track the selected strategy, initialized to "Different Teams"
   const [selectedStrategy, setSelectedStrategy] = useState('Different Teams');
+
+
+
+    // Memoize newObj to prevent reference changes
+    const newObj = useMemo(() => {
+        let newValue
+        if(selectedStrategy === "Different Teams"){
+          newValue =""
+        }else{
+          newValue ="1"
+        }
+
+        return newValue
+    }
+    , [selectedStrategy]);
+  
+      // Trigger onTierPicksUpdate only when newObj changes
+      useEffect(() => {
+        if (onTeamFlagCheckUpdate) {
+          onTeamFlagCheckUpdate(newObj);
+        }
+      }, [newObj, onTeamFlagCheckUpdate]);
+
+  
 
   return (
     <div className="container mx-auto p-4">
@@ -1298,25 +1885,28 @@ const TeamVariation = () => {
   );
 };
 
+
 const CreateTeamSetting = () => {
+  // State declarations
   const [data, setData] = useState(null);
   const [sportData, setSportData] = useState(null);
   const [playerData, setPlayerData] = useState(null);
   const [loadingCount, setLoadingCount] = useState(0);
   const [error, setError] = useState(null);
-
   const [activeIndex, setActiveIndex] = useState(4);
   const [teamsCount, setTeamsCount] = useState(0);
   const [distribution, setDistribution] = useState(1);
   const [cvcPool, setCvcPool] = useState(3);
-  useEffect(() => {
-    if (distribution === 1) {
-      setCvcPool(3); // force 'High' when 'Equal' is selected
-    }
-  }, [distribution]);
+  const [tierPicks, setTierPicks] = useState({});
+  const [positionCheck, setPositionCheck] = useState({});
+  const [tempPlayers, setTempPlayers] = useState({})
+  const [SimilarTeamFlag, setSimilarTeamFlag] = useState("");
 
+  const HIGH_CVC_POOL = 3;
+
+  // Location and memoized derived data
   const location = useLocation();
-  const matchInSights = location.state?.matchInSights;
+  const matchInSights = useMemo(() => location.state?.matchInSights, [location.state]);
   const playerInfo = location.state?.playerData;
   const settingData = location.state?.setting;
 
@@ -1325,6 +1915,25 @@ const CreateTeamSetting = () => {
     [matchInSights]
   );
 
+  // Memoized callback functions
+  const handleTierPicksUpdate = useCallback((newTierPicks) => {
+    setTierPicks(newTierPicks);
+  }, []); // Empty dependency array since it only uses setTierPicks
+
+  const handlePositionCheckUpdate = useCallback((newPositionCheck) => {
+    setPositionCheck(newPositionCheck);
+  }, []); // Empty dependency array since it only uses setPositionCheck
+
+
+  const handleTempCheckUpdate = useCallback((newPositionCheck) => {
+    setTempPlayers(newPositionCheck);
+  }, []); // Empty dependency array since it only uses setPositionCheck
+
+  const handleTeamFlagCheckUpdate = useCallback((newPositionCheck) => {
+    setSimilarTeamFlag(newPositionCheck);
+  }, []); // Empty dependency array since it only uses setPositionCheck
+
+  // Effect to sync state with settingData
   useEffect(() => {
     if (settingData) {
       setTeamsCount(settingData.teamsCount);
@@ -1334,22 +1943,19 @@ const CreateTeamSetting = () => {
     }
   }, [settingData]);
 
-  const setting = {
-    teamsCount: teamsCount,
-    seasonGameUid: seasonGameUid,
-    excluded_players: [],
-    activeIndex: activeIndex,
-    fetch_excluded: 1,
-    distribution: distribution,
-    cvcPool: cvcPool,
-  };
+  // Effect to enforce cvcPool based on distribution
+  useEffect(() => {
+    if (distribution === 1) {
+      setCvcPool(HIGH_CVC_POOL);
+    }
+  }, [distribution]);
 
+  // Utility functions
   const getCurrentTimestampInIST = () => Date.now() + 5.5 * 3600000;
-
   const incrementLoading = () => setLoadingCount((prev) => prev + 1);
-  const decrementLoading = () =>
-    setLoadingCount((prev) => Math.max(prev - 1, 0));
+  const decrementLoading = () => setLoadingCount((prev) => Math.max(prev - 1, 0));
 
+  // API fetch functions
   const fetchMatchData = useCallback(async () => {
     if (!seasonGameUid) return;
     incrementLoading();
@@ -1359,7 +1965,9 @@ const CreateTeamSetting = () => {
       );
       setData(res.data);
     } catch (err) {
-      setError(err.message || "Error fetching match data.");
+      if (!axios.isCancel(err)) {
+        setError(err.message || "Error fetching match data.");
+      }
     } finally {
       decrementLoading();
     }
@@ -1373,7 +1981,9 @@ const CreateTeamSetting = () => {
       );
       setSportData(res.data);
     } catch (err) {
-      setError(err.message || "Error fetching sport master data.");
+      if (!axios.isCancel(err)) {
+        setError(err.message || "Error fetching sport master data.");
+      }
     } finally {
       decrementLoading();
     }
@@ -1381,7 +1991,6 @@ const CreateTeamSetting = () => {
 
   const fetchCvcData = useCallback(async () => {
     if (!teamsCount || !seasonGameUid) return;
-
     incrementLoading();
     try {
       const res = await axios.post(
@@ -1405,71 +2014,74 @@ const CreateTeamSetting = () => {
       );
       setPlayerData(res.data.data);
     } catch (err) {
-      setError(err.message || "Error fetching CVC allocations.");
+      if (!axios.isCancel(err)) {
+        setError(err.message || "Error fetching CVC allocations.");
+      }
     } finally {
       decrementLoading();
     }
   }, [teamsCount, seasonGameUid, activeIndex, distribution, cvcPool]);
 
+  const debouncedFetchCvcData = useMemo(
+    () => debounce(fetchCvcData, 500),
+    [fetchCvcData]
+  );
+
+  // Fetch initial data
   useEffect(() => {
     fetchMatchData();
     fetchSportData();
   }, [fetchMatchData, fetchSportData]);
 
+  // Fetch CVC data with debounce
   useEffect(() => {
-    fetchCvcData();
-  }, [fetchCvcData]);
+    debouncedFetchCvcData();
+    return () => debouncedFetchCvcData.cancel();
+  }, [debouncedFetchCvcData]);
 
+  // Memoized computed values
   const tooltip = useMemo(
     () => sportData?.cvc_settings?.tooltip_msg?.[distribution]?.[cvcPool] || "",
     [sportData, distribution, cvcPool]
   );
-
   const distributionData = useMemo(() => sportData?.cvc_settings, [sportData]);
+  const getCvCPlayerIds = useMemo(
+    () =>
+      playerInfo
+        ? playerInfo.map((player) => player.player_uid)
+        : playerData?.map((player) => player.player_uid),
+    [playerInfo, playerData]
+  );
+  const selectedPlayerCvC = useMemo(() => playerInfo || playerData, [playerInfo, playerData]);
 
-  if (!matchInSights) {
-    return (
-      <div className="text-center text-gray-600">No match data provided.</div>
-    );
-  }
-
-  if (loadingCount > 0) {
-    return <div className="text-center text-gray-600">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
-  }
-
-  if (!data || !sportData) {
-    return <div className="text-center text-gray-600">No data available.</div>;
-  }
+  // Early returns
+  if (!matchInSights) return <div className="text-center text-gray-600">No match data provided.</div>;
+  if (loadingCount > 0) return <div className="text-center text-gray-600">Loading...</div>;
+  if (error) return <div className="text-red-500 text-center">Error: {error}</div>;
+  if (!data || !sportData) return <div className="text-center text-gray-600">No data available.</div>;
 
   return (
     <main className="flex-grow container mx-auto px-4 sm:px-6 py-6">
       <header className="w-full">
         <FixtureHeader matchInSights={matchInSights} />
       </header>
-
       <section className="bg-white text-gray-800 mt-2">
         <div className="w-full max-w-5xl mx-auto">
-          {/* Step 1: Team logic options */}
-          <div className="mb-6 flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-800 mr-100">
+          <div className="mb-6 flex items-center space-x-2 text-base sm:text-lg font-semibold text-gray-800">
             <span className="text-indigo-600">1.</span>
             <span>Create teams on the basis of</span>
           </div>
-          {/* Selection Options Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {selectionOptions.map((option) => (
               <div
                 key={option.lineup_logic}
                 onClick={() => setActiveIndex(option.lineup_logic)}
                 className={`flex flex-col items-center justify-center rounded-md border cursor-pointer p-4 transition-colors text-center
-                ${
-                  activeIndex === option.lineup_logic
-                    ? "bg-indigo-600 text-white border-indigo-600"
-                    : "border-gray-200 hover:border-indigo-300"
-                }`}
+                  ${
+                    activeIndex === option.lineup_logic
+                      ? "bg-indigo-600 text-white border-indigo-600"
+                      : "border-gray-200 hover:border-indigo-300"
+                  }`}
                 title={option.tooltip}
               >
                 <span className="text-sm font-medium">{option.label}</span>
@@ -1477,15 +2089,11 @@ const CreateTeamSetting = () => {
             ))}
           </div>
 
-          {/* Step 2: Number of teams */}
           <div className="mt-10">
-            <h2 className="text-base sm:text-lg font-semibold">
-              2. NUMBER OF TEAMS
-            </h2>
+            <h2 className="text-base sm:text-lg font-semibold">2. NUMBER OF TEAMS</h2>
             <p className="text-sm sm:text-base text-gray-500">
               Select the number of lineups you would like to generate
             </p>
-
             <div className="flex flex-col sm:flex-row items-center gap-3 mt-4">
               <input
                 type="range"
@@ -1495,37 +2103,24 @@ const CreateTeamSetting = () => {
                 onChange={(e) => setTeamsCount(Number(e.target.value))}
                 className="w-full sm:flex-1 accent-indigo-600"
               />
-              <span className="text-sm font-medium text-gray-700">
-                {teamsCount}
-              </span>
+              <span className="text-sm font-medium text-gray-700">{teamsCount}</span>
             </div>
           </div>
 
-          {/* Step 3: CVC Settings */}
           <div className="mt-10 border rounded-lg p-4">
-            <div className="font-semibold text-gray-800 mb-1">
-              3. C & VC SETTINGS
-            </div>
-            <div className="text-sm text-gray-600 mb-4">
-              What's your strategy?
-            </div>
-
-            {/* Headers */}
+            <div className="font-semibold text-gray-800 mb-1">3. C & VC SETTINGS</div>
+            <div className="text-sm text-gray-600 mb-4">What's your strategy?</div>
             <div className="flex flex-row justify-between mb-3 font-medium text-gray-700 text-sm">
               <span>Distribution</span>
               <span className="pr-2">C/VC Pool</span>
             </div>
-
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-              {/* Distribution Options */}
               <div className="flex-1 border rounded-md overflow-hidden">
                 {distributionData?.distribution?.options.map((opt) => (
                   <div
                     key={opt.key_value}
                     className={`p-3 text-center cursor-pointer text-sm font-medium ${
-                      Number(distribution) === Number(opt.key_value)
-                        ? "bg-gray-200"
-                        : "bg-gray-100"
+                      Number(distribution) === Number(opt.key_value) ? "bg-gray-200" : "bg-gray-100"
                     }`}
                     onClick={() => setDistribution(opt.key_value)}
                   >
@@ -1533,16 +2128,12 @@ const CreateTeamSetting = () => {
                   </div>
                 ))}
               </div>
-
-              {/* CVC Pool Options */}
               <div className="flex-1 border rounded-md p-3">
                 {distributionData?.cvc_pool?.options.map((opt) => (
                   <div
                     key={opt.key_value}
                     className={`flex items-center mb-2 cursor-pointer text-sm ${
-                      Number(cvcPool) === Number(opt.key_value)
-                        ? "font-semibold text-gray-800"
-                        : "text-gray-600"
+                      Number(cvcPool) === Number(opt.key_value) ? "font-semibold text-gray-800" : "text-gray-600"
                     }`}
                     onClick={() => setCvcPool(opt.key_value)}
                   >
@@ -1556,8 +2147,6 @@ const CreateTeamSetting = () => {
                 ))}
               </div>
             </div>
-
-            {/* Tooltip / Info Text */}
             {tooltip && (
               <div className="mt-4 text-sm text-center text-gray-600 italic bg-gray-100 p-2 rounded-md">
                 {tooltip}
@@ -1565,22 +2154,31 @@ const CreateTeamSetting = () => {
             )}
           </div>
 
-          {/* Player Data List */}
           {playerData && (
             <div className="mt-6">
-              <PlayerList players={playerInfo || playerData} />
+              <PlayerList players={selectedPlayerCvC} />
             </div>
           )}
 
-          {/* Customize Button */}
           <Link
             to={`/create-team-cvc/Cricket/${seasonGameUid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}/overall`}
-            state={{ matchInSights, setting, playerData }}
+            state={{
+              matchInSights,
+              setting: {
+                teamsCount,
+                seasonGameUid,
+                excluded_players: [],
+                activeIndex,
+                fetch_excluded: 1,
+                distribution,
+                cvcPool,
+              },
+              playerData: selectedPlayerCvC,
+              selected_cvc: getCvCPlayerIds,
+            }}
           >
             <div className="mt-6 bg-gray-100 rounded-lg p-4 cursor-pointer hover:bg-gray-200 transition duration-300 flex justify-between items-center shadow-md">
-              <span className="text-base sm:text-lg font-bold text-gray-700">
-                Customize
-              </span>
+              <span className="text-base sm:text-lg font-bold text-gray-700">Customize</span>
               <div className="flex space-x-1">
                 <i className="w-4 h-4 bg-gray-500 rounded-full" />
                 <i className="w-4 h-4 bg-gray-500 rounded-full" />
@@ -1589,28 +2187,43 @@ const CreateTeamSetting = () => {
             </div>
           </Link>
 
-          {/* Player Data List */}
-          <TierBasedTeamFormation matchInSights={matchInSights}/>
+          <TierBasedTeamFormation
+            matchInSights={matchInSights}
+            onTierPicksUpdate={handleTierPicksUpdate}
+          />
+          <TeamFormation
+            matchInSights={matchInSights}
+            onPositionCheckUpdate={handlePositionCheckUpdate}
+          />
+          <TeamSelectionPreferences matchInSights={matchInSights} onTempCheckUpdate={handleTempCheckUpdate} />
+          <TeamVariation onTeamFlagCheckUpdate={handleTeamFlagCheckUpdate} />
 
-          {/* Pick Team Formation */}
-          <TeamFormation matchInSights={matchInSights}/>
-          {/* Team Selection Preferences */}
-          <TeamSelectionPreferences matchInSights={matchInSights} />
-          {/* TEAM VARIATION */}
-          <TeamVariation />
-
-          {/* Next Button */}
           <div className="mt-10 flex w-full max-w-4xl">
-            <button
-              onClick={() => alert("Next clicked!")}
+            <Link
+              to={`/create-team/Cricket/${matchInSights.season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
+              state={{
+                matchInSights,
+                lineup_logic: activeIndex,
+                number_of_lineups: teamsCount,
+                lmh_method: distribution,
+                variation_code: cvcPool,
+                tier_picks: tierPicks,
+                position_check:positionCheck,
+                team_player:tempPlayers,
+                similar_team_flag:SimilarTeamFlag,
+                selected_cvc:getCvCPlayerIds
+              }}
               className="bg-[#212341] text-white px-4 py-2 rounded font-semibold w-full max-w-full sm:max-w-screen-lg mx-auto justify-center flex items-center"
             >
               NEXT
-            </button>
+            </Link>
           </div>
         </div>
       </section>
     </main>
   );
 };
+
+
+
 export default CreateTeamSetting;

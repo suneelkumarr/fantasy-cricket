@@ -25,6 +25,9 @@ import CreateTeamSetting from './components/CreateTeamSetting.jsx'
 import CreateTeamCvc from './components/CreateTeamCvc.jsx'
 import PlayerBattle from './components/PlayerBattle.jsx'
 import PlayerComparation from './components/PlayerComparation.jsx'
+import CreateTeam from './components/CreateTeam.jsx'
+import CreateTeamChart from './components/CreateTeamChart.jsx'
+import ExportTeam from './components/ExportTeam.jsx'
 // import FantasyBreakDown from './components/FantasyBreakDown.jsx'
 // <Route path="/player/:playerId/:fullName/:matchId/form" element={<FantasyBreakDown />} />
 
@@ -64,6 +67,9 @@ function App() {
         <Route path="/create-team-cvc/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId/overall" element={<CreateTeamCvc />} />
         <Route path="/player-battle/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<PlayerBattle />} />
         <Route path="/popular-comparisons/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<PlayerComparation />} />
+        <Route path="/create-team/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<CreateTeam />} />
+        <Route path="/create-team-chart/:sport/:matchId/:homeTeam_vs_awayTeam/:eventId" element={<CreateTeamChart />} />
+        <Route path="/export-team" element={<ExportTeam />} />
       </Routes>
     </Router>
   )
