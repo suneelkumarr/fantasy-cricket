@@ -1,167 +1,165 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useLocation, Link } from "react-router-dom";
 import axios from "axios";
 import { AiOutlineMenuFold } from "react-icons/ai";
-import HighchartsReact from "highcharts-react-official";
+import { motion, AnimatePresence } from "framer-motion";
 import Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 
-// import { AiOutlineStar } from "react-icons/ai"; // Unused import
-// import Getlocation from './Getlocation.jsx'; // Unused import
-// Example data structure
+// Constants
+const FLAG_BASE_URL = "https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/";
+const JERSEY_BASE_URL = "https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/";
+const positionMap = { WK: "Wicket Keeper", BAT: "Batsman", BOW: "Bowler", AR: "All Rounder" };
+const positionOrder = ["Wicket Keeper", "Batsman", "All Rounder", "Bowler"];
 
+// Utility Functions
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleString("en-GB", {
+    day: "numeric",
+    month: "long",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+};
+
+// Skeleton Loader Component
+const SkeletonLoader = () => (
+  <div className="w-full space-y-4 p-4">
+    {[...Array(3)].map((_, i) => (
+      <div key={i} className="h-24 bg-gray-200 rounded-lg animate-pulse"></div>
+    ))}
+  </div>
+);
+
+// Reusable Tab Button Component
+const TabButton = ({ label, isActive, onClick }) => (
+  <motion.button
+    onClick={onClick}
+    className={`px-3 py-2 text-xs sm:text-sm md:text-base font-medium rounded-full transition-all duration-300 ${
+      isActive
+        ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg"
+        : "bg-transparent text-gray-600 hover:bg-gray-200"
+    }`}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+  >
+    {label}
+  </motion.button>
+);
+
+// TopPlayers Component
 const TopPlayers = ({ matchData, stats_details }) => {
   const [activeTab, setActiveTab] = useState("FANTASY POINTS");
 
-  // Derive sorted data based on activeTab (to avoid mutating the original array, use spread)
-  const data =
-    activeTab === "FANTASY POINTS"
-      ? [...stats_details.player_list].sort(
-          (a, b) => b.fantasy_points - a.fantasy_points
-        )
-      : [...stats_details.player_list].sort((a, b) => b.value - a.value);
+  const data = useMemo(() => {
+    return activeTab === "FANTASY POINTS"
+      ? [...stats_details.player_list].sort((a, b) => Number(b.fantasy_points) - Number(a.fantasy_points))
+      : [...stats_details.player_list].sort((a, b) => Number(b.value) - Number(a.value));
+  }, [activeTab, stats_details.player_list]);
 
-  // Extract the team abbreviations from matchData (adjust if named differently)
-  const homeTeamAbbr = matchData?.home;
-  const awayTeamAbbr = matchData?.away;
-
-  // Compute max for the currently selected tab
-  const maxFantasyPoints = Math.max(
-    ...data.map((player) => Number(player.fantasy_points))
-  );
-  const maxValue = Math.max(...data.map((player) => Number(player.value)));
+  const maxFantasyPoints = Math.max(...data.map((player) => Number(player.fantasy_points)), 0);
+  const maxValue = Math.max(...data.map((player) => Number(player.value)), 0);
 
   return (
-    <div className="top-player-container bg-white p-4 shadow-md rounded-md w-full max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="header text-xl font-bold mb-2 text-gray-700">
-        Top Player
+    <motion.div
+      className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl xl:max-w-5xl mx-auto p-4 sm:p-6 bg-white rounded-xl shadow-lg mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-4">Top Players</h2>
+      <div className="flex flex-col sm:flex-row items-center bg-gray-100 p-1 rounded-full mb-6 space-y-2 sm:space-y-0">
+        <TabButton
+          label="FANTASY POINTS"
+          isActive={activeTab === "FANTASY POINTS"}
+          onClick={() => setActiveTab("FANTASY POINTS")}
+        />
+        <TabButton
+          label="Value"
+          isActive={activeTab === "Value"}
+          onClick={() => setActiveTab("Value")}
+        />
       </div>
-
-      {/* Tabs */}
-      <div className="child-tab-container border-b border-gray-300 mb-4">
-        <div className="child-tab-list flex">
-          <button
-            onClick={() => setActiveTab("FANTASY POINTS")}
-            className={`child-tab-item px-4 py-2 text-sm font-medium mr-2 ${
-              activeTab === "FANTASY POINTS"
-                ? "bg-blue-500 text-white rounded-t"
-                : "bg-gray-100 text-gray-600"
-            }`}
-          >
-            FANTASY POINTS
-          </button>
-          <button
-            onClick={() => setActiveTab("Value")}
-            className={`child-tab-item px-4 py-2 text-sm font-medium ${
-              activeTab === "Value"
-                ? "bg-blue-500 text-white rounded-t"
-                : "bg-gray-100 text-gray-600"
-            }`}
-          >
-            Value
-          </button>
-        </div>
-      </div>
-
-      {/* Favorite info */}
-      <div className="fav-info-container flex items-center gap-2 mb-4">
+      <div className="flex items-center gap-2 mb-4">
         <img
           src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic-mark-fav-enable.png"
-          alt="fav-icon"
+          alt="Favorite Icon"
           className="w-4 h-4"
+          loading="lazy"
         />
-        <span className="text-sm text-gray-600">
-          Mark a player as favourite and be reminded next time they play
+        <span className="text-xs sm:text-sm text-gray-600">
+          Mark a player as favorite and be reminded next time they play
         </span>
       </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+        >
+          {data.map((player) => {
+            const currentValue = activeTab === "FANTASY POINTS" ? Number(player.fantasy_points) : Number(player.value);
+            const maxForTab = activeTab === "FANTASY POINTS" ? maxFantasyPoints : maxValue;
+            const progressWidth = maxForTab ? (currentValue / maxForTab) * 100 : 0;
+            const progressColor = player.team_abbr === matchData?.home ? "from-green-400 to-green-600" : "from-blue-400 to-blue-600";
 
-      {/* Player list */}
-      <div className="player-category-item">
-        {data.map((player) => {
-          // Current value based on which tab is active
-          const currentValue =
-            activeTab === "FANTASY POINTS"
-              ? Number(player.fantasy_points)
-              : Number(player.value);
-
-          // Decide the max for the current tab
-          const maxForTab =
-            activeTab === "FANTASY POINTS" ? maxFantasyPoints : maxValue;
-
-          // Calculate progress width
-          const progressWidth = (currentValue / maxForTab) * 100;
-
-          // Decide color based on team
-          const progressColor =
-            player.team_abbr === homeTeamAbbr
-              ? "rgba(244, 118, 76, .25)"
-              : "rgba(80, 193, 232, .25)";
-
-          return (
-            <div
-              key={player.player_uid}
-              className="matchreport-players-list border-b border-gray-100 py-3 last:border-b-0"
-            >
-              <div className="player-graph-team flex items-center justify-between">
-                {/* Left: Player Info */}
-                <div className="player-info-box w-1/4">
-                  <div className="name-style font-medium text-gray-700">
+            return (
+              <motion.div
+                key={player.player_uid}
+                className="flex flex-col sm:flex-row items-center p-4 bg-gray-50 rounded-lg shadow-md hover:shadow-lg transition-all border border-gray-100 mb-3"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="w-full sm:w-40 flex-shrink-0 mb-2 sm:mb-0">
+                  <div className="font-medium text-gray-800 truncate max-w-[80px] sm:max-w-[100px] text-sm sm:text-base">
                     {player.display_name}
                   </div>
-                  <div className="position-style text-sm text-gray-500 flex items-center">
+                  <div className="text-xs sm:text-sm text-gray-500 flex items-center">
                     {player.player_position}
-                    <div className="dot w-2 h-2 rounded-full bg-gray-400 mx-1"></div>
+                    <span className="mx-1 w-1 h-1 bg-gray-400 rounded-full inline-block"></span>
                     {player.team_abbr}
                   </div>
                 </div>
-
-                {/* Middle: Progress bar & points/value */}
-                <div className="flex flex-1 items-center px-4">
-                  <div className="relative w-full h-8 bg-gray-200 rounded overflow-hidden">
-                    <div
-                      className="absolute left-0 top-0 h-full"
-                      style={{
-                        width: `${progressWidth}%`,
-                        backgroundColor: progressColor,
-                      }}
+                <div className="flex items-center flex-grow px-0 sm:px-4 w-full sm:w-auto">
+                  <div className="relative w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <motion.div
+                      className={`h-full bg-gradient-to-r ${progressColor}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progressWidth}%` }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
                     />
                   </div>
-                  <div className="points-style text-sm text-gray-700 ml-2 font-medium">
+                  <span className="ml-3 text-xs sm:text-sm font-medium text-gray-700 w-24 text-right">
                     {currentValue}
-                  </div>
+                  </span>
                 </div>
-
-                {/* Right: Favorite icon */}
-                <div className="player-fav-box ml-2">
-                  <div className="fav-unfav-item w-4 h-4">
-                    <img
-                      src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic-mark-fav-disable.png"
-                      alt="fav-icon"
-                    />
-                  </div>
+                <div className="ml-0 sm:ml-2 w-5 flex-shrink-0 mt-2 sm:mt-0">
+                  <img
+                    src="https://plineup-prod.blr1.digitaloceanspaces.com/assets/img/ic-mark-fav-disable.png"
+                    alt="Favorite Icon"
+                    className="w-5 h-5"
+                    loading="lazy"
+                  />
                 </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
-function DreamTeamChart({ matchData, stats_details }) {
+// DreamTeamChart Component
+const DreamTeamChart = ({ matchData, stats_details }) => {
   const { BOW, AR, BAT, WK } = stats_details.position_breakdown;
-  // Example chart options:
   const chartOptions = {
-    chart: {
-      type: "pie",
-    },
-    title: {
-      text: "",
-    },
-    tooltip: {
-      pointFormat: "{series.name}: <b>{point.y}</b>",
-    },
+    chart: { type: "pie", backgroundColor: "transparent" },
+    title: { text: "" },
+    tooltip: { pointFormat: "{series.name}: <b>{point.y}</b>" },
     plotOptions: {
       pie: {
         allowPointSelect: true,
@@ -169,6 +167,7 @@ function DreamTeamChart({ matchData, stats_details }) {
         dataLabels: {
           enabled: true,
           format: "<b>{point.name}</b>: {point.y}",
+          style: { fontSize: "12px", color: "#333" },
         },
       },
     },
@@ -177,93 +176,63 @@ function DreamTeamChart({ matchData, stats_details }) {
         name: "Points",
         colorByPoint: true,
         data: [
-          {
-            name: "WK",
-            y: WK,
-            color: "rgb(208,236,246)",
-          },
-          {
-            name: "BAT",
-            y: BAT,
-            color: "rgb(249,218,207)",
-          },
-          {
-            name: "AR",
-            y: AR,
-            color: "rgb(95,165,145)",
-          },
-          {
-            name: "BOWL",
-            y: BOW,
-            color: "rgb(89,130,237)",
-          },
+          { name: "WK", y: WK, color: "#4CAF50" },
+          { name: "BAT", y: BAT, color: "#FF5722" },
+          { name: "AR", y: AR, color: "#2196F3" },
+          { name: "BOWL", y: BOW, color: "#FFC107" },
         ],
       },
     ],
   };
 
-  // 2. We'll store the data array separately for easy use below
   const chartData = chartOptions.series[0].data;
 
   return (
-    <div className="max-w-4xl mx-auto border rounded-md bg-white p-4 shadow-sm">
-      {/* Header */}
-      <h2 className="text-base font-bold mb-1">
-        Fantasy points contribution by position in Dream Team
+    <motion.div
+      className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl xl:max-w-5xl mx-auto p-4 sm:p-6 bg-white rounded-xl shadow-lg mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 text-center mb-2">
+        Fantasy Points by Position in Dream Team
       </h2>
-      <p className="text-sm text-gray-600 mb-4">
-        Breakdown of fantasy points based on positions for players appearing in
-        the Dream Team of the last played at this venue
+      <p className="text-xs sm:text-sm text-gray-600 text-center mb-4">
+        Breakdown of fantasy points based on positions for players in the Dream Team
       </p>
-
-      {/* Chart Container */}
       <div className="overflow-hidden mb-6">
         <HighchartsReact highcharts={Highcharts} options={chartOptions} />
       </div>
-
-      {/* 3. Data Below the Chart */}
       <div className="space-y-2">
-        <div className="font-semibold text-gray-800">Points Breakdown</div>
-
-        {/* For a quick card/list style: */}
-        <div className="flex flex-col gap-2">
+        <h3 className="font-semibold text-gray-800 text-center">Points Breakdown</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {chartData.map((item) => (
-            <div
+            <motion.div
               key={item.name}
-              className="flex items-center justify-between rounded-md bg-gray-50 p-2 shadow-sm"
+              className="flex items-center justify-between rounded-lg bg-gray-50 p-3 shadow-sm"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
             >
               <div className="flex items-center space-x-2">
-                {/* Color Swatch */}
-                <div
-                  className="h-4 w-4 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-                {/* Position Name */}
-                <span className="font-medium text-gray-700">{item.name}</span>
+                <div className="h-4 w-4 rounded-full" style={{ backgroundColor: item.color }} />
+                <span className="font-medium text-gray-700 text-xs sm:text-sm">{item.name}</span>
               </div>
-              {/* Points */}
-              <div className="text-gray-800 font-semibold">{item.y} pts</div>
-            </div>
+              <span className="text-gray-800 font-semibold text-xs sm:text-sm">{item.y} pts</span>
+            </motion.div>
           ))}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
+};
 
-function DreamTeamChartfildeing({ matchData, stats_details }) {
+// DreamTeamChartFielding Component
+const DreamTeamChartFielding = ({ matchData, stats_details }) => {
   const { BATTING, BOWLING, FIELDING } = stats_details.category_breakdown;
-  // Example chart options:
   const chartOptions = {
-    chart: {
-      type: "pie",
-    },
-    title: {
-      text: "",
-    },
-    tooltip: {
-      pointFormat: "{series.name}: <b>{point.y}</b>",
-    },
+    chart: { type: "pie", backgroundColor: "transparent" },
+    title: { text: "" },
+    tooltip: { pointFormat: "{series.name}: <b>{point.y}</b>" },
     plotOptions: {
       pie: {
         allowPointSelect: true,
@@ -271,6 +240,7 @@ function DreamTeamChartfildeing({ matchData, stats_details }) {
         dataLabels: {
           enabled: true,
           format: "<b>{point.name}</b>: {point.y}",
+          style: { fontSize: "12px", color: "#333" },
         },
       },
     },
@@ -279,212 +249,139 @@ function DreamTeamChartfildeing({ matchData, stats_details }) {
         name: "Points",
         colorByPoint: true,
         data: [
-          {
-            name: "BATTING",
-            y: BATTING,
-            color: "rgb(208,236,246)",
-          },
-          {
-            name: "BOWLING",
-            y: BOWLING,
-            color: "rgb(249,218,207)",
-          },
-          {
-            name: "FIELDING",
-            y: FIELDING,
-            color: "rgb(95,165,145)",
-          },
+          { name: "BATTING", y: BATTING, color: "#4CAF50" },
+          { name: "BOWLING", y: BOWLING, color: "#FF5722" },
+          { name: "FIELDING", y: FIELDING, color: "#2196F3" },
         ],
       },
     ],
   };
 
-  // 2. We'll store the data array separately for easy use below
   const chartData = chartOptions.series[0].data;
 
   return (
-    <div className="max-w-4xl mx-auto border rounded-md bg-white p-4 shadow-sm">
-      {/* Header */}
-      <h2 className="text-base font-bold mb-1">Dream Team Points Breakdown</h2>
-      <p className="text-sm text-gray-600 mb-4">
-        Breakdown of fantasy points into Batting, Bowling and Fielding points
-        for players appearing in the Dream Teams of the last played at this
-        venue
+    <motion.div
+      className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl xl:max-w-5xl mx-auto p-4 sm:p-6 bg-white rounded-xl shadow-lg mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 text-center mb-2">
+        Dream Team Points Breakdown
+      </h2>
+      <p className="text-xs sm:text-sm text-gray-600 text-center mb-4">
+        Breakdown of fantasy points into Batting, Bowling, and Fielding
       </p>
-
-      {/* Chart Container */}
       <div className="overflow-hidden mb-6">
         <HighchartsReact highcharts={Highcharts} options={chartOptions} />
       </div>
-
-      {/* 3. Data Below the Chart */}
       <div className="space-y-2">
-        <div className="font-semibold text-gray-800">Points Breakdown</div>
-
-        {/* For a quick card/list style: */}
-        <div className="flex flex-col gap-2">
+        <h3 className="font-semibold text-gray-800 text-center">Points Breakdown</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {chartData.map((item) => (
-            <div
+            <motion.div
               key={item.name}
-              className="flex items-center justify-between rounded-md bg-gray-50 p-2 shadow-sm"
+              className="flex items-center justify-between rounded-lg bg-gray-50 p-3 shadow-sm"
+              whileHover={{ scale: 1.05 }}
+              transition={{ duration: 0.3 }}
             >
               <div className="flex items-center space-x-2">
-                {/* Color Swatch */}
-                <div
-                  className="h-4 w-4 rounded-full"
-                  style={{ backgroundColor: item.color }}
-                />
-                {/* Position Name */}
-                <span className="font-medium text-gray-700">{item.name}</span>
+                <div className="h-4 w-4 rounded-full" style={{ backgroundColor: item.color }} />
+                <span className="font-medium text-gray-700 text-xs sm:text-sm">{item.name}</span>
               </div>
-              {/* Points */}
-              <div className="text-gray-800 font-semibold">{item.y} pts</div>
-            </div>
+              <span className="text-gray-800 font-semibold text-xs sm:text-sm">{item.y} pts</span>
+            </motion.div>
           ))}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
+};
 
-function DreamTeam({ matchData, stats_details }) {
-  // 1) Filter players in perfect lineup
-  const dreamTeamPlayers = stats_details.player_list.filter(
-    (player) => player.in_perfect_lineup === "1"
-  );
-
-  // 2) State to toggle between Salary and Fantasy Points
+// DreamTeam Component
+const DreamTeam = ({ matchData, stats_details }) => {
+  const dreamTeamPlayers = stats_details.player_list.filter((player) => player.in_perfect_lineup === "1");
   const [activeTab, setActiveTab] = useState("FantasyPoints");
 
-  // 3) Sum total based on the active tab
   const totalValue = dreamTeamPlayers.reduce((sum, player) => {
-    const value =
-      activeTab === "FantasyPoints"
-        ? Number(player.pl_fantasy_points ?? 0)
-        : Number(player.player_salary ?? 0);
+    const value = activeTab === "FantasyPoints" ? Number(player.pl_fantasy_points ?? 0) : Number(player.player_salary ?? 0);
     return sum + value;
   }, 0);
 
-  // 4) Map short position codes to user-friendly labels
-  const positionMap = {
-    WK: "Wicket Keeper",
-    BAT: "Batsman",
-    BOW: "Bowler",
-    AR: "All Rounder",
-  };
-
-  // 5) Group players by position
   const groupedByPosition = dreamTeamPlayers.reduce((acc, player) => {
-    const positionLabel =
-      positionMap[player.player_position] || player.player_position;
+    const positionLabel = positionMap[player.player_position] || player.player_position;
     if (!acc[positionLabel]) acc[positionLabel] = [];
     acc[positionLabel].push(player);
     return acc;
   }, {});
 
-  // 6) Define the order we want to display positions in
-  const positionOrder = ["Wicket Keeper", "Batsman", "All Rounder", "Bowler"];
-
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      {/* Title & Points */}
+    <motion.div
+      className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl xl:max-w-5xl mx-auto p-4 sm:p-6 mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold">Dream Team</h1>
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800">Dream Team</h1>
         <div className="flex items-center">
-          <div className="text-2xl font-semibold mr-2">{totalValue}</div>
-          <div className="text-sm leading-tight">
-            Dream team
-            <br />
-            {activeTab === "FantasyPoints" ? "points" : "salary"}
+          <div className="text-lg sm:text-xl md:text-2xl font-semibold text-gray-800 mr-2">{totalValue}</div>
+          <div className="text-xs sm:text-sm text-gray-600 leading-tight">
+            Dream Team<br />
+            {activeTab === "FantasyPoints" ? "Points" : "Salary"}
           </div>
         </div>
       </div>
-
-      {/* Tabs: Salary / Fantasy Points */}
-      <div className="mb-4 flex space-x-4 border-b border-gray-200 pb-2">
-        <button
-          className={
-            activeTab === "Salary"
-              ? "border-b-2 border-blue-600 text-blue-600 font-medium"
-              : "text-gray-500 hover:text-gray-700"
-          }
+      <div className="flex flex-col sm:flex-row items-center bg-gray-100 p-1 rounded-full mb-6 space-y-2 sm:space-y-0">
+        <TabButton
+          label="Salary"
+          isActive={activeTab === "Salary"}
           onClick={() => setActiveTab("Salary")}
-        >
-          Salary
-        </button>
-        <button
-          className={
-            activeTab === "FantasyPoints"
-              ? "border-b-2 border-blue-600 text-blue-600 font-medium"
-              : "text-gray-500 hover:text-gray-700"
-          }
+        />
+        <TabButton
+          label="Fantasy Points"
+          isActive={activeTab === "FantasyPoints"}
           onClick={() => setActiveTab("FantasyPoints")}
-        >
-          Fantasy Points
-        </button>
+        />
       </div>
-
-      {/* Stadium background container */}
       <div
-        className="
-        relative 
-        bg-no-repeat bg-cover bg-center 
-        rounded-md p-4
-        min-h-[400px]
-      "
+        className="relative bg-no-repeat bg-cover bg-center rounded-xl p-4 sm:p-6 min-h-[400px]"
         style={{
-          backgroundImage:
-            'url("https://www.perfectlineup.in/static/media/ic_cricket_stadium.7d551e28.png")',
+          backgroundImage: 'url("https://www.perfectlineup.in/static/media/ic_cricket_stadium.7d551e28.png")',
         }}
       >
-        {/* Positions & Players */}
         <div className="relative space-y-8">
           {positionOrder.map((posLabel) => {
             const players = groupedByPosition[posLabel];
-            if (!players) return null; // No players for this position
+            if (!players) return null;
             return (
               <div key={posLabel} className="mb-6">
-                <div className="font-bold text-lg mb-2">{posLabel}</div>
-
-                {/* Display players in a responsive grid */}
+                <div className="font-bold text-lg sm:text-xl text-white mb-2">{posLabel}</div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   {players.map((player) => (
-                    <div
+                    <motion.div
                       key={player.stats_player_id}
-                      className="flex items-center bg-white/80 p-2 rounded shadow"
+                      className="flex items-center bg-white/90 p-3 rounded-lg shadow-md"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ duration: 0.3 }}
                     >
-                      {/* Jersey image */}
                       <img
-                        className="w-8 h-8 mr-2"
-                        alt={player.display_name + " Jersey"}
-                        src={
-                          "https://plineup-prod.blr1.digitaloceanspaces.com/upload/jersey/" +
-                          player.jersey
-                        }
+                        className="w-8 h-8 mr-2 rounded-full"
+                        alt={`${player.display_name} Jersey`}
+                        src={`${JERSEY_BASE_URL}${player.jersey}`}
+                        loading="lazy"
                       />
-
-                      {/* Captain or Vice-captain */}
                       {player.C === 1 && (
-                        <span className="text-red-600 font-semibold mr-2">
-                          C
-                        </span>
+                        <span className="text-red-600 font-semibold mr-2">C</span>
                       )}
                       {player.C === 2 && (
-                        <span className="text-blue-600 font-semibold mr-2">
-                          VC
-                        </span>
+                        <span className="text-blue-600 font-semibold mr-2">VC</span>
                       )}
-
-                      {/* Player Name */}
-                      <div className="flex-1">{player.display_name}</div>
-
-                      {/* Value (Fantasy Points or player_salary) based on activeTab */}
-                      <div className="font-bold">
-                        {activeTab === "FantasyPoints"
-                          ? player.pl_fantasy_points
-                          : player.player_salary}
+                      <div className="flex-1 text-sm sm:text-base text-gray-800">{player.display_name}</div>
+                      <div className="font-bold text-sm sm:text-base text-gray-800">
+                        {activeTab === "FantasyPoints" ? player.pl_fantasy_points : player.player_salary}
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -492,22 +389,18 @@ function DreamTeam({ matchData, stats_details }) {
           })}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
-}
+};
 
+// Overview Component
 const Overview = ({ matchData }) => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch Data
   const fetchData = useCallback(async () => {
-    if (!matchData?.season_game_uid || !matchData?.league_id) {
-      console.warn("Missing required matchData properties.");
-      return;
-    }
-
+    if (!matchData?.season_game_uid || !matchData?.league_id) return;
     setLoading(true);
     try {
       const response = await axios.post(
@@ -525,160 +418,130 @@ const Overview = ({ matchData }) => {
           },
         }
       );
-
-      console.log("API Response:", response.data);
       setData(response.data.data);
     } catch (error) {
-      console.error("API Error:", error);
       setError(error.message || "An error occurred while fetching data.");
     } finally {
       setLoading(false);
     }
   }, [matchData?.season_game_uid, matchData?.league_id]);
 
-  // Run Fetch on Dependency Change
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Handle Loading & Error States
-  if (loading) {
-    return <div className="text-center text-gray-600">Loading...</div>;
-  }
-  if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
-  }
-  if (!data) {
-    return <div className="text-center text-gray-600">No data available.</div>;
-  }
+  if (loading) return <SkeletonLoader />;
+  if (error) return <div className="text-red-500 text-center">Error: {error}</div>;
+  if (!data) return <div className="text-center text-gray-600">No data available.</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {data && data.stats && (
-        <DreamTeam
-          matchData={data.fixture_details}
-          stats_details={data.stats}
-        />
-      )}
-
-      {data && data.stats && (
-        <DreamTeamChart
-          matchData={data.fixture_details}
-          stats_details={data.stats}
-        />
-      )}
-
-      {data && data.stats && (
-        <DreamTeamChartfildeing
-          matchData={data.fixture_details}
-          stats_details={data.stats}
-        />
-      )}
-
-      {data && data.stats && (
-        <TopPlayers
-          matchData={data.fixture_details}
-          stats_details={data.stats}
-        />
-      )}
+    <div className="w-full">
+      <DreamTeam matchData={data.fixture_details} stats_details={data.stats} />
+      <DreamTeamChart matchData={data.fixture_details} stats_details={data.stats} />
+      <DreamTeamChartFielding matchData={data.fixture_details} stats_details={data.stats} />
+      <TopPlayers matchData={data.fixture_details} stats_details={data.stats} />
     </div>
   );
 };
 
-const Table = ({ headers = [], rows = [] }) => {
-  return (
-    <div className="overflow-x-auto mb-4">
-      <table className="w-full border-collapse bg-white text-sm">
-        <thead className="bg-gray-100">
-          <tr>
-            {headers.map((header, idx) => (
-              <th
-                key={idx}
-                className="p-2 font-semibold text-gray-700 border-b text-left"
-              >
-                {header}
-              </th>
+// Table Component
+const Table = ({ headers = [], rows = [] }) => (
+  <div className="overflow-x-auto mb-4">
+    <table className="w-full border-collapse bg-white text-xs sm:text-sm">
+      <thead className="bg-gray-100">
+        <tr>
+          {headers.map((header, idx) => (
+            <th key={idx} className="p-2 font-semibold text-gray-700 border-b text-left">
+              {header}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row, rIdx) => (
+          <tr key={rIdx} className="border-b hover:bg-gray-50">
+            {row.map((col, cIdx) => (
+              <td key={cIdx} className="p-2 text-gray-700">
+                {col}
+              </td>
             ))}
           </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, rIdx) => (
-            <tr key={rIdx} className="border-b hover:bg-gray-50">
-              {row.map((col, cIdx) => (
-                <td key={cIdx} className="p-2 text-gray-700">
-                  {col}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
 
+// Accordion Component
 const Accordion = ({ title, score, overs, children }) => {
   const [isOpen, setIsOpen] = useState(true);
 
   return (
-    <div className="border rounded bg-white mb-4">
-      {/* Accordion Header */}
+    <motion.div
+      className="border rounded-lg bg-white mb-4 shadow-md"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div
-        className="flex items-center justify-between p-4 cursor-pointer"
+        className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className="font-semibold text-gray-800">{title}</span>
+        <span className="font-semibold text-gray-800 text-sm sm:text-base">{title}</span>
         <div className="flex items-center space-x-4">
-          {/* Score Box */}
-          <div className="text-gray-700">
-            {score} <span className="text-sm text-gray-500">[{overs}]</span>
+          <div className="text-gray-700 text-sm sm:text-base">
+            {score} <span className="text-xs sm:text-sm text-gray-500">[{overs}]</span>
           </div>
-          {/* Arrow/Chevron icon (rotate when open) */}
-          <i
-            className={`transform transition-transform ${
-              isOpen ? "rotate-180" : ""
-            }`}
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
           >
-            ▼
-          </i>
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </motion.div>
         </div>
       </div>
-
-      {/* Accordion Body */}
-      {isOpen && <div className="p-4 border-t">{children}</div>}
-    </div>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="p-4 border-t overflow-hidden"
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
+// Scorecard Component
 const Scorecard = ({ matchData, stats_details }) => {
-  // Parse the top-level match info
   const parsedScoreData = JSON.parse(matchData.score_data);
   const inningKey = "1";
-
-  // Extract IDs and names
   const homeTeamId = matchData.home_uid;
   const awayTeamId = matchData.away_uid;
   const homeTeamName = matchData.home_team_name;
   const awayTeamName = matchData.away_team_name;
 
-  // Score data (home vs. away)
   const homeScore = parsedScoreData[inningKey].home_team_score;
   const homeWickets = parsedScoreData[inningKey].home_wickets;
   const homeOvers = parsedScoreData[inningKey].home_overs;
-
   const awayScore = parsedScoreData[inningKey].away_team_score;
   const awayWickets = parsedScoreData[inningKey].away_wickets;
   const awayOvers = parsedScoreData[inningKey].away_overs;
 
-  // Detailed stats
   const homeTeamData = stats_details.scoring_stats[inningKey][homeTeamId];
   const awayTeamData = stats_details.scoring_stats[inningKey][awayTeamId];
 
-  // Helper to build table rows
   const buildBattingRows = (batters = []) =>
     batters.map((player) => [
       <div key={player.player_uid}>
-        <span className="block font-medium">{player.player_name}</span>
+        <span className="block font-medium text-gray-800">{player.player_name}</span>
         <span className="block text-xs text-gray-500">{player.out_string}</span>
       </div>,
       player.batting_runs,
@@ -691,13 +554,10 @@ const Scorecard = ({ matchData, stats_details }) => {
   const buildBowlingRows = (bowlers = []) =>
     bowlers.map((player) => {
       const oversFloat = parseFloat(player.bowling_overs || 0);
-      const economy =
-        oversFloat > 0
-          ? (Number(player.bowling_runs_given) / oversFloat).toFixed(2)
-          : "0.00";
+      const economy = oversFloat > 0 ? (Number(player.bowling_runs_given) / oversFloat).toFixed(2) : "0.00";
       return [
         <div key={player.player_uid}>
-          <span className="block font-medium">{player.player_name}</span>
+          <span className="block font-medium text-gray-800">{player.player_name}</span>
         </div>,
         player.bowling_overs,
         player.bowling_maiden_overs,
@@ -710,351 +570,227 @@ const Scorecard = ({ matchData, stats_details }) => {
   const buildFoWRows = (fows = []) =>
     fows.map((item, idx) => [
       <div key={idx}>
-        <span className="block font-medium">{item.name}</span>
+        <span className="block font-medium text-gray-800">{item.name}</span>
         <span className="block text-xs text-gray-500">{item.how_out}</span>
       </div>,
       item.score_at_dismissal,
       item.overs_at_dismissal,
     ]);
 
-  // Headers & Rows for HOME
   const homeBattingHeaders = ["Batsman", "R", "B", "4s", "6s", "SR"];
   const homeBowlingHeaders = ["Bowler", "O", "M", "R", "W", "ECON"];
   const homeFoWHeaders = ["Fall of Wicket", "Score", "Over"];
-
   const homeBattingRows = buildBattingRows(homeTeamData?.batting);
   const homeBowlingRows = buildBowlingRows(homeTeamData?.bowling);
   const homeFoWRows = buildFoWRows(homeTeamData?.fall_of_wickets);
 
-  // Headers & Rows for AWAY
   const awayBattingHeaders = ["Batsman", "R", "B", "4s", "6s", "SR"];
   const awayBowlingHeaders = ["Bowler", "O", "M", "R", "W", "ECON"];
   const awayFoWHeaders = ["Fall of Wicket", "Score", "Over"];
-
   const awayBattingRows = buildBattingRows(awayTeamData?.batting);
   const awayBowlingRows = buildBowlingRows(awayTeamData?.bowling);
   const awayFoWRows = buildFoWRows(awayTeamData?.fall_of_wickets);
 
   return (
-    <div className="bg-gray-100 min-h-screen py-8 px-4">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* HOME TEAM ACCORDION */}
-        <Accordion
-          title={homeTeamName}
-          score={`${homeScore}/${homeWickets}`}
-          overs={`${homeOvers} Ovs`}
-        >
-          <Table headers={homeBattingHeaders} rows={homeBattingRows} />
-          <Table headers={homeBowlingHeaders} rows={homeBowlingRows} />
-          <Table headers={homeFoWHeaders} rows={homeFoWRows} />
-        </Accordion>
-
-        {/* AWAY TEAM ACCORDION */}
-        <Accordion
-          title={awayTeamName}
-          score={`${awayScore}/${awayWickets}`}
-          overs={`${awayOvers} Ovs`}
-        >
-          <Table headers={awayBattingHeaders} rows={awayBattingRows} />
-          <Table headers={awayBowlingHeaders} rows={awayBowlingRows} />
-          <Table headers={awayFoWHeaders} rows={awayFoWRows} />
-        </Accordion>
-      </div>
+    <div className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl xl:max-w-5xl mx-auto py-8 px-4">
+      <Accordion
+        title={homeTeamName}
+        score={`${homeScore}/${homeWickets}`}
+        overs={`${homeOvers} Ovs`}
+      >
+        <Table headers={homeBattingHeaders} rows={homeBattingRows} />
+        <Table headers={homeBowlingHeaders} rows={homeBowlingRows} />
+        <Table headers={homeFoWHeaders} rows={homeFoWRows} />
+      </Accordion>
+      <Accordion
+        title={awayTeamName}
+        score={`${awayScore}/${awayWickets}`}
+        overs={`${awayOvers} Ovs`}
+      >
+        <Table headers={awayBattingHeaders} rows={awayBattingRows} />
+        <Table headers={awayBowlingHeaders} rows={awayBowlingRows} />
+        <Table headers={awayFoWHeaders} rows={awayFoWRows} />
+      </Accordion>
     </div>
   );
 };
 
-function ProjectedVsActual({ fixture_details, fantasy_data }) {
-  // Dropdown open/close state
+// ProjectedVsActual Component
+const ProjectedVsActual = ({ fixture_details, fantasy_data }) => {
   const [filterOpen, setFilterOpen] = useState(false);
-
-  // Which filter is currently selected?
   const [selectedFilter, setSelectedFilter] = useState("All");
 
-  // 1. Handle picking a filter from the dropdown
   const handleFilterSelect = (filterValue) => {
     setSelectedFilter(filterValue);
-    setFilterOpen(false); // close the dropdown once we pick
+    setFilterOpen(false);
   };
 
-  // 2. Function to filter a list of players based on `selectedFilter`
   const applyFilter = (playerArray) => {
     if (!playerArray) return [];
+    if (selectedFilter === "All") return playerArray;
 
-    if (selectedFilter === "All") {
-      return playerArray;
-    }
+    const filterMap = {
+      BATSMAN: "BAT",
+      "WICKET-KEEPER": "WK",
+      "ALL ROUNDER": "AR",
+      BOWLER: "BOW",
+    };
 
-    // If filter is one of the roles (BATSMAN, WICKET-KEEPER, ALL ROUNDER, BOWLER)
-    // we assume your data has:
-    //   "BAT" for Batsman
-    //   "WK" for Wicket-Keeper
-    //   "AR" for All Rounder
-    //   "BOW" for Bowler
-    // If your data is different, adjust the logic accordingly.
-    if (
-      ["BATSMAN", "WICKET-KEEPER", "ALL ROUNDER", "BOWLER"].includes(
-        selectedFilter
-      )
-    ) {
-      // Map from the filter label to the data’s `player_position`
-      const filterMap = {
-        BATSMAN: "BAT",
-        "WICKET-KEEPER": "WK",
-        "ALL ROUNDER": "AR",
-        BOWLER: "BOW",
-      };
+    if (["BATSMAN", "WICKET-KEEPER", "ALL ROUNDER", "BOWLER"].includes(selectedFilter)) {
       const requiredPos = filterMap[selectedFilter];
       return playerArray.filter((p) => p.player_position === requiredPos);
     }
 
-    // If the filter is a team (e.g. EMD, SAP)
-    // we compare with `player.team_abbr`.
     if ([fixture_details.home, fixture_details.away].includes(selectedFilter)) {
       return playerArray.filter((p) => p.team_abbr === selectedFilter);
     }
 
-    // If we somehow get here, return unfiltered
     return playerArray;
   };
 
-  // 3. Helper to calculate bar widths (Projected vs Actual)
   const getBarWidths = (proj, actual) => {
     const p = Number(proj);
     const a = Number(actual);
-    const total = p + a;
-    if (total === 0) {
-      return { projPercent: 0, actualPercent: 0 };
-    }
-    const projPercent = (p / total) * 100;
-    const actualPercent = (a / total) * 100;
-    return { projPercent, actualPercent };
+    const total = Math.max(p, a, 1);
+    return { projPercent: (p / total) * 100, actualPercent: (a / total) * 100 };
   };
 
-  // 4. Render a single row in any of the three categories
   const renderPlayerRow = (player) => {
-    const { projPercent, actualPercent } = getBarWidths(
-      player.player_fppg,
-      player.fantasy_points
-    );
+    const { projPercent, actualPercent } = getBarWidths(player.player_fppg, player.fantasy_points);
 
     return (
-      <div
+      <motion.div
         key={`${player.player_uid}-${player.team_abbr}`}
-        className="table_points_view flex flex-col border-b last:border-0 py-3"
+        className="flex flex-col border-b last:border-0 py-3"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
       >
-        {/* Player Info */}
-        <div className="flex flex-row items-start mb-2">
-          <div className="first_table_column w-1/4">
-            <div className="players_name font-semibold text-gray-800">
+        <div className="flex flex-col sm:flex-row items-start mb-2">
+          <div className="w-full sm:w-40 flex-shrink-0 mb-2 sm:mb-0">
+            <div className="font-medium text-gray-800 truncate max-w-[80px] sm:max-w-[100px] text-sm sm:text-base">
               {player.full_name}
             </div>
-            <div className="players_matches text-sm text-gray-500 flex items-center">
+            <div className="text-xs sm:text-sm text-gray-500 flex items-center">
               {player.player_position}
-              <div className="small_dot w-1 h-1 bg-gray-400 rounded-full mx-2"></div>
+              <span className="mx-1 w-1 h-1 bg-gray-400 rounded-full inline-block"></span>
               {player.team_abbr}
             </div>
           </div>
-
-          {/* Bars Container */}
-          <div className="second_table_column w-3/4 flex flex-col space-y-1">
-            {/* Projected bar - top bar */}
+          <div className="w-full sm:w-auto flex flex-col space-y-1 flex-1">
             <div className="flex items-center">
-              <div
-                className="first_range h-8 bg-[#F0E5C2] flex items-center justify-end"
-                style={{
-                  width: `${projPercent.toFixed(1)}%`,
-                  minWidth: player.player_fppg ? "2.5rem" : "0",
-                }}
+              <motion.div
+                className="h-8 bg-yellow-200 flex items-center justify-end rounded-r"
+                initial={{ width: 0 }}
+                animate={{ width: `${projPercent}%` }}
+                transition={{ duration: 0.5 }}
+                style={{ minWidth: player.player_fppg ? "2.5rem" : "0" }}
               >
-                <div className="point_first text-sm text-gray-700 pr-2">
-                  {player.player_fppg}
-                </div>
-              </div>
+                <div className="text-xs sm:text-sm text-gray-700 pr-2">{player.player_fppg}</div>
+              </motion.div>
             </div>
-
-            {/* Actual bar - bottom bar */}
             <div className="flex items-center">
-              <div
-                className="second_range h-8 bg-[#c2e4f0] flex items-center justify-end"
-                style={{
-                  width: `${actualPercent.toFixed(1)}%`,
-                  minWidth: player.fantasy_points ? "2.5rem" : "0",
-                }}
+              <motion.div
+                className="h-8 bg-blue-200 flex items-center justify-end rounded-r"
+                initial={{ width: 0 }}
+                animate={{ width: `${actualPercent}%` }}
+                transition={{ duration: 0.5 }}
+                style={{ minWidth: player.fantasy_points ? "2.5rem" : "0" }}
               >
-                <div className="point_first text-sm text-gray-700 pr-2">
-                  {player.fantasy_points}
-                </div>
-              </div>
+                <div className="text-xs sm:text-sm text-gray-700 pr-2">{player.fantasy_points}</div>
+              </motion.div>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     );
   };
 
-  // 5. Prepare each category data with filter
   const underData = applyFilter(fantasy_data.under);
   const withinData = applyFilter(fantasy_data.within);
   const overData = applyFilter(fantasy_data.over);
 
   return (
-    <div className="matchreport-overall-container bg-white p-4 sm:p-6 rounded shadow">
-      <div className="format_container">
-        {/* TOP TEXTS */}
-        <h2 className="proj_and_Act_text text-lg font-bold text-gray-800">
-          Projected vs actual fantasy points
-        </h2>
-        <p className="details_text text-sm text-gray-600 mt-1">
-          PL projected points estimated before the match with actual fantasy
-          points earned by the player in the match
-        </p>
-
-        {/* LEGEND + FILTER SECTION */}
-        <div className="filter_icons_button_text mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0">
-          {/* Legend */}
-          <div className="flex items-center space-x-6">
-            {/* Actual Points */}
-            <div className="actual_points flex items-center space-x-2">
-              <div className="small_circle w-3 h-3 rounded-full bg-[#c2e4f0]"></div>
-              <div
-                className="actual_text text-gray-700"
-                style={{ width: "135px" }}
-              >
-                Actual Points
-              </div>
-            </div>
-            {/* Projected Points */}
-            <div className="actual_points flex items-center space-x-2">
-              <div
-                className="small_circle w-3 h-3 rounded-full"
-                style={{ backgroundColor: "#F0E5C2" }}
-              ></div>
-              <div className="actual_text text-gray-700">Projected Points</div>
-            </div>
+    <motion.div
+      className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl xl:max-w-5xl mx-auto p-4 sm:p-6 bg-white rounded-xl shadow-lg mb-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 mb-2">
+        Projected vs Actual Fantasy Points
+      </h2>
+      <p className="text-xs sm:text-sm text-gray-600 mb-4">
+        PL projected points estimated before the match with actual fantasy points earned
+      </p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0 mb-6">
+        <div className="flex items-center space-x-4 sm:space-x-6">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-blue-200"></div>
+            <div className="text-xs sm:text-sm text-gray-700">Actual Points</div>
           </div>
-
-          {/* Filter Dropdown */}
-          <div
-            className="filter_icon self-end sm:self-auto"
-            style={{ textAlign: "right" }}
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 rounded-full bg-yellow-200"></div>
+            <div className="text-xs sm:text-sm text-gray-700">Projected Points</div>
+          </div>
+        </div>
+        <div className="relative">
+          <motion.button
+            className="bg-blue-600 text-white px-3 py-1 rounded flex items-center"
+            onClick={() => setFilterOpen((prev) => !prev)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            <div className="createteam-drop-btn-style relative inline-block">
-              <button
-                type="button"
-                className="dropdown-toggle btn btn-primary bg-blue-600 text-white px-3 py-1 rounded flex items-center"
-                onClick={() => setFilterOpen((prev) => !prev)}
+            <AiOutlineMenuFold className="mr-1 text-xl" />
+          </motion.button>
+          <AnimatePresence>
+            {filterOpen && (
+              <motion.div
+                className="absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg py-1 z-10"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
               >
-                {/* Replace your <i className="icon-filter" ...> with the AiOutlineMenuFold icon */}
-                <AiOutlineMenuFold className="mr-1 text-xl" />
-              </button>
-
-              {/* Dropdown Menu */}
-              {filterOpen && (
-                <div
-                  className="dropdown-menu absolute right-0 mt-2 w-48 bg-white border rounded shadow py-1 z-10"
-                  style={{ top: "100%", opacity: 1 }}
-                >
+                {["All", "BATSMAN", "WICKET-KEEPER", "ALL ROUNDER", "BOWLER", fixture_details.home, fixture_details.away].map((filter) => (
                   <button
-                    onClick={() => handleFilterSelect("All")}
-                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    key={filter}
+                    onClick={() => handleFilterSelect(filter)}
+                    className="w-full text-left px-4 py-2 text-xs sm:text-sm hover:bg-gray-100"
                   >
-                    All
+                    {filter}
                   </button>
-                  <button
-                    onClick={() => handleFilterSelect("BATSMAN")}
-                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    BATSMAN
-                  </button>
-                  <button
-                    onClick={() => handleFilterSelect("WICKET-KEEPER")}
-                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    WICKET-KEEPER
-                  </button>
-                  <button
-                    onClick={() => handleFilterSelect("ALL ROUNDER")}
-                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    ALL ROUNDER
-                  </button>
-                  <button
-                    onClick={() => handleFilterSelect("BOWLER")}
-                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    BOWLER
-                  </button>
-                  <button
-                    onClick={() => handleFilterSelect(fixture_details.home)}
-                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    {fixture_details.home}
-                  </button>
-                  <button
-                    onClick={() => handleFilterSelect(fixture_details.away)}
-                    className="dropdown-item w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                  >
-                    {fixture_details.away}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* UNDERESTIMATED SECTION */}
-        <div className="points_view_container mt-6">
-          <div className="header_text_view text-md font-semibold text-gray-800 mb-3">
-            <span>Underestimated</span>
-          </div>
-          {underData.length > 0 ? (
-            underData.map((player) => renderPlayerRow(player))
-          ) : (
-            <div className="text-sm text-gray-500">No data found.</div>
-          )}
-        </div>
-
-        {/* WITHIN RANGE SECTION */}
-        <div className="points_view_container mt-8">
-          <div className="header_text_view text-md font-semibold text-gray-800 mb-3">
-            <span>Within Range</span>
-          </div>
-          {withinData.length > 0 ? (
-            withinData.map((player) => renderPlayerRow(player))
-          ) : (
-            <div className="text-sm text-gray-500">No data found.</div>
-          )}
-        </div>
-
-        {/* OVERESTIMATED SECTION */}
-        <div className="points_view_container mt-8">
-          <div className="header_text_view text-md font-semibold text-gray-800 mb-3">
-            <span>Overestimated</span>
-          </div>
-          {overData.length > 0 ? (
-            overData.map((player) => renderPlayerRow(player))
-          ) : (
-            <div className="text-sm text-gray-500">No data found.</div>
-          )}
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
-    </div>
+      {["Underestimated", "Within Range", "Overestimated"].map((category, idx) => {
+        const data = idx === 0 ? underData : idx === 1 ? withinData : overData;
+        return (
+          <div key={category} className="mt-6">
+            <div className="text-md sm:text-lg font-semibold text-gray-800 mb-3">{category}</div>
+            {data.length > 0 ? (
+              data.map((player) => renderPlayerRow(player))
+            ) : (
+              <div className="text-xs sm:text-sm text-gray-500">No data found.</div>
+            )}
+          </div>
+        );
+      })}
+    </motion.div>
   );
-}
+};
 
+// Fantasy Component
 const Fantasy = ({ matchData }) => {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Fetch Data
   const fetchData = useCallback(async () => {
-    if (!matchData?.season_game_uid || !matchData?.league_id) {
-      console.warn("Missing required matchData properties.");
-      return;
-    }
-
+    if (!matchData?.season_game_uid || !matchData?.league_id) return;
     setLoading(true);
     try {
       const response = await axios.post(
@@ -1072,49 +808,32 @@ const Fantasy = ({ matchData }) => {
           },
         }
       );
-
-      console.log("API Response:", response.data);
       setData(response.data.data);
     } catch (error) {
-      console.error("API Error:", error);
       setError(error.message || "An error occurred while fetching data.");
     } finally {
       setLoading(false);
     }
   }, [matchData?.season_game_uid, matchData?.league_id]);
 
-  // Run Fetch on Dependency Change
   useEffect(() => {
     fetchData();
   }, [fetchData]);
 
-  // Handle Loading & Error States
-  if (loading) {
-    return <div className="text-center text-gray-600">Loading...</div>;
-  }
-  if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
-  }
-  if (!data) {
-    return <div className="text-center text-gray-600">No data available.</div>;
-  }
+  if (loading) return <SkeletonLoader />;
+  if (error) return <div className="text-red-500 text-center">Error: {error}</div>;
+  if (!data) return <div className="text-center text-gray-600">No data available.</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      {data && data.fixture_details && (
-        <ProjectedVsActual
-          fixture_details={data?.fixture_details}
-          fantasy_data={data?.fantasy_data}
-        />
-      )}
+    <div className="w-full">
+      <ProjectedVsActual fixture_details={data?.fixture_details} fantasy_data={data?.fantasy_data} />
     </div>
   );
 };
 
+// MatchCard Component
 const MatchCard = ({ matchData, stats_details }) => {
-  // Safely parse score data (it’s stored as a JSON string in matchData.score_data)
   const scoreData = JSON.parse(matchData.score_data);
-  console.log(scoreData)
   const {
     away_overs,
     home_overs,
@@ -1126,107 +845,123 @@ const MatchCard = ({ matchData, stats_details }) => {
 
   const [activeTab, setActiveTab] = useState("SCORECARD");
   const toggleList = ["OVERVIEW", "SCORECARD", "FANTASY"];
-  // You can format the date/time however you prefer. Below is a simplistic approach:
-  // matchData.season_scheduled_date = "2025-03-04 18:01:00"
-  // For the screenshot, you mentioned "04 March 11:31 pm" but we'll keep it simple here.
-  const dateTime = new Date(matchData.season_scheduled_date);
-  const options = {
-    day: "numeric",
-    month: "long",
-    hour: "numeric",
-    minute: "2-digit",
-  };
-  const formattedDate = dateTime.toLocaleString("en-GB", options);
+  const formattedDate = formatDate(matchData.season_scheduled_date);
 
   return (
     <>
-      <div className="w-full max-w-4xl mx-auto bg-gray-100 shadow-lg rounded-lg p-4 my-4 flex flex-col">
-        {/* League Title */}
-        <h2 className="text-xl font-semibold text-center mb-1">
+      {/* Match Summary Card */}
+      <motion.div
+        className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl xl:max-w-5xl mx-auto bg-white shadow-lg rounded-xl p-4 sm:p-6 my-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-center text-gray-800 mb-1">
           {matchData.league_name}
         </h2>
-
-        {/* Date and Venue Info */}
-        <div className="text-sm text-gray-500 text-center">
+        <div className="text-xs sm:text-sm text-gray-500 text-center mb-4">
           {formattedDate} | {matchData.ground_name}
         </div>
-
-        {/* Main Scoreboard Section */}
-        <div className="flex items-center justify-between mt-4">
-          {/* Home Team */}
-          <div className="flex flex-col -pr-40">
-            {/* If you have actual images, swap the src below with your own */}
-
+        <div className="flex items-center justify-between">
+          <motion.div
+            className="flex flex-col items-center"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.3 }}
+          >
             <img
-              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchData.home_flag}`}
+              src={`${FLAG_BASE_URL}${matchData.home_flag}`}
               alt={`${matchData.home_team_name} flag`}
-              className="w-12 h-12 mb-2 sm:h-10 rounded-full"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-sm mb-2"
+              loading="lazy"
             />
-            <h3 className="font-bold">{matchData.home_team_name}</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="font-bold text-sm sm:text-base text-gray-800">{matchData.home_team_name}</h3>
+            <p className="text-xs sm:text-sm text-gray-600">
               {home_team_score}/{home_wickets} ({home_overs} Overs)
             </p>
-          </div>
-
-          {/* VS and Result */}
+          </motion.div>
           <div className="flex flex-col items-center">
-            <p className="text-gray-400">Vs</p>
+            <p className="text-gray-400 text-sm sm:text-base">Vs</p>
             {matchData.result_info && (
-              <p className="text-green-600 font-semibold mt-1">
-                {matchData.result_info}
-              </p>
+              <p className="text-green-600 font-semibold mt-1 text-xs sm:text-sm">{matchData.result_info}</p>
             )}
           </div>
-
-          {/* Away Team */}
-          <div className="flex flex-col items-center">
+          <motion.div
+            className="flex flex-col items-center"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.3 }}
+          >
             <img
-              src={`https://plineup-prod.blr1.digitaloceanspaces.com/upload/flag/${matchData.away_flag}`}
+              src={`${FLAG_BASE_URL}${matchData.away_flag}`}
               alt={`${matchData.away} flag`}
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full shadow-sm mb-2"
+              loading="lazy"
             />
-            <h3 className="font-bold">{matchData.away_team_name}</h3>
-            <p className="text-sm text-gray-600">
+            <h3 className="font-bold text-sm sm:text-base text-gray-800">{matchData.away_team_name}</h3>
+            <p className="text-xs sm:text-sm text-gray-600">
               {away_team_score}/{away_wickets} ({away_overs} Overs)
             </p>
-          </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="w-full max-w-4xl mx-auto bg-gray-100 shadow-lg rounded-lg p-4 my-4 flex flex-col items-center">
-        <div className="w-full bg-white rounded shadow p-4 mt-4">
-          {/* Heading */}
-          {/* Main Tabs */}
-          <div className="flex justify-center items-center mb-4">
-            {toggleList.map((tab) => (
-              <div
-                key={tab}
-                className={`text-tabItem px-4 py-1 cursor-pointer ${
-                  activeTab === tab
-                    ? "border-b-2 border-[#212341] font-semibold text-[#999]"
-                    : "text-gray-600"
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab}
-              </div>
-            ))}
-          </div>
-
-          {/* Tab Content */}
-          <div className="mt-4">
-            {activeTab === "OVERVIEW" && <Overview matchData={matchData} />}
-            {activeTab === "SCORECARD" && (
+      {/* Tabs and Content */}
+      <motion.div
+        className="w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl xl:max-w-5xl mx-auto bg-white shadow-lg rounded-xl p-4 sm:p-6 my-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <div className="flex flex-wrap justify-center items-center gap-2 sm:gap-4 mb-6">
+          {toggleList.map((tab) => (
+            <TabButton
+              key={tab}
+              label={tab}
+              isActive={activeTab === tab}
+              onClick={() => setActiveTab(tab)}
+            />
+          ))}
+        </div>
+        <AnimatePresence mode="wait">
+          {activeTab === "OVERVIEW" && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Overview matchData={matchData} />
+            </motion.div>
+          )}
+          {activeTab === "SCORECARD" && (
+            <motion.div
+              key="scorecard"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
               <Scorecard matchData={matchData} stats_details={stats_details} />
-            )}
-            {activeTab === "FANTASY" && <Fantasy matchData={matchData} />}
-          </div>
-        </div>
-      </div>
+            </motion.div>
+          )}
+          {activeTab === "FANTASY" && (
+            <motion.div
+              key="fantasy"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Fantasy matchData={matchData} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
     </>
   );
 };
 
+// Main MatchReport Component
 function MatchReport() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -1235,23 +970,12 @@ function MatchReport() {
   const location = useLocation();
   const matchInSights = location.state?.matchInSights;
   const matchSessionIDs = location.state?.matchSessionIDs;
-  const matchleageIDs = location.state?.matchleageIDs;
 
   useEffect(() => {
-    // Check if at least one of season_game_uid or es_season_game_uid exists, and league_id is required
-    const hasSeasonGameUid =
-      matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
+    const hasSeasonGameUid = matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
+    if (!hasSeasonGameUid || !matchInSights?.league_id) return;
 
-    if (!hasSeasonGameUid || !matchInSights?.league_id) {
-      console.warn(
-        "Neither season_game_uid nor es_season_game_uid is defined, or league_id is undefined or null"
-      );
-      return;
-    }
-
-    // Use the available season_game_uid (primary or fallback)
-    const gameUid =
-      matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
+    const gameUid = matchInSights?.season_game_uid || matchInSights?.es_season_game_uid;
 
     const fetchData = async () => {
       setLoading(true);
@@ -1259,8 +983,8 @@ function MatchReport() {
         const response = await axios.post(
           "https://plapi.perfectlineup.in/fantasy/completed_match/get_fixture_scorecard",
           {
-            season_game_uid: matchSessionIDs, // Use the resolved value
-            league_id: matchInSights?.league_id, // Required field
+            season_game_uid: matchSessionIDs,
+            league_id: matchInSights?.league_id,
             sports_id: "7",
           },
           {
@@ -1271,10 +995,8 @@ function MatchReport() {
             },
           }
         );
-        console.log("API Response:", response.data);
         setData(response.data.data);
       } catch (error) {
-        console.error("API Error:", error);
         setError(error.message || "An error occurred while fetching data.");
       } finally {
         setLoading(false);
@@ -1282,103 +1004,55 @@ function MatchReport() {
     };
 
     fetchData();
-  }, [
-    matchInSights?.season_game_uid,
-    matchInSights?.es_season_game_uid,
-    matchInSights?.league_id,
-  ]);
+  }, [matchInSights?.season_game_uid, matchInSights?.es_season_game_uid, matchInSights?.league_id, matchSessionIDs]);
 
-  // Countdown function (if you need it)
-  const getCountdownTime = (scheduledDate) => {
-    const now = new Date();
-    // Convert scheduledDate from UTC to IST (UTC +5:30)
-    const targetDate = new Date(scheduledDate);
-    targetDate.setHours(targetDate.getHours() + 5);
-    targetDate.setMinutes(targetDate.getMinutes() + 30);
-
-    const diff = targetDate - now;
-
-    if (diff <= 0) {
-      return "Event Started";
-    }
-
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-    return `${days}d ${hours}h ${minutes}m ${seconds}s`;
-  };
-
-  // Handle loading & error states
-  if (loading) {
-    return <div className="text-center text-gray-600">Loading...</div>;
-  }
-  if (error) {
-    return <div className="text-red-500 text-center">Error: {error}</div>;
-  }
-
-  // If there's no match data at all, don't render
-  if (!matchInSights) {
-    return null;
-  }
-
-  if (!data) {
-    return <div className="text-center text-gray-600">No data available.</div>;
-  }
-
-
+  if (loading) return <SkeletonLoader />;
+  if (error) return <div className="text-red-500 text-center">Error: {error}</div>;
+  if (!matchInSights) return null;
+  if (!data) return <div className="text-center text-gray-600">No data available.</div>;
 
   return (
-    <div className="w-full min-h-screen flex flex-col bg-white overflow-hidden items-start justify-start">
+    <motion.div
+      className="w-full min-h-screen bg-gray-50 flex flex-col items-center justify-start"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Navigation Bar */}
-      <div className="relative flex items-center p-4 border-b w-full max-w-screen-lg mx-auto mt-4">
-        {/* Back Button, absolutely positioned on the left */}
+      <div className="relative flex items-center p-4 border-b w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-4xl xl:max-w-5xl mx-auto mt-4 bg-white rounded-b-lg shadow-md">
         <Link
-          key={
-            matchInSights?.season_game_uid
-              ? matchInSights?.season_game_uid
-              : matchInSights?.es_season_game_uid
-          }
-          to={`/stats-playground/Cricket/${
-            matchInSights?.season_game_uid
-              ? matchInSights?.season_game_uid
-              : matchInSights?.es_season_game_uid
-          }/${matchInSights.home}_vs_${matchInSights.away}/${
-            matchInSights.league_id
-          }`}
+          key={matchInSights?.season_game_uid || matchInSights?.es_season_game_uid}
+          to={`/stats-playground/Cricket/${matchInSights?.season_game_uid || matchInSights?.es_season_game_uid}/${matchInSights.home}_vs_${matchInSights.away}/${matchInSights.league_id}`}
           state={{ matchInSights: matchInSights }}
-          className="absolute left-4 flex items-center p-2 rounded-lg shadow-md bg-white hover:bg-gray-100"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <motion.div
+            className="absolute left-4 p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
           >
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </motion.div>
         </Link>
-
-        {/* Centered title */}
-        <span className="mx-auto font-semibold text-lg">Match Report</span>
+        <span className="mx-auto font-semibold text-lg sm:text-xl text-gray-800">Match Report</span>
       </div>
 
-      {/* Render match data, scorecard, etc. here */}
-      {/* Example: <pre>{JSON.stringify(data, null, 2)}</pre> */}
-
+      {/* Match Card */}
       {data && data.fixture_details && (
-        <MatchCard
-          matchData={data.fixture_details}
-          stats_details={data.stats_details}
-        />
+        <MatchCard matchData={data.fixture_details} stats_details={data.stats_details} />
       )}
-    </div>
+    </motion.div>
   );
 }
 
