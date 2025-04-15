@@ -1,0 +1,92 @@
+/* MatchInsights.css */
+:root {
+    --primary-color: #212341;
+    --accent-color: #6fc8f8;
+    --secondary-accent: #fab4a5;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+  }
+  
+  .match-insights-container {
+    @apply min-h-screen bg-gradient-to-b from-gray-50 to-white font-sans;
+  }
+  
+  .navbar {
+    @apply sticky top-0 z-10 bg-white/95 backdrop-blur-sm shadow-sm py-4 px-4 sm:px-6;
+    animation: slideDown 0.3s ease-out;
+  }
+  
+  @keyframes slideDown {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(0); }
+  }
+  
+  .section-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6;
+    transition: all 0.3s ease;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-lg p-6 mb-6;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  }
+  
+  .progress-bar {
+    @apply rounded-full overflow-hidden relative;
+    background: linear-gradient(90deg, #e5e7eb, #f3f4f6);
+  }
+  
+  .progress-fill {
+    @apply h-full transition-all duration-1000 ease-out;
+  }
+  
+  .player-item {
+    @apply flex items-center p-4 rounded-lg transition-all duration-300;
+  }
+  
+  .player-item:hover {
+    @apply bg-gray-50;
+    transform: translateX(4px);
+  }
+  
+  .team-flag {
+    @apply w-10 h-10 rounded-full object-cover border border-gray-200;
+    transition: transform 0.3s ease;
+  }
+  
+  .team-flag:hover {
+    transform: scale(1.1);
+  }
+  
+  .tooltip {
+    @apply absolute z-20 bg-gray-900 text-white text-sm rounded-lg px-3 py-2 shadow-xl;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  
+  .button-primary {
+    @apply bg-primary-color text-white px-6 py-3 rounded-lg font-semibold;
+    transition: all 0.3s ease;
+  }
+  
+  .button-primary:hover {
+    @apply bg-opacity-90 transform scale-105;
+  }
+  
+  @media (max-width: 640px) {
+    .section-container {
+      @apply px-2 py-4;
+    }
+    
+    .card {
+      @apply p-4 mb-4;
+    }
+    
+    .team-flag {
+      @apply w-8 h-8;
+    }
+  }
